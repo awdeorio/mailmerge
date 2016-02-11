@@ -6,23 +6,28 @@ By Andrew DeOrio
 2016
 
 ## Quickstart
+1. Install libraries
+   ````
+   pip install -r requirements.txt
+   ````
+
 1. Create a sample template email and database.
     ```
     ./mailmerge.py
     ```
 
-2. Edit the template email and database
+1. Edit the template email and database
     ```
     mailmerge_email.txt
     mailmerge_database.csv
     ```
 
-3. Dry run
+1. Dry run
     ```
     ./mailmerge.py
     ```
 
-4. Send the emails
+1. Send the emails
     ```
     ./mailmerge.py --no-pretend
     ```
