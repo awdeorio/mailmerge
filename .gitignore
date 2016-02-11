@@ -2,3 +2,5 @@
 *~
 mailmerge_database.csv
 mailmerge_email.txt
+venv/
+.venv/
