@@ -14,25 +14,27 @@ from subprocess import Popen, PIPE
 import jinja2
 import click
 
-TEMPLATE_FILENAME = "mailmerge_email.txt" #FIXME option with default
-DATABASE_FILENAME = "mailmerge_database.csv" #FIXME option with default
+TEMPLATE_FILENAME = "mailmerge_email.txt"
+DATABASE_FILENAME = "mailmerge_database.csv"
 SENDMAIL = "sendmail"
 
 def sendmail(message):
     """Send email message using UNIX sendmail utility"""
-    p = Popen([SENDMAIL, "-t", "-oi"], stdin=PIPE)
-    stdout, stderr = p.communicate(message)
-    retval = p.returncode
+    proc = Popen([SENDMAIL, "-t", "-oi"], stdin=PIPE)
+    stdout, stderr = proc.communicate(message)
+    retval = proc.returncode
     if retval != 0:
         print ">>> Error: sendmail returned {}".format(retval)
-        if stdout is not None: print stdout
-        if stderr is not None: print stderr
-        print ">>> End error"
+        if stdout is not None:
+            print stdout
+        if stderr is not None:
+            print stderr
 
-def create_sample_input_files():
-    print "Creating sample template email {}".format(TEMPLATE_FILENAME)
-    with open(TEMPLATE_FILENAME, "w") as fh:
-        fh.write(
+def create_sample_input_files(template_filename, database_filename):
+    """Create sample template email and database"""
+    print "Creating sample template email {}".format(template_filename)
+    with open(template_filename, "w") as template_file:
+        template_file.write(
             "TO: {{email}}\n"
             "SUBJECT: Testing mailmerge\n"
             "FROM: Drew DeOrio <awdeorio@gmail.com>\n"
@@ -43,9 +45,9 @@ def create_sample_input_files():
             "\n"
             "AWD\n"
             )
-    print "Creating sample database {}".format(DATABASE_FILENAME)
-    with open(DATABASE_FILENAME, "w") as fh:
-        fh.write(
+    print "Creating sample database {}".format(database_filename)
+    with open(database_filename, "w") as database_file:
+        database_file.write(
             'email,name,position\n'
             'awdeorio@gmail.com,"Drew DeOrio",17\n'
             )
@@ -54,25 +56,27 @@ def create_sample_input_files():
 
 @click.command()
 @click.option('--pretend/--no-pretend', default=True, help="Don't send email, just print")
-def main(pretend):
+def main(pretend=True):
+    """Top level mailmerge application"""
+
     # Banner
     print "mailmerge 0.1 | Andrew DeOrio | 2016"
 
     # Create a sample email template and database if there isn't one already
     if not os.path.exists(TEMPLATE_FILENAME) or \
            not os.path.exists(DATABASE_FILENAME):
-        create_sample_input_files()
+        create_sample_input_files(TEMPLATE_FILENAME, DATABASE_FILENAME)
         sys.exit(1)
 
     # Read template
-    with open(TEMPLATE_FILENAME, "r") as fh:
-        content = fh.read()
+    with open(TEMPLATE_FILENAME, "r") as template_file:
+        content = template_file.read()
         content += "\n"
         template = jinja2.Template(content)
 
     # Read CSV file database
-    with open(DATABASE_FILENAME, "r") as fh:
-        reader = csv.DictReader(fh)
+    with open(DATABASE_FILENAME, "r") as database_file:
+        reader = csv.DictReader(database_file)
 
         # Each row corresponds to one email message
         for i, row in enumerate(reader):
@@ -81,9 +85,9 @@ def main(pretend):
             # Fill in template fields using fields from row of CSV file
             message = template.render(**row)
             print message
-                
-            # FIXME: add an option to enable actually sending the message
-            if (pretend):
+
+            # Send message
+            if pretend:
                 print ">>> prentended to send message.  Use --no-pretend to actually send messages."
             else:
                 sendmail(message)
