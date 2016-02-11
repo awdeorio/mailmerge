@@ -12,11 +12,11 @@ import sys
 import csv
 from subprocess import Popen, PIPE
 import jinja2
+import click
 
 TEMPLATE_FILENAME = "mailmerge_email.txt" #FIXME option with default
 DATABASE_FILENAME = "mailmerge_database.csv" #FIXME option with default
 SENDMAIL = "sendmail"
-PRETEND = True                     #FIXME option with default
 
 def sendmail(message):
     """Send email message using UNIX sendmail utility"""
@@ -51,8 +51,10 @@ def create_sample_input_files():
             )
     print "Edit these files, and then run mailmerge again"
 
-if __name__ == "__main__":
-    
+
+@click.command()
+@click.option('--pretend/--no-pretend', default=True, help="Don't send email, just print")
+def main(pretend):
     # Banner
     print "mailmerge 0.1 | Andrew DeOrio | 2016"
 
@@ -81,8 +83,11 @@ if __name__ == "__main__":
             print message
                 
             # FIXME: add an option to enable actually sending the message
-            if (PRETEND):
-                print ">>> prentended to send message.  Use --nopretend to actually send messages."
+            if (pretend):
+                print ">>> prentended to send message.  Use --no-pretend to actually send messages."
             else:
                 sendmail(message)
                 print ">>> sent message"
+
+if __name__ == "__main__":
+    main()
