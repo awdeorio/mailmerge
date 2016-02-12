@@ -46,7 +46,6 @@ pip install -r requirements.txt
 ```
 
 # Todo
-* `--limit / --no-limit` options
 * Remove my email address from sample
 * Simple example in README
 * Complex example in README (e.g., student grade email with optional warning)
@@ -57,5 +56,9 @@ pip install -r requirements.txt
 * `--template` option
 * `--output` option for log file
 * `--sample` option to create sample database and template files
+* Directory structure:
+  bin/mailmerge
+  python/mailmerge.py
+  python/__init__.py
 * [setup script](https://stackoverflow.com/questions/4840182/setup-py-and-adding-file-to-bin)
 * [Python package](http://peterdowns.com/posts/first-time-with-pypi.html)
