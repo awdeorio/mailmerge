@@ -57,3 +57,5 @@ pip install -r requirements.txt
 * `--template` option
 * `--output` option for log file
 * `--sample` option to create sample database and template files
+* [setup script](https://stackoverflow.com/questions/4840182/setup-py-and-adding-file-to-bin)
+* [Python package](http://peterdowns.com/posts/first-time-with-pypi.html)
