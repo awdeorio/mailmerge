@@ -26,8 +26,10 @@ def sendmail(message):
     if retval != 0:
         print ">>> Error: sendmail returned {}".format(retval)
         if stdout is not None:
+            print "STDOUT:"
             print stdout
         if stderr is not None:
+            print "STDERR:"
             print stderr
 
 def create_sample_input_files(template_filename, database_filename):
@@ -55,8 +57,13 @@ def create_sample_input_files(template_filename, database_filename):
 
 
 @click.command()
-@click.option('--pretend/--no-pretend', default=True, help="Don't send email, just print")
-def main(pretend=True):
+@click.option('--dry-run/--no-dry-run', default=True,
+              help="Don't send email, just print")
+@click.option('--limit', is_flag=False, default=1,
+              help='Limit the number of messages; default 1')
+@click.option('--no-limit', is_flag=True, default=False,
+              help="Do not limit the number of messages")
+def main(dry_run=True, limit=1, no_limit=False):
     """Top level mailmerge application"""
 
     # Banner
@@ -80,6 +87,9 @@ def main(pretend=True):
 
         # Each row corresponds to one email message
         for i, row in enumerate(reader):
+            if not no_limit and i >= limit:
+                break
+
             print ">>> message {}".format(i)
 
             # Fill in template fields using fields from row of CSV file
@@ -87,11 +97,18 @@ def main(pretend=True):
             print message
 
             # Send message
-            if pretend:
-                print ">>> prentended to send message.  Use --no-pretend to actually send messages."
+            if dry_run:
+                print ">>> sent message DRY RUN"
             else:
                 sendmail(message)
                 print ">>> sent message"
+
+    # Hints for user
+    if not no_limit:
+        print ">>> Limit was {} messages.  ".format(limit) + \
+            "To remove the limit, use the --no-limit option."
+    if dry_run:
+        print ">>> This was a dry run.  To send messages, use --no-dry-run option."
 
 if __name__ == "__main__":
     main()
