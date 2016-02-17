@@ -57,3 +57,5 @@ pip install -r requirements.txt
   bin/mailmerge
   python/mailmerge.py
   python/__init__.py
+* [setup script](https://stackoverflow.com/questions/4840182/setup-py-and-adding-file-to-bin)
+* [Python package](http://peterdowns.com/posts/first-time-with-pypi.html)
