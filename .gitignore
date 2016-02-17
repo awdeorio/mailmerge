@@ -1,6 +1,6 @@
 *.pyc
 *~
 mailmerge_database.csv
-mailmerge_email.txt
+mailmerge_template.txt
 venv/
 .venv/

@@ -14,8 +14,8 @@ from subprocess import Popen, PIPE
 import jinja2
 import click
 
-TEMPLATE_FILENAME = "mailmerge_email.txt"
-DATABASE_FILENAME = "mailmerge_database.csv"
+TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
+DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 SENDMAIL = "sendmail"
 
 def sendmail(message):
@@ -52,37 +52,52 @@ def create_sample_input_files(template_filename, database_filename):
         database_file.write(
             'email,name,position\n'
             'awdeorio@gmail.com,"Drew DeOrio",17\n'
+            'awdeorio@gmail.com,"Drew DeOrio",18\n'
             )
     print "Edit these files, and then run mailmerge again"
 
 
-@click.command()
-@click.option('--dry-run/--no-dry-run', default=True,
+CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+@click.command(context_settings=CONTEXT_SETTINGS)
+@click.option("--dry-run/--no-dry-run", default=True,
               help="Don't send email, just print")
-@click.option('--limit', is_flag=False, default=1,
-              help='Limit the number of messages; default 1')
-@click.option('--no-limit', is_flag=True, default=False,
+@click.option("--limit", is_flag=False, default=1,
+              help="Limit the number of messages; default 1")
+@click.option("--no-limit", is_flag=True, default=False,
               help="Do not limit the number of messages")
-def main(dry_run=True, limit=1, no_limit=False):
-    """Top level mailmerge application"""
+@click.option("--database", "database_filename",
+              default=DATABASE_FILENAME_DEFAULT,
+              help="database CSV file name; default " + DATABASE_FILENAME_DEFAULT)
+@click.option("--template", "template_filename",
+              default=TEMPLATE_FILENAME_DEFAULT,
+              help="template email file name; default " + TEMPLATE_FILENAME_DEFAULT)
+def main(dry_run=True,
+         limit=1,
+         no_limit=False,
+         database_filename=DATABASE_FILENAME_DEFAULT,
+         template_filename=TEMPLATE_FILENAME_DEFAULT):
+    """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
 
-    # Banner
-    print "mailmerge 0.1 | Andrew DeOrio | 2016"
+    A simple, command line mail merge tool.
+
+    Render an email template for each line in a CSV database.  Send messages
+    with sendmail.
+    """
 
     # Create a sample email template and database if there isn't one already
-    if not os.path.exists(TEMPLATE_FILENAME) or \
-           not os.path.exists(DATABASE_FILENAME):
-        create_sample_input_files(TEMPLATE_FILENAME, DATABASE_FILENAME)
+    if not os.path.exists(template_filename) or \
+           not os.path.exists(database_filename):
+        create_sample_input_files(template_filename, database_filename)
         sys.exit(1)
 
     # Read template
-    with open(TEMPLATE_FILENAME, "r") as template_file:
+    with open(template_filename, "r") as template_file:
         content = template_file.read()
         content += "\n"
         template = jinja2.Template(content)
 
     # Read CSV file database
-    with open(DATABASE_FILENAME, "r") as database_file:
+    with open(database_filename, "r") as database_file:
         reader = csv.DictReader(database_file)
 
         # Each row corresponds to one email message
