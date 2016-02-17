@@ -139,7 +139,7 @@ def main(sample=False,
         print ">>> Limit was {} messages.  ".format(limit) + \
             "To remove the limit, use the --no-limit option."
     if dry_run:
-        print ">>> This was a dry run.  To send messages, use --no-dry-run option."
+        print ">>> This was a dry run.  To send messages, use the --no-dry-run option."
 
 if __name__ == "__main__":
     main()
