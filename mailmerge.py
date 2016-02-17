@@ -35,6 +35,9 @@ def sendmail(message):
 def create_sample_input_files(template_filename, database_filename):
     """Create sample template email and database"""
     print "Creating sample template email {}".format(template_filename)
+    if os.path.exists(template_filename):
+        print "Error: file exists: " + template_filename
+        sys.exit(1)
     with open(template_filename, "w") as template_file:
         template_file.write(
             "TO: {{email}}\n"
@@ -48,6 +51,9 @@ def create_sample_input_files(template_filename, database_filename):
             "AWD\n"
             )
     print "Creating sample database {}".format(database_filename)
+    if os.path.exists(database_filename):
+        print "Error: file exists: " + database_filename
+        sys.exit(1)
     with open(database_filename, "w") as database_file:
         database_file.write(
             'email,name,position\n'
@@ -59,6 +65,8 @@ def create_sample_input_files(template_filename, database_filename):
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.command(context_settings=CONTEXT_SETTINGS)
+@click.option("--sample", is_flag=True, default=False,
+              help="Create sample database and template email files")
 @click.option("--dry-run/--no-dry-run", default=True,
               help="Don't send email, just print")
 @click.option("--limit", is_flag=False, default=1,
@@ -71,7 +79,8 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 @click.option("--template", "template_filename",
               default=TEMPLATE_FILENAME_DEFAULT,
               help="template email file name; default " + TEMPLATE_FILENAME_DEFAULT)
-def main(dry_run=True,
+def main(sample=False,
+         dry_run=True,
          limit=1,
          no_limit=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
@@ -85,9 +94,16 @@ def main(dry_run=True,
     """
 
     # Create a sample email template and database if there isn't one already
-    if not os.path.exists(template_filename) or \
-           not os.path.exists(database_filename):
+    if sample:
         create_sample_input_files(template_filename, database_filename)
+        sys.exit(0)
+    if not os.path.exists(template_filename):
+        print "Error: can't find template email " + template_filename
+        print "Create a sample with --sample or specify a file with --template"
+        sys.exit(1)
+    if not os.path.exists(database_filename):
+        print "Error: can't find database_filename " + database_filename
+        print "Create a sample with --sample or specify a file with --database"
         sys.exit(1)
 
     # Read template

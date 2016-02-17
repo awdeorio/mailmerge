@@ -52,10 +52,7 @@ pip install -r requirements.txt
 * Make yourself the first recipient
 * Sanity check `sendmail` executable
 * Step-by-step guide (first limit 1, then no-pretend with self, then no-limit)
-* `--database` option
-* `--template` option
 * `--output` option for log file
-* `--sample` option to create sample database and template files
 * Directory structure:
   bin/mailmerge
   python/mailmerge.py
