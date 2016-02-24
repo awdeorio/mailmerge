@@ -129,10 +129,10 @@ def main(sample=False,
 
             # Send message
             if dry_run:
-                print ">>> sent message DRY RUN"
+                print ">>> sent message {} DRY RUN".format(i)
             else:
                 sendmail(message)
-                print ">>> sent message"
+                print ">>> sent message {}".format(i)
 
     # Hints for user
     if not no_limit:

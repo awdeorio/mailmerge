@@ -1,7 +1,7 @@
 # mailmerge
 A simple, command line mail merge tool.
 
-By Andrew DeOrio
+By Andrew DeOrio <awdeorio@umich.edu>
 
 2016
 
@@ -13,7 +13,7 @@ By Andrew DeOrio
 
 1. Create a sample template email and database.
     ```
-    ./mailmerge.py --sample
+    mailmerge --sample
     ```
 
 1. Edit the template email and database
@@ -24,23 +24,23 @@ By Andrew DeOrio
 
 1. Dry run one email message
     ```
-    ./mailmerge.py
+    mailmerge
       OR
-    ./mailmerge.py --limit 1 --dry-run
+    mailmerge --limit 1 --dry-run
 
     ```
 
 1. Dry run all email messages
     ```
-    ./mailmerge.py --no-limit
+    mailmerge --no-limit
       OR
-    ./mailmerge.py --no-limit --dry-run
+    mailmerge --no-limit --dry-run
 
     ```
 
 1. Send the emails
     ```
-    ./mailmerge.py --no-limit --no-dry-run
+    mailmerge --no-limit --no-dry-run
     ```
 
 
@@ -59,7 +59,7 @@ pip install -r requirements.txt
 # Example
 Create a sample template email and database.
 ```
-./mailmerge.py --sample
+mailmerge --sample
 ```
 
 ### Edit the template email message `mailmerge_template.txt`
@@ -89,7 +89,7 @@ awdeorio@umich.edu,"Andrew DeOrio",18
 ### Dry run
 First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
 ```
-./mailmerge.py --dry-run --limit 1
+mailmerge --dry-run --limit 1
 >>> message 0
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -101,14 +101,14 @@ Your position is 17.
 
 AWD
 
->>> sent message DRY RUN
+>>> sent message 0 DRY RUN
 >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
 ```
-./mailmerge.py --dry-run --no-limit
+mailmerge --dry-run --no-limit
 >>> message 0
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -120,7 +120,7 @@ Your position is 17.
 
 AWD
 
->>> sent message DRY RUN
+>>> sent message 0 DRY RUN
 >>> message 1
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -132,14 +132,14 @@ Your position is 18.
 
 AWD
 
->>> sent message DRY RUN
+>>> sent message 1 DRY RUN
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 ### Send first email
 We're being extra careful in this example to avoid sending people spam, so next we'll send one **real** email message.  Recall that you added yourself as the first email recipient.
 ```
-./mailmerge.py --no-dry-run --limit 1
+mailmerge --no-dry-run --limit 1
 >>> message 0
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -151,7 +151,7 @@ Your position is 17.
 
 AWD
 
->>> sent message
+>>> sent message 0
 >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
 ```
 
@@ -160,7 +160,7 @@ Now, check your email make sure the message went through.  If everything looks O
 ### Send all emails
 
 ```
-./mailmerge.py --no-dry-run --no-limit
+mailmerge --no-dry-run --no-limit
 >>> message 0
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -172,7 +172,7 @@ Your position is 17.
 
 AWD
 
->>> sent message
+>>> sent message 0
 >>> message 1
 TO: awdeorio@umich.edu
 SUBJECT: Testing mailmerge
@@ -184,7 +184,7 @@ Your position is 18.
 
 AWD
 
->>> sent message
+>>> sent message 1
 ```
 
 # Todo
