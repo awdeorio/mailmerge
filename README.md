@@ -188,7 +188,6 @@ AWD
 ```
 
 # Todo
-* Remove my email address from sample
 * Complex example in README (e.g., student grade email with optional warning)
 
   Reference [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/)
