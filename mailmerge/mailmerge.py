@@ -42,13 +42,11 @@ def create_sample_input_files(template_filename, database_filename):
         template_file.write(
             "TO: {{email}}\n"
             "SUBJECT: Testing mailmerge\n"
-            "FROM: Andrew DeOrio <awdeorio@umich.edu>\n"
+            "FROM: My Self <myself@mydomain.com>\n"
             "\n"
             "Hi, {{name}},\n"
             "\n"
-            "Your position is {{position}}.\n"
-            "\n"
-            "AWD\n"
+            "Your number is {{number}}.\n"
             )
     print "Creating sample database {}".format(database_filename)
     if os.path.exists(database_filename):
@@ -56,9 +54,9 @@ def create_sample_input_files(template_filename, database_filename):
         sys.exit(1)
     with open(database_filename, "w") as database_file:
         database_file.write(
-            'email,name,position\n'
-            'awdeorio@umich.edu,"Andrew DeOrio",17\n'
-            'awdeorio@umich.edu,"Andrew DeOrio",18\n'
+            'email,name,number\n'
+            'email1@domain1.com,"Alice",17\n'
+            'email2@domain2.com,"Bob",42\n'
             )
     print "Edit these files, and then run mailmerge again"
 
