@@ -1,0 +1,1 @@
+from mailmerge import main

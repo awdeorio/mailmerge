@@ -4,3 +4,6 @@ mailmerge_database.csv
 mailmerge_template.txt
 venv/
 .venv/
+dist/
+build/
+mailmerge.egg-info/

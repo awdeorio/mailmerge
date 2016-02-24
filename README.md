@@ -188,10 +188,5 @@ AWD
 * Make yourself the first recipient in sample files
 * Sanity check `sendmail` executable
 * `--output` option for log file
-* Directory structure:
-  bin/mailmerge
-  python/mailmerge.py
-  python/__init__.py
-* [setup script](https://stackoverflow.com/questions/4840182/setup-py-and-adding-file-to-bin)
 * [Python package](http://peterdowns.com/posts/first-time-with-pypi.html)
 * tests
