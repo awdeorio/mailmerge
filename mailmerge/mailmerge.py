@@ -42,7 +42,7 @@ def create_sample_input_files(template_filename, database_filename):
         template_file.write(
             "TO: {{email}}\n"
             "SUBJECT: Testing mailmerge\n"
-            "FROM: Drew DeOrio <awdeorio@gmail.com>\n"
+            "FROM: Andrew DeOrio <awdeorio@umich.edu>\n"
             "\n"
             "Hi, {{name}},\n"
             "\n"
@@ -57,8 +57,8 @@ def create_sample_input_files(template_filename, database_filename):
     with open(database_filename, "w") as database_file:
         database_file.write(
             'email,name,position\n'
-            'awdeorio@gmail.com,"Drew DeOrio",17\n'
-            'awdeorio@gmail.com,"Drew DeOrio",18\n'
+            'awdeorio@umich.edu,"Andrew DeOrio",17\n'
+            'awdeorio@umich.edu,"Andrew DeOrio",18\n'
             )
     print "Edit these files, and then run mailmerge again"
 
