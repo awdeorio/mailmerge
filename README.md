@@ -178,5 +178,4 @@ If there is an error sending email, your system may report that you have mail wh
 * Complex example in README.  For example, student progress report.  Reference [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/)
 * Sanity check `sendmail` executable
 * `--output` option for log file
-* [Python package](http://peterdowns.com/posts/first-time-with-pypi.html)
-* tests
+* Unit tests
