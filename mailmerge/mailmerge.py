@@ -55,8 +55,8 @@ def create_sample_input_files(template_filename, database_filename):
     with open(database_filename, "w") as database_file:
         database_file.write(
             'email,name,number\n'
-            'email1@domain1.com,"Alice",17\n'
-            'email2@domain2.com,"Bob",42\n'
+            'myself@mydomain.com,"Myself",17\n'
+            'bob@bobdomain.com,"Bob",42\n'
             )
     print "Edit these files, and then run mailmerge again"
 

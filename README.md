@@ -6,60 +6,18 @@ http://andrewdeorio.com<br>
 2016
 
 # Quickstart
-1. Install libraries
-   ````
-   pip install -r requirements.txt
-   ````
-
-1. Create a sample template email and database.
-    ```
-    mailmerge --sample
-    ```
-
-1. Edit the template email and database
-    ```
-    mailmerge_template.txt
-    mailmerge_database.csv
-    ```
-
-1. Dry run one email message
-    ```
-    mailmerge
-      OR
-    mailmerge --limit 1 --dry-run
-
-    ```
-
-1. Dry run all email messages
-    ```
-    mailmerge --no-limit
-      OR
-    mailmerge --no-limit --dry-run
-
-    ```
-
-1. Send the emails
-    ```
-    mailmerge --no-limit --no-dry-run
-    ```
-
-
-# Install
-Optionally, use a virtual environment
+`mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
 ```
-virtualenv venv
-. ./venv/bin/activate
-```
-
-Install libraries
-```
-pip install -r requirements.txt
+$ pip install mailmerge
+$ mailmerge
 ```
 
 # Example
-Create a sample template email and database.
+This example will walk you through the steps for creating a template email, and database.  Then, it will show how to test it before sending real emails.
+
+### Create a sample template email and database.
 ```
-mailmerge --sample
+$ mailmerge --sample
 ```
 
 ### Edit the template email message `mailmerge_template.txt`
@@ -77,22 +35,23 @@ Your number is {{number}}.
 ### Edit the database `mailmerge_database.csv`
 Notice that the first line is a header that matches the parameters in the template example, for example, `{{email}}`.
 
-**HINT:** Add yourself as the first recipient.  This is helpful for testing.
+**Pro-tip**: Add yourself as the first recipient.  This is helpful for testing.
 ```
 email,name,number
-email1@domain1.com,"Alice",17
-email2@domain2.com,"Bob",42
+myself@mydomain.com,"Myself",17
+bob@bobdomain.com,"Bob",42
 ```
 
 ### Dry run
 First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
 ```
+$ mailmerge --dry-run --limit 1
 >>> message 0
-TO: email1@domain1.com
+TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
-Hi, Alice,
+Hi, Myself,
 
 Your number is 17.
 
@@ -103,19 +62,19 @@ Your number is 17.
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
 ```
-mailmerge --dry-run --no-limit
+$ mailmerge --dry-run --no-limit
 >>> message 0
-TO: email1@domain1.com
+TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
-Hi, Alice,
+Hi, Myself,
 
 Your number is 17.
 
 >>> sent message 0 DRY RUN
 >>> message 1
-TO: email2@domain2.com
+TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
@@ -128,15 +87,15 @@ Your number is 42.
 ```
 
 ### Send first email
-We're being extra careful in this example to avoid sending spam, so next we'll send one **real** email message.  Recall that you added yourself as the first email recipient.
+We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email*.  Recall that you added yourself as the first email recipient.
 ```
-mailmerge --no-dry-run --limit 1
+$ mailmerge --no-dry-run --limit 1
 >>> message 0
-TO: email1@domain1.com
+TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
-Hi, Alice,
+Hi, Myself,
 
 Your number is 17.
 
@@ -148,19 +107,19 @@ Now, check your email make sure the message went through.  If everything looks O
 
 ### Send all emails
 ```
-mailmerge --no-dry-run --no-limit
+$ mailmerge --no-dry-run --no-limit
 >>> message 0
-TO: email1@domain1.com
+TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
-Hi, Alice,
+Hi, Myself,
 
 Your number is 17.
 
 >>> sent message 0
 >>> message 1
-TO: email2@domain2.com
+TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 
@@ -176,6 +135,6 @@ If there is an error sending email, your system may report that you have mail wh
 
 # Todo
 * Complex example in README.  For example, student progress report.  Reference [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/)
-* Sanity check `sendmail` executable
+* Sanity check `sendmail` executable on start
 * `--output` option for log file
 * Unit tests
