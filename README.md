@@ -4,7 +4,7 @@ A simple, command line mail merge tool.
 Andrew DeOrio <awdeorio@umich.edu><br>
 http://andrewdeorio.com<br>
 
-`mailmerge` uses plain text files and the powerful [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/).  It sends messages using the `sendmail` utility.
+`mailmerge` uses plain text files and the powerful [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).  It sends messages using the `sendmail` utility.
 
 # Quickstart
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
