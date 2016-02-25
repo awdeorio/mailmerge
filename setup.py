@@ -6,7 +6,7 @@ except ImportError:
 setup(
     name="mailmerge",
     description = "A simple, command line mail merge tool",
-    version="0.1",
+    version="0.12",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
@@ -14,7 +14,7 @@ setup(
     license="MIT",
     packages = ["mailmerge"],
     scripts=["bin/mailmerge"],
-    keywords=["mailmerge", "email"],
+    keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
         "click>=6.2",
         "Jinja2>=2.8",
