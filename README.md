@@ -206,3 +206,4 @@ At this time, your estimated letter grade is A+.
 * Sanity check `sendmail` executable on start
 * `--output` option for log file
 * Unit tests
+* Test with python3
