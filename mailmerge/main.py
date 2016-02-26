@@ -1,10 +1,7 @@
-#!/usr/bin/env python
-
 """
 Mail merge using CSV database and jinja2 template email
 
 Andrew DeOrio <awdeorio@umich.edu>
-2016-02-10
 """
 
 import os
@@ -83,6 +80,7 @@ def main(sample=False,
          no_limit=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT):
+    #pylint: disable=too-many-arguments
     """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
 
     A simple, command line mail merge tool.
