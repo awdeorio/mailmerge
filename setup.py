@@ -19,4 +19,5 @@ setup(
         "click>=6.2",
         "Jinja2>=2.8",
         ],
+    test_suite='nose2.collector.collector',
 )
