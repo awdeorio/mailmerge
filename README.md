@@ -12,6 +12,7 @@ http://andrewdeorio.com<br>
 $ pip install mailmerge
 $ mailmerge
 ```
+If you get *error: could not create '/usr/local/lib/python2.7/dist-packages/mailmerge': Permission denied*, use `sudo pip install mailmerge`.
 
 # Example
 This example will walk you through the steps for creating a template email, and database.  Then, it will show how to test it before sending real emails.
