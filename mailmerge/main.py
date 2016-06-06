@@ -17,7 +17,7 @@ SENDMAIL = "sendmail"
 
 def sendmail(message):
     """Send email message using UNIX sendmail utility"""
-    proc = Popen([SENDMAIL, "-t", "-oi"], stdin=PIPE)
+    proc = Popen([SENDMAIL, "-t", "-oi"], stdin=PIPE, universal_newlines=True)
     stdout, stderr = proc.communicate(message)
     retval = proc.returncode
     if retval != 0:
