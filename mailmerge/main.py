@@ -21,19 +21,19 @@ def sendmail(message):
     stdout, stderr = proc.communicate(message)
     retval = proc.returncode
     if retval != 0:
-        print ">>> Error: sendmail returned {}".format(retval)
+        print(">>> Error: sendmail returned {}".format(retval))
         if stdout is not None:
-            print "STDOUT:"
-            print stdout
+            print("STDOUT:")
+            print(stdout)
         if stderr is not None:
-            print "STDERR:"
-            print stderr
+            print("STDERR:")
+            print(stderr)
 
 def create_sample_input_files(template_filename, database_filename):
     """Create sample template email and database"""
-    print "Creating sample template email {}".format(template_filename)
+    print("Creating sample template email {}".format(template_filename))
     if os.path.exists(template_filename):
-        print "Error: file exists: " + template_filename
+        print("Error: file exists: " + template_filename)
         sys.exit(1)
     with open(template_filename, "w") as template_file:
         template_file.write(
@@ -45,9 +45,9 @@ def create_sample_input_files(template_filename, database_filename):
             "\n"
             "Your number is {{number}}.\n"
             )
-    print "Creating sample database {}".format(database_filename)
+    print("Creating sample database {}".format(database_filename))
     if os.path.exists(database_filename):
-        print "Error: file exists: " + database_filename
+        print("Error: file exists: " + database_filename)
         sys.exit(1)
     with open(database_filename, "w") as database_file:
         database_file.write(
@@ -55,7 +55,7 @@ def create_sample_input_files(template_filename, database_filename):
             'myself@mydomain.com,"Myself",17\n'
             'bob@bobdomain.com,"Bob",42\n'
             )
-    print "Edit these files, and then run mailmerge again"
+    print("Edit these files, and then run mailmerge again")
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
@@ -94,12 +94,12 @@ def main(sample=False,
         create_sample_input_files(template_filename, database_filename)
         sys.exit(0)
     if not os.path.exists(template_filename):
-        print "Error: can't find template email " + template_filename
-        print "Create a sample with --sample or specify a file with --template"
+        print("Error: can't find template email " + template_filename)
+        print("Create a sample with --sample or specify a file with --template")
         sys.exit(1)
     if not os.path.exists(database_filename):
-        print "Error: can't find database_filename " + database_filename
-        print "Create a sample with --sample or specify a file with --database"
+        print("Error: can't find database_filename " + database_filename)
+        print("Create a sample with --sample or specify a file with --database")
         sys.exit(1)
 
     # Read template
@@ -117,25 +117,25 @@ def main(sample=False,
             if not no_limit and i >= limit:
                 break
 
-            print ">>> message {}".format(i)
+            print(">>> message {}".format(i))
 
             # Fill in template fields using fields from row of CSV file
             message = template.render(**row)
-            print message
+            print(message)
 
             # Send message
             if dry_run:
-                print ">>> sent message {} DRY RUN".format(i)
+                print(">>> sent message {} DRY RUN".format(i))
             else:
                 sendmail(message)
-                print ">>> sent message {}".format(i)
+                print(">>> sent message {}".format(i))
 
     # Hints for user
     if not no_limit:
-        print ">>> Limit was {} messages.  ".format(limit) + \
-            "To remove the limit, use the --no-limit option."
+        print(">>> Limit was {} messages.  ".format(limit) +
+              "To remove the limit, use the --no-limit option.")
     if dry_run:
-        print ">>> This was a dry run.  To send messages, use the --no-dry-run option."
+        print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
 
 if __name__ == "__main__":
     main()
