@@ -41,6 +41,7 @@ def test():
         os.remove("mailmerge_template.txt") # HACK: need to use constants from package
     except OSError:
         pass
-    sh.mailmerge("--sample")
-    output = sh.mailmerge("--dry-run", "--no-limit")
+    mailmerge_cmd = sh.Command("./bin/mailmerge")
+    output = mailmerge_cmd("--sample")
+    output = mailmerge_cmd("--dry-run", "--no-limit")
     assert output == CORRECT_OUTPUT
