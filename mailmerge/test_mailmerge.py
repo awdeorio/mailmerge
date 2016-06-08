@@ -5,6 +5,7 @@ output.
 
 import os
 import sh
+from mailmerge import TEMPLATE_FILENAME_DEFAULT, DATABASE_FILENAME_DEFAULT
 
 CORRECT_OUTPUT = \
 """>>> message 0
@@ -32,16 +33,25 @@ Your number is 42.
 
 def test():
     """A basic test using the default options"""
-    try:
-        os.remove("mailmerge_database.csv") # HACK: need to use constants from package
-    except OSError:
-        pass
 
-    try:
-        os.remove("mailmerge_template.txt") # HACK: need to use constants from package
-    except OSError:
-        pass
+    # Remove input files, if they exist
+    if os.path.exists(DATABASE_FILENAME_DEFAULT):
+        os.remove(DATABASE_FILENAME_DEFAULT)
+    if os.path.exists(TEMPLATE_FILENAME_DEFAULT):
+        os.remove(TEMPLATE_FILENAME_DEFAULT)
+
+    # Object references local command
     mailmerge_cmd = sh.Command("./bin/mailmerge")
+
+    # Create sample input files
     output = mailmerge_cmd("--sample")
+
+    # Run executable on sample input files
     output = mailmerge_cmd("--dry-run", "--no-limit")
+
+    # Check output
     assert output == CORRECT_OUTPUT
+
+    # Clean up
+    os.remove(TEMPLATE_FILENAME_DEFAULT)
+    os.remove(DATABASE_FILENAME_DEFAULT)
