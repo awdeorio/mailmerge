@@ -206,4 +206,3 @@ At this time, your estimated letter grade is A+.
 # Todo
 * Sanity check `sendmail` executable on start
 * `--output` option for log file
-* Test with python3
