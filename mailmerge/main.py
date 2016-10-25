@@ -6,28 +6,46 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 import os
 import sys
+import smtplib
+import email.parser
+from builtins import input  # for Python 2 and 3 compatibility
+import getpass
 import csv
-from subprocess import Popen, PIPE
 import jinja2
 import click
 
+
+# Configuration
+SMTP_SERVER_HOST = "smtp.mail.umich.edu"
+SMTP_SERVER_PORT = 465
 TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
 DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
-SENDMAIL = "sendmail"
 
-def sendmail(message):
-    """Send email message using UNIX sendmail utility"""
-    proc = Popen([SENDMAIL, "-t", "-oi"], stdin=PIPE, universal_newlines=True)
-    stdout, stderr = proc.communicate(message)
-    retval = proc.returncode
-    if retval != 0:
-        print(">>> Error: sendmail returned {}".format(retval))
-        if stdout is not None:
-            print("STDOUT:")
-            print(stdout)
-        if stderr is not None:
-            print("STDERR:")
-            print(stderr)
+
+def sendmail(text):
+    """Send email message using Python SMTP library"""
+
+    # Prompt for username and password
+    print("Credentials for {}".format(SMTP_SERVER_HOST))
+    smtp_server_username = input("username: ")
+    smtp_server_password = getpass.getpass("password: ")
+
+    # Parse message headers
+    message = email.parser.Parser().parsestr(text)
+
+    # Send message
+    try:
+        smtp = smtplib.SMTP_SSL(SMTP_SERVER_HOST, SMTP_SERVER_PORT)
+        smtp.login(smtp_server_username, smtp_server_password)
+        smtp.sendmail(
+            message["from"],
+            message["to"],
+            message.as_string(),
+            )
+        smtp.close()
+    except Exception as e:
+        print("Error sending message:", e)
+        smtp.close()
 
 def create_sample_input_files(template_filename, database_filename):
     """Create sample template email and database"""
