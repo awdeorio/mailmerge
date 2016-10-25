@@ -26,26 +26,23 @@ def sendmail(text):
     """Send email message using Python SMTP library"""
 
     # Prompt for username and password
-    print("Credentials for {}".format(SMTP_SERVER_HOST))
-    smtp_server_username = input("username: ")
-    smtp_server_password = getpass.getpass("password: ")
+    if not hasattr(sendmail, "username"):
+        print("Credentials for {}".format(SMTP_SERVER_HOST))
+        sendmail.username = input("username: ")
+        sendmail.password = getpass.getpass("password: ")
 
     # Parse message headers
     message = email.parser.Parser().parsestr(text)
 
     # Send message
-    try:
-        smtp = smtplib.SMTP_SSL(SMTP_SERVER_HOST, SMTP_SERVER_PORT)
-        smtp.login(smtp_server_username, smtp_server_password)
-        smtp.sendmail(
-            message["from"],
-            message["to"],
-            message.as_string(),
-            )
-        smtp.close()
-    except Exception as e:
-        print("Error sending message:", e)
-        smtp.close()
+    smtp = smtplib.SMTP_SSL(SMTP_SERVER_HOST, SMTP_SERVER_PORT)
+    smtp.login(sendmail.username, sendmail.password)
+    smtp.sendmail(
+        message["from"],
+        message["to"],
+        message.as_string(),
+        )
+    smtp.close()
 
 def create_sample_input_files(template_filename, database_filename):
     """Create sample template email and database"""
@@ -131,29 +128,34 @@ def main(sample=False,
         reader = csv.DictReader(database_file)
 
         # Each row corresponds to one email message
-        for i, row in enumerate(reader):
-            if not no_limit and i >= limit:
-                break
+        try:
+            for i, row in enumerate(reader):
+                if not no_limit and i >= limit:
+                    break
 
-            print(">>> message {}".format(i))
+                print(">>> message {}".format(i))
 
-            # Fill in template fields using fields from row of CSV file
-            message = template.render(**row)
-            print(message)
+                # Fill in template fields using fields from row of CSV file
+                message = template.render(**row)
+                print(message)
 
-            # Send message
-            if dry_run:
-                print(">>> sent message {} DRY RUN".format(i))
-            else:
-                sendmail(message)
-                print(">>> sent message {}".format(i))
+                # Send message
+                if dry_run:
+                    print(">>> sent message {} DRY RUN".format(i))
+                else:
+                    sendmail(message)
+                    print(">>> sent message {}".format(i))
 
-    # Hints for user
-    if not no_limit:
-        print(">>> Limit was {} messages.  ".format(limit) +
-              "To remove the limit, use the --no-limit option.")
-    if dry_run:
-        print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
+                # Hints for user
+                if not no_limit:
+                    print(">>> Limit was {} messages.  ".format(limit) +
+                          "To remove the limit, use the --no-limit option.")
+                if dry_run:
+                    print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
+
+        except smtplib.SMTPAuthenticationError as e:
+            print(">>> Authentication error: {}".format(e))
+
 
 if __name__ == "__main__":
     main()
