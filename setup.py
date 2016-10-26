@@ -6,11 +6,11 @@ except ImportError:
 setup(
     name="mailmerge",
     description = "A simple, command line mail merge tool",
-    version="1.4",
+    version="1.5",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
-    download_url = "https://github.com/awdeorio/mailmerge/tarball/0.1",
+    download_url = "https://github.com/awdeorio/mailmerge/tarball/1.5",
     license="MIT",
     packages = ["mailmerge"],
     scripts=["bin/mailmerge"],
@@ -18,6 +18,7 @@ setup(
     install_requires=[
         "click>=6.2",
         "Jinja2>=2.8",
+        "future==0.15.2",
         ],
     test_suite='nose2.collector.collector',
 )
