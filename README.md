@@ -4,7 +4,7 @@ A simple, command line mail merge tool.
 Andrew DeOrio <awdeorio@umich.edu><br>
 http://andrewdeorio.com<br>
 
-`mailmerge` uses plain text files and the powerful [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).  It sends messages using the `sendmail` utility.
+`mailmerge` uses plain text files and the powerful [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
 
 # Quickstart
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
@@ -15,11 +15,22 @@ $ mailmerge
 If you get *error: could not create '/usr/local/lib/python2.7/dist-packages/mailmerge': Permission denied*, use `sudo pip install mailmerge`.
 
 # Example
-This example will walk you through the steps for creating a template email, and database.  Then, it will show how to test it before sending real emails.
+This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
-### Create a sample template email and database.
+### Create a sample template email, database, and config
 ```
 $ mailmerge --sample
+```
+
+### Edit the SMTP server config `mailmerge_config.conf`
+The defaults are set up for gmail.  Be sure to change your username.
+
+NOTE: If you use 2-factor authentication, you might need to go through the process for setting a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page..
+```
+[smtp_server]
+host = smtp.gmail.com
+port = 465
+username = YOUR_USERNAME_HERE
 ```
 
 ### Edit the template email message `mailmerge_template.txt`
@@ -204,5 +215,4 @@ At this time, your estimated letter grade is A+.
 ```
 
 # Todo
-* Sanity check `sendmail` executable on start
 * `--output` option for log file
