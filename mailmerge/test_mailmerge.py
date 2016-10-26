@@ -5,7 +5,10 @@ output.
 
 import os
 import sh
-from mailmerge import TEMPLATE_FILENAME_DEFAULT, DATABASE_FILENAME_DEFAULT
+from mailmerge import \
+     TEMPLATE_FILENAME_DEFAULT, \
+     DATABASE_FILENAME_DEFAULT, \
+     CONFIG_FILENAME_DEFAULT
 
 CORRECT_OUTPUT = \
 """>>> message 0
@@ -39,6 +42,8 @@ def test():
         os.remove(DATABASE_FILENAME_DEFAULT)
     if os.path.exists(TEMPLATE_FILENAME_DEFAULT):
         os.remove(TEMPLATE_FILENAME_DEFAULT)
+    if os.path.exists(CONFIG_FILENAME_DEFAULT):
+        os.remove(CONFIG_FILENAME_DEFAULT)
 
     # Object references local command
     mailmerge_cmd = sh.Command("./bin/mailmerge")
@@ -55,3 +60,4 @@ def test():
     # Clean up
     os.remove(TEMPLATE_FILENAME_DEFAULT)
     os.remove(DATABASE_FILENAME_DEFAULT)
+    os.remove(CONFIG_FILENAME_DEFAULT)
