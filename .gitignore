@@ -2,6 +2,7 @@
 *~
 mailmerge_database.csv
 mailmerge_template.txt
+mailmerge_config.conf
 venv/
 .venv/
 dist/
