@@ -8,8 +8,7 @@ import os
 import sys
 import smtplib
 import email.parser
-import ConfigParser #FIXME: not python3 compatible
-from builtins import input  # for Python 2 and 3 compatibility
+import configparser
 import getpass
 import csv
 import jinja2
@@ -28,7 +27,7 @@ def sendmail(text, config_filename):
     # Read config file from disk to get SMTP server host, port, username
     # FIXME: move config stuff out of this function?
     if not hasattr(sendmail, "host"):
-        config = ConfigParser.RawConfigParser()
+        config = configparser.RawConfigParser()
         config.read(config_filename)
         sendmail.host = config.get("smtp_server", "host")
         sendmail.port = config.get("smtp_server", "port")
@@ -49,11 +48,7 @@ def sendmail(text, config_filename):
     # Send message
     smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
     smtp.login(sendmail.username, sendmail.password)
-    smtp.sendmail(
-        message["from"],
-        message["to"],
-        message.as_string(),
-        )
+    smtp.send_message(message)
     smtp.close()
 
 def create_sample_input_files(template_filename,
