@@ -1,5 +1,0 @@
-click==6.2
-Jinja2==2.8
-future==0.15.2
-nose2==0.6.2
-sh==1.11

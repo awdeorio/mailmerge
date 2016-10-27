@@ -22,7 +22,7 @@ This example will walk you through the steps for creating a template email, data
 $ mailmerge --sample
 ```
 
-### Edit the SMTP server config `mailmerge_config.conf`
+### Edit the SMTP server config `mailmerge_server.conf`
 The defaults are set up for gmail.  Be sure to change your username.
 
 NOTE: If you use 2-factor authentication, you might need to go through the process for setting a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page..
@@ -222,6 +222,25 @@ At this time, your estimated letter grade is A+.
 >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
+
+# Hacking
+Set up development environment.  This will install a `mailmerge` executable in your `PATH` which points to your python development source code.
+```
+virtualenv venv
+source venv/bin/activate
+pip install -e .   # same as `python setup.py develop`
+```
+
+Run unit tests
+```
+nose2
+```
+
+Test python2/python3 compatibility
+```
+./bin/test_python2_python3
+```
+
 
 # Todo
 * `--output` option for log file

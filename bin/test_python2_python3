@@ -1,0 +1,32 @@
+#!/bin/bash
+
+# Set PYTHONPATH
+PROJECT_HOME=`cd $(dirname $0)/.. && pwd -P`
+
+# Stop on errors, print commands
+set -e
+set -x
+
+# Clean up
+rm -rf venv2/ venv3/
+
+# Environment
+export PYTHONPATH="${PROJECT_HOME}"
+
+# Run unit tests with python2
+echo "Testing with python2"
+virtualenv -p python2 venv2 &> /dev/null
+source venv2/bin/activate &> /dev/null
+pip install . &> /dev/null
+nose2
+deactivate &> /dev/null
+
+# Test with python3
+virtualenv -p python3 venv3 &> /dev/null
+source venv3/bin/activate &> /dev/null
+pip install . &> /dev/null
+nose2
+deactivate &> /dev/null
+
+# Clean up
+rm -rf venv2 venv3
