@@ -19,7 +19,7 @@ import click
 # Configuration
 TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
 DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
-CONFIG_FILENAME_DEFAULT = "mailmerge_config.conf"
+CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
 
 
 def sendmail(text, config_filename):
