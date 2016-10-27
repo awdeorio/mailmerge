@@ -22,7 +22,7 @@ This example will walk you through the steps for creating a template email, data
 $ mailmerge --sample
 ```
 
-### Edit the SMTP server config `mailmerge_config.conf`
+### Edit the SMTP server config `mailmerge_server.conf`
 The defaults are set up for gmail.  Be sure to change your username.
 
 NOTE: If you use 2-factor authentication, you might need to go through the process for setting a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page..
