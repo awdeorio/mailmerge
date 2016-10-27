@@ -214,5 +214,24 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
+# Hacking
+Set up development environment.  This will install a `mailmerge` executable in your `PATH` which points to your python development source code.
+```
+virtualenv venv
+source venv/bin/activate
+pip install -e .   # same as `python setup.py develop`
+```
+
+Run unit tests
+```
+nose2
+```
+
+Test python2/python3 compatibility
+```
+./bin/test_python2_python3
+```
+
+
 # Todo
 * `--output` option for log file
