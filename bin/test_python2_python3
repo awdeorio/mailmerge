@@ -1,7 +1,6 @@
 #!/bin/bash
-
-# Set PYTHONPATH
-PROJECT_HOME=`cd $(dirname $0)/.. && pwd -P`
+#
+# Install and run tests with python2 and again with python3
 
 # Stop on errors, print commands
 set -e
@@ -9,9 +8,6 @@ set -x
 
 # Clean up
 rm -rf venv2/ venv3/
-
-# Environment
-export PYTHONPATH="${PROJECT_HOME}"
 
 # Run unit tests with python2
 echo "Testing with python2"
