@@ -33,6 +33,15 @@ port = 465
 username = YOUR_USERNAME_HERE
 ```
 
+Here's another example for `umich.edu` SMTP servers:
+```
+[smtp_server]
+host = smtp.mail.umich.edu
+port = 465
+username = YOUR_USERNAME_HERE
+```
+
+
 ### Edit the template email message `mailmerge_template.txt`
 Take note that `TO`, `SUBJECT`, and `FROM` fields are required.  The remainder is the body of the message.  Use `{{ }}` to indicate customized parameters that will be read from the database.  For example, `{{email}}` will be filled in from the `email` column of `mailmerge_database.csv`.
 ```
