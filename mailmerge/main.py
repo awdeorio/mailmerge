@@ -8,7 +8,8 @@ import os
 import sys
 import smtplib
 import email.parser
-import configparser
+from configparser import ConfigParser
+from builtins import input
 import getpass
 import csv
 import jinja2

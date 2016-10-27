@@ -13,7 +13,7 @@ export PROJECT_HOME=`cd $(dirname "${BASH_SOURCE}") && pwd -P`
 VENV_DIR="${PROJECT_HOME}/.venv"
 if [ ! -d "${VENV_DIR}" ]; then
   echo "Error: can't find virtualenv directory ${VENV_DIR}"
-  echo "HINT: virtualenv -p python3 ${VENV_DIR}"
+  echo "HINT: virtualenv ${VENV_DIR}"
   echo "HINT: pip install -r requirements.txt"
   return 1
 fi
