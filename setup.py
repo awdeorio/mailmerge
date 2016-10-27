@@ -16,10 +16,12 @@ setup(
     scripts=["bin/mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-        "click>=6.6",
-        "Jinja2>=2.8",
-        "nose2>=0.6.5",
-        "sh>=1.11",
-        ],
+    "click>=6.6",
+    "configparser>=3.5.0",
+    "future>=0.15.2",
+    "Jinja2>=2.8",
+    "nose2>=0.6.5",
+    "sh>=1.11",
+    ],
     test_suite='nose2.collector.collector',
 )
