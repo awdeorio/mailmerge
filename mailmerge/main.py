@@ -9,7 +9,6 @@ import sys
 import smtplib
 import email.parser
 import configparser
-from builtins import input
 import getpass
 import csv
 import jinja2
@@ -183,18 +182,18 @@ def main(sample=False,
         if dry_run:
             print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
 
-    except jinja2.exceptions.TemplateError as e:
-        print(">>> Error in Jinja2 template: {}".format(e))
+    except jinja2.exceptions.TemplateError as err:
+        print(">>> Error in Jinja2 template: {}".format(err))
         sys.exit(1)
-    except csv.Error as e:
-        print(">>> Error reading CSV file".format(e))
+    except csv.Error as err:
+        print(">>> Error reading CSV file: {}".format(err))
         sys.exit(1)
-    except smtplib.SMTPAuthenticationError as e:
-        print(">>> Authentication error: {}".format(e))
+    except smtplib.SMTPAuthenticationError as err:
+        print(">>> Authentication error: {}".format(err))
         sys.exit(1)
-    except configparser.Error as e:
+    except configparser.Error as err:
         print(">>> Error reading config file {}: {}".format(
-            config_filename, e))
+            config_filename, err))
         sys.exit(1)
 
 if __name__ == "__main__":
