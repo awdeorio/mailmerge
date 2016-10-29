@@ -8,7 +8,7 @@ import os
 import sys
 import smtplib
 import email.parser
-from configparser import ConfigParser
+import configparser
 from builtins import input
 import getpass
 import csv
@@ -145,18 +145,18 @@ def main(sample=False,
         print("Create a sample with --sample or specify a file with --database")
         sys.exit(1)
 
-    # Read template
-    with open(template_filename, "r") as template_file:
-        content = template_file.read()
-        content += "\n"
-        template = jinja2.Template(content)
+    try:
+        # Read template
+        with open(template_filename, "r") as template_file:
+            content = template_file.read()
+            content += "\n"
+            template = jinja2.Template(content)
 
-    # Read CSV file database
-    with open(database_filename, "r") as database_file:
-        reader = csv.DictReader(database_file)
+        # Read CSV file database
+        with open(database_filename, "r") as database_file:
+            reader = csv.DictReader(database_file)
 
-        # Each row corresponds to one email message
-        try:
+            # Each row corresponds to one email message
             for i, row in enumerate(reader):
                 if not no_limit and i >= limit:
                     break
@@ -181,11 +181,19 @@ def main(sample=False,
             if dry_run:
                 print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
 
-        except smtplib.SMTPAuthenticationError as e:
-            print(">>> Authentication error: {}".format(e))
-        except ConfigParser.Error as e:
-            print(">>> Error reading config file {}: {}".format(
-                config_filename, e))
+    except jinja2.exceptions.TemplateError as e:
+        print(">>> Error in Jinja2 template: {}".format(e))
+        sys.exit(1)
+    except csv.Error as e:
+        print(">>> Error reading CSV file".format(e))
+        sys.exit(1)
+    except smtplib.SMTPAuthenticationError as e:
+        print(">>> Authentication error: {}".format(e))
+        sys.exit(1)
+    except configparser.Error as e:
+        print(">>> Error reading config file {}: {}".format(
+            config_filename, e))
+        sys.exit(1)
 
 if __name__ == "__main__":
     main()
