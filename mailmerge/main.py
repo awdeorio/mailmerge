@@ -119,8 +119,7 @@ def main(sample=False,
          no_limit=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
-         config_filename=CONFIG_FILENAME_DEFAULT,
-         ):
+         config_filename=CONFIG_FILENAME_DEFAULT):
     #pylint: disable=too-many-arguments
     """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
 
@@ -153,33 +152,36 @@ def main(sample=False,
             template = jinja2.Template(content)
 
         # Read CSV file database
+        database = []
         with open(database_filename, "r") as database_file:
             reader = csv.DictReader(database_file)
+            for row in reader:
+                database.append(row)
 
-            # Each row corresponds to one email message
-            for i, row in enumerate(reader):
-                if not no_limit and i >= limit:
-                    break
+        # Each row corresponds to one email message
+        for i, row in enumerate(database):
+            if not no_limit and i >= limit:
+                break
 
-                print(">>> message {}".format(i))
+            print(">>> message {}".format(i))
 
-                # Fill in template fields using fields from row of CSV file
-                message = template.render(**row)
-                print(message)
+            # Fill in template fields using fields from row of CSV file
+            message = template.render(**row)
+            print(message)
 
-                # Send message
-                if dry_run:
-                    print(">>> sent message {} DRY RUN".format(i))
-                else:
-                    sendmail(message, config_filename)
-                    print(">>> sent message {}".format(i))
-
-            # Hints for user
-            if not no_limit:
-                print(">>> Limit was {} messages.  ".format(limit) +
-                      "To remove the limit, use the --no-limit option.")
+            # Send message
             if dry_run:
-                print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
+                print(">>> sent message {} DRY RUN".format(i))
+            else:
+                sendmail(message, config_filename)
+                print(">>> sent message {}".format(i))
+
+        # Hints for user
+        if not no_limit:
+            print(">>> Limit was {} messages.  ".format(limit) +
+                  "To remove the limit, use the --no-limit option.")
+        if dry_run:
+            print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
 
     except jinja2.exceptions.TemplateError as e:
         print(">>> Error in Jinja2 template: {}".format(e))
