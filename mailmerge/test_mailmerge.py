@@ -34,6 +34,7 @@ Your number is 42.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 """
 
+
 def test():
     """A basic test using the default options"""
 

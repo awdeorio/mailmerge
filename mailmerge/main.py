@@ -32,15 +32,17 @@ def sendmail(text, config_filename):
         sendmail.host = config.get("smtp_server", "host")
         sendmail.port = config.get("smtp_server", "port")
         sendmail.username = config.get("smtp_server", "username")
-        print(">>> Read SMTP server configuration from {}".format(config_filename))
+        print(">>> Read SMTP server configuration from {}".format(
+            config_filename))
         print(">>>   host = {}".format(sendmail.host))
         print(">>>   port = {}".format(sendmail.port))
         print(">>>   username = {}".format(sendmail.username))
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
-        sendmail.password = getpass.getpass(">>> password for {} on {}: ".format(
-            sendmail.username, sendmail.host))
+        prompt = ">>> password for {} on {}: ".format(sendmail.username,
+                                                      sendmail.host)
+        sendmail.password = getpass.getpass(prompt)
 
     # Parse message headers
     message = email.parser.Parser().parsestr(text)
@@ -50,6 +52,7 @@ def sendmail(text, config_filename):
     smtp.login(sendmail.username, sendmail.password)
     smtp.send_message(message)
     smtp.close()
+
 
 def create_sample_input_files(template_filename,
                               database_filename,
@@ -94,6 +97,8 @@ def create_sample_input_files(template_filename,
 
 
 CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
+
+
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--sample", is_flag=True, default=False,
               help="Create sample database and template email files")
@@ -105,13 +110,16 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               help="Do not limit the number of messages")
 @click.option("--database", "database_filename",
               default=DATABASE_FILENAME_DEFAULT,
-              help="database CSV file name; default " + DATABASE_FILENAME_DEFAULT)
+              help="database CSV file name; default " +
+                   DATABASE_FILENAME_DEFAULT)
 @click.option("--template", "template_filename",
               default=TEMPLATE_FILENAME_DEFAULT,
-              help="template email file name; default " + TEMPLATE_FILENAME_DEFAULT)
+              help="template email file name; default " +
+                   TEMPLATE_FILENAME_DEFAULT)
 @click.option("--config", "config_filename",
               default=CONFIG_FILENAME_DEFAULT,
-              help="configuration file name; default " + CONFIG_FILENAME_DEFAULT)
+              help="configuration file name; default " +
+                   CONFIG_FILENAME_DEFAULT)
 def main(sample=False,
          dry_run=True,
          limit=1,
@@ -119,7 +127,6 @@ def main(sample=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
          config_filename=CONFIG_FILENAME_DEFAULT):
-    #pylint: disable=too-many-arguments
     """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
 
     A simple, command line mail merge tool.
@@ -180,7 +187,8 @@ def main(sample=False,
             print(">>> Limit was {} messages.  ".format(limit) +
                   "To remove the limit, use the --no-limit option.")
         if dry_run:
-            print(">>> This was a dry run.  To send messages, use the --no-dry-run option.")
+            print((">>> This was a dry run.  "
+                  "To send messages, use the --no-dry-run option."))
 
     except jinja2.exceptions.TemplateError as err:
         print(">>> Error in Jinja2 template: {}".format(err))
