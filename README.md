@@ -152,9 +152,6 @@ Your number is 42.
 >>> sent message 1
 ```
 
-### Bounced messages
-If there is an error sending email, your system may report that you have mail when you log in.  For example, bounce messages may be in `/var/mail/${USER}`.
-
 # A more complicated example
 This example will send progress reports to students.  The template uses some more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
 
