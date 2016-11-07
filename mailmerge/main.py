@@ -50,7 +50,17 @@ def sendmail(text, config_filename):
     # Send message
     smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
     smtp.login(sendmail.username, sendmail.password)
-    smtp.send_message(message)
+    try:
+        # Python 3.x
+        smtp.send_message(msg)
+    except AttributeError:
+        # Python 2.7.x
+        smtp.sendmail(
+            message['From'],
+            message['To'],
+            message.as_string()
+            )
+        smtp.send_message(message)
     smtp.close()
 
 
