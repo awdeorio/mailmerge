@@ -30,7 +30,7 @@ def sendmail(text, config_filename):
         config = configparser.RawConfigParser()
         config.read(config_filename)
         sendmail.host = config.get("smtp_server", "host")
-        sendmail.port = config.get("smtp_server", "port")
+        sendmail.port = int(config.get("smtp_server", "port"))
         sendmail.username = config.get("smtp_server", "username")
         print(">>> Read SMTP server configuration from {}".format(
             config_filename))
@@ -50,7 +50,16 @@ def sendmail(text, config_filename):
     # Send message
     smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
     smtp.login(sendmail.username, sendmail.password)
-    smtp.send_message(message)
+    try:
+        # Python 3.x
+        smtp.send_message(message)
+    except AttributeError:
+        # Python 2.7.x
+        smtp.sendmail(
+            message["from"],
+            message["to"],
+            message.as_string(),
+            )
     smtp.close()
 
 
