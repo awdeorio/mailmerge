@@ -52,7 +52,7 @@ def sendmail(text, config_filename):
     smtp.login(sendmail.username, sendmail.password)
     try:
         # Python 3.x
-        smtp.send_message(msg)
+        smtp.send_message(message)
     except AttributeError:
         # Python 2.7.x
         smtp.sendmail(
