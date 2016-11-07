@@ -30,7 +30,7 @@ def sendmail(text, config_filename):
         config = configparser.RawConfigParser()
         config.read(config_filename)
         sendmail.host = config.get("smtp_server", "host")
-        sendmail.port = config.get("smtp_server", "port")
+        sendmail.port = int(config.get("smtp_server", "port"))
         sendmail.username = config.get("smtp_server", "username")
         print(">>> Read SMTP server configuration from {}".format(
             config_filename))
@@ -56,11 +56,10 @@ def sendmail(text, config_filename):
     except AttributeError:
         # Python 2.7.x
         smtp.sendmail(
-            message['From'],
-            message['To'],
-            message.as_string()
+            message["from"],
+            message["to"],
+            message.as_string(),
             )
-        smtp.send_message(message)
     smtp.close()
 
 
