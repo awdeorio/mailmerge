@@ -110,7 +110,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 @click.command(context_settings=CONTEXT_SETTINGS)
 @click.option("--sample", is_flag=True, default=False,
-              help="Create sample database and template email files")
+              help="Create sample database, template email, and config")
 @click.option("--dry-run/--no-dry-run", default=True,
               help="Don't send email, just print")
 @click.option("--limit", is_flag=False, default=1,
@@ -140,8 +140,7 @@ def main(sample=False,
 
     A simple, command line mail merge tool.
 
-    Render an email template for each line in a CSV database.  Send messages
-    with sendmail.
+    Render an email template for each line in a CSV database.
     """
 
     # Create a sample email template and database if there isn't one already
