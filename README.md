@@ -12,7 +12,7 @@ http://andrewdeorio.com<br>
 $ pip install mailmerge
 $ mailmerge
 ```
-If you get *error: could not create '/usr/local/lib/python2.7/dist-packages/mailmerge': Permission denied*, use `sudo pip install mailmerge`.
+If you get a `Permission denied` error, use `sudo pip install mailmerge` or `virtualenv venv && source venv/bin/activate && pip install mailmerge`
 
 # Example
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
@@ -23,21 +23,21 @@ $ mailmerge --sample
 ```
 
 ### Edit the SMTP server config `mailmerge_server.conf`
-The defaults are set up for gmail.  Be sure to change your username.
-
-NOTE: If you use 2-factor authentication, you might need to go through the process for setting a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page..
+The defaults are set up for gmail.  Be sure to change your username.  If you use 2-factor authentication, you may need to set up a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page.
 ```
 [smtp_server]
 host = smtp.gmail.com
 port = 465
+security = SSL/TLS
 username = YOUR_USERNAME_HERE
 ```
 
-Here's another example for `umich.edu` SMTP servers:
+Here's another example for University of Michigan EECS servers:
 ```
 [smtp_server]
-host = smtp.mail.umich.edu
-port = 465
+host = newman.eecs.umich.edu
+port = 25
+security = STARTTLS
 username = YOUR_USERNAME_HERE
 ```
 
@@ -237,7 +237,3 @@ Test python2/python3 compatibility
 ```
 ./bin/test_python2_python3
 ```
-
-
-# Todo
-* `--output` option for log file
