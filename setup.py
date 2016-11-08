@@ -13,7 +13,6 @@ setup(
     download_url = "https://github.com/awdeorio/mailmerge/tarball/1.6.2",
     license="MIT",
     packages = ["mailmerge"],
-    scripts=["bin/mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
     "click>=6.6",
@@ -23,4 +22,8 @@ setup(
     "sh>=1.11",
     ],
     test_suite='nose2.collector.collector',
+    entry_points="""
+    [console_scripts]
+    mailmerge=mailmerge.main:main
+    """
 )
