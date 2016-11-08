@@ -47,7 +47,7 @@ def test():
         os.remove(CONFIG_FILENAME_DEFAULT)
 
     # Object references local command
-    mailmerge_cmd = sh.Command("./bin/mailmerge")
+    mailmerge_cmd = sh.Command("mailmerge")
 
     # Create sample input files
     output = mailmerge_cmd("--sample")
