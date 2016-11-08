@@ -30,13 +30,15 @@ def sendmail(text, config_filename):
         config = configparser.RawConfigParser()
         config.read(config_filename)
         sendmail.host = config.get("smtp_server", "host")
-        sendmail.port = int(config.get("smtp_server", "port"))
+        sendmail.port = config.getint("smtp_server", "port")
         sendmail.username = config.get("smtp_server", "username")
+        sendmail.security = config.get("smtp_server", "security")
         print(">>> Read SMTP server configuration from {}".format(
             config_filename))
         print(">>>   host = {}".format(sendmail.host))
         print(">>>   port = {}".format(sendmail.port))
         print(">>>   username = {}".format(sendmail.username))
+        print(">>>   security = {}".format(sendmail.security))
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
@@ -47,9 +49,23 @@ def sendmail(text, config_filename):
     # Parse message headers
     message = email.parser.Parser().parsestr(text)
 
-    # Send message
-    smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
+    # Connect to SMTP server
+    if sendmail.security == "SSL/TLS":
+        smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
+    elif sendmail.security == "STARTTLS":
+        smtp = smtplib.SMTP(sendmail.host, sendmail.port)
+        smtp.ehlo()
+        smtp.starttls()
+        smtp.ehlo()
+    elif sendmail.security == "Never":
+        smtp = smtplib.SMTP(sendmail.host, sendmail.port)
+    else:
+        raise configparser.Error("Unrecognized security type: {}".format(sendmail.security))
+
+    # Send credentials
     smtp.login(sendmail.username, sendmail.password)
+
+    # Send message
     try:
         # Python 3.x
         smtp.send_message(message)
@@ -97,10 +113,33 @@ def create_sample_input_files(template_filename,
         sys.exit(1)
     with open(config_filename, "w") as config_file:
         config_file.write(
-            '[smtp_server]\n'
-            'host = smtp.gmail.com\n'
-            'port = 465\n'
-            'username = YOUR_USERNAME_HERE\n'
+            "# Example: GMail\n"
+            "[smtp_server]\n"
+            "host = smtp.gmail.com\n"
+            "port = 465\n"
+            "security = SSL/TLS\n"
+            "username = YOUR_USERNAME_HERE\n"
+            "#\n"
+            "# Example: University of Michigan\n"
+            "# [smtp_server]\n"
+            "# host = smtp.mail.umich.edu\n"
+            "# port = 465\n"
+            "# security = SSL/TLS\n"
+            "# username = YOUR_USERNAME_HERE\n"
+            "#\n"
+            "# Example: University of Michigan EECS Dept., with STARTTLS security\n"
+            "# [smtp_server]\n"
+            "# host = newman.eecs.umich.edu\n"
+            "# port = 25\n"
+            "# security = STARTTLS\n"
+            "# username = YOUR_USERNAME_HERE\n"
+            "#\n"
+            "# Example: University of Michigan EECS Dept., with no encryption\n"
+            "# [smtp_server]\n"
+            "# host = newman.eecs.umich.edu\n"
+            "# port = 25\n"
+            "# security = Never\n"
+            "# username = YOUR_USERNAME_HERE\n"
             )
     print("Edit these files, and then run mailmerge again")
 
