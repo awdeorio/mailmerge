@@ -109,6 +109,7 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
 
 
 @click.command(context_settings=CONTEXT_SETTINGS)
+@click.version_option() #version autodetected via setuptools
 @click.option("--sample", is_flag=True, default=False,
               help="Create sample database, template email, and config")
 @click.option("--dry-run/--no-dry-run", default=True,
