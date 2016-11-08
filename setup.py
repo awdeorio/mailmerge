@@ -6,7 +6,7 @@ except ImportError:
 setup(
     name="mailmerge",
     description = "A simple, command line mail merge tool",
-    version="1.6.2",
+    version="1.7.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
