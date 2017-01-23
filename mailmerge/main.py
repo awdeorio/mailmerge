@@ -13,6 +13,8 @@ import getpass
 import csv
 import jinja2
 import click
+import importlib
+import inspect
 
 
 # Configuration
@@ -169,19 +171,33 @@ CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
               default=CONFIG_FILENAME_DEFAULT,
               help="configuration file name; default " +
                    CONFIG_FILENAME_DEFAULT)
+@click.option("--template-functions", "template_functions",
+              default='')
+
 def main(sample=False,
          dry_run=True,
          limit=1,
          no_limit=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
-         config_filename=CONFIG_FILENAME_DEFAULT):
+         config_filename=CONFIG_FILENAME_DEFAULT,
+         template_functions=''):
     """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
 
     A simple, command line mail merge tool.
 
     Render an email template for each line in a CSV database.
     """
+    # Load jinja env for easy template loading
+    env = jinja2.Environment(loader=jinja2.FileSystemLoader('./'))
+    # Load external functions if specified by user
+    if template_functions:
+        #import module by string
+        i = importlib.import_module(template_functions)
+        all_functions = inspect.getmembers(i, inspect.isfunction)
+        # add functions to jinja environment
+        for func in all_functions: 
+            env.globals[func[0]] = func[1]
 
     # Create a sample email template and database if there isn't one already
     if sample:
@@ -200,10 +216,7 @@ def main(sample=False,
 
     try:
         # Read template
-        with open(template_filename, "r") as template_file:
-            content = template_file.read()
-            content += "\n"
-            template = jinja2.Template(content)
+        template = env.get_template(template_filename)
 
         # Read CSV file database
         database = []

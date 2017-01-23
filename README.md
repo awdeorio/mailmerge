@@ -237,3 +237,44 @@ Test python2/python3 compatibility
 ```
 ./bin/test_python2_python3
 ```
+
+# Adding custom functions
+You can import functions you have written to be used in the email template.
+```
+$ mailmerge --dry-run --template-functions [nameOfFunctionsFile]
+```
+Where [nameOfFunctionsFile] is a python file.
+
+### Example
+Contents of myfuncs.py
+```
+def n_multiply(input, n):
+	return input * n
+```
+
+Contents of mailmerge_template.txt
+```
+TO: {{ email }}
+SUBJECT: Testing mailmerge imported functions
+FROM: My Self <myself@mydomain.com>
+
+Hi, {{ name }},
+
+I {{ n_multiply('love', 3) }} functions.
+```
+
+Running mailmerge
+```
+$ mailmerge --dry-run --limit 1 --template-functions myfuncs
+>>> message 0
+TO: myself@mydomain.com
+SUBJECT: Testing mailmerge imported functions
+FROM: My Self <myself@mydomain.com>
+
+Hi, Myself,
+
+I lovelovelove functions.
+>>> sent message 0 DRY RUN
+>>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+>>> This was a dry run.  To send messages, use the --no-dry-run option.
+```
