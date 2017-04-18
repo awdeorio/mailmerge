@@ -11,7 +11,7 @@ from mailmerge import \
      CONFIG_FILENAME_DEFAULT
 
 CORRECT_OUTPUT = \
-""">>> message 0
+u""">>> message 0
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
