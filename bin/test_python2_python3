@@ -2,12 +2,22 @@
 #
 # Install and run tests with python2 and again with python3
 
+# Check for virtual env
+if env | grep -q VIRTUAL_ENV; then
+  echo "Error: deactivate your virtual environment first"
+  echo "Try \`deactivate\`"
+  exit 1
+fi
+
 # Stop on errors, print commands
 set -e
 set -x
 
 # Clean up
-rm -rf venv2/ venv3/
+rm -rf venv2/ venv3/ \
+   mailmerge_template.txt \
+   mailmerge_database.csv \
+   mailmerge_.csv
 
 # Run unit tests with python2
 echo "Testing with python2"
@@ -18,9 +28,10 @@ nose2
 deactivate &> /dev/null
 
 # Test with python3
+echo "Testing with python3"
 virtualenv -p python3 venv3 &> /dev/null
 source venv3/bin/activate &> /dev/null
-pip install . &> /dev/null
+pip3 install . &> /dev/null
 nose2
 deactivate &> /dev/null
 

@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 
 import os
+import io
 import sys
 import smtplib
 import email.parser
@@ -87,60 +88,60 @@ def create_sample_input_files(template_filename,
     if os.path.exists(template_filename):
         print("Error: file exists: " + template_filename)
         sys.exit(1)
-    with open(template_filename, "w") as template_file:
+    with io.open(template_filename, "w") as template_file:
         template_file.write(
-            "TO: {{email}}\n"
-            "SUBJECT: Testing mailmerge\n"
-            "FROM: My Self <myself@mydomain.com>\n"
-            "\n"
-            "Hi, {{name}},\n"
-            "\n"
-            "Your number is {{number}}.\n"
-            )
+            u"TO: {{email}}\n"
+            u"SUBJECT: Testing mailmerge\n"
+            u"FROM: My Self <myself@mydomain.com>\n"
+            u"\n"
+            u"Hi, {{name}},\n"
+            u"\n"
+            u"Your number is {{number}}.\n"
+        )
     print("Creating sample database {}".format(database_filename))
     if os.path.exists(database_filename):
         print("Error: file exists: " + database_filename)
         sys.exit(1)
-    with open(database_filename, "w") as database_file:
+    with io.open(database_filename, "w") as database_file:
         database_file.write(
-            'email,name,number\n'
-            'myself@mydomain.com,"Myself",17\n'
-            'bob@bobdomain.com,"Bob",42\n'
-            )
+            u'email,name,number\n'
+            u'myself@mydomain.com,"Myself",17\n'
+            u'bob@bobdomain.com,"Bob",42\n'
+        )
     print("Creating sample config file {}".format(config_filename))
     if os.path.exists(config_filename):
         print("Error: file exists: " + config_filename)
         sys.exit(1)
-    with open(config_filename, "w") as config_file:
+    with io.open(config_filename, "w") as config_file:
         config_file.write(
-            "# Example: GMail\n"
-            "[smtp_server]\n"
-            "host = smtp.gmail.com\n"
-            "port = 465\n"
-            "security = SSL/TLS\n"
-            "username = YOUR_USERNAME_HERE\n"
-            "#\n"
-            "# Example: University of Michigan\n"
-            "# [smtp_server]\n"
-            "# host = smtp.mail.umich.edu\n"
-            "# port = 465\n"
-            "# security = SSL/TLS\n"
-            "# username = YOUR_USERNAME_HERE\n"
-            "#\n"
-            "# Example: University of Michigan EECS Dept., with STARTTLS security\n"
-            "# [smtp_server]\n"
-            "# host = newman.eecs.umich.edu\n"
-            "# port = 25\n"
-            "# security = STARTTLS\n"
-            "# username = YOUR_USERNAME_HERE\n"
-            "#\n"
-            "# Example: University of Michigan EECS Dept., with no encryption\n"
-            "# [smtp_server]\n"
-            "# host = newman.eecs.umich.edu\n"
-            "# port = 25\n"
-            "# security = Never\n"
-            "# username = YOUR_USERNAME_HERE\n"
-            )
+            u"# Example: GMail\n"
+            u"[smtp_server]\n"
+            u"host = smtp.gmail.com\n"
+            u"port = 465\n"
+            u"security = SSL/TLS\n"
+            u"username = YOUR_USERNAME_HERE\n"
+            u"#\n"
+            u"# Example: University of Michigan\n"
+            u"# [smtp_server]\n"
+            u"# host = smtp.mail.umich.edu\n"
+            u"# port = 465\n"
+            u"# security = SSL/TLS\n"
+            u"# username = YOUR_USERNAME_HERE\n"
+            u"#\n"
+            u"# Example: University of Michigan EECS Dept., with STARTTLS security\n"
+            u"# [smtp_server]\n"
+            u"# host = newman.eecs.umich.edu\n"
+            u"# port = 25\n"
+            u"# security = STARTTLS\n"
+            u"# username = YOUR_USERNAME_HERE\n"
+            u"#\n"
+            u"# Example: University of Michigan EECS Dept., with no encryption\n"
+            u"# [smtp_server]\n"
+            u"# host = newman.eecs.umich.edu\n"
+            u"# port = 25\n"
+            u"# security = Never\n"
+            u"# username = YOUR_USERNAME_HERE\n"
+        )
     print("Edit these files, and then run mailmerge again")
 
 
@@ -200,14 +201,14 @@ def main(sample=False,
 
     try:
         # Read template
-        with open(template_filename, "r") as template_file:
+        with io.open(template_filename, "r") as template_file:
             content = template_file.read()
-            content += "\n"
+            content += u"\n"
             template = jinja2.Template(content)
 
         # Read CSV file database
         database = []
-        with open(database_filename, "r") as database_file:
+        with io.open(database_filename, "r") as database_file:
             reader = csv.DictReader(database_file)
             for row in reader:
                 database.append(row)
