@@ -220,6 +220,30 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
+# HTML formatting example
+This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
+
+**mailmerge_template.txt**
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+Content-Type: text/html
+
+<html>
+<body>
+
+<p>Hi, {{name}},</p>
+
+<p>Your number is {{number}}.</p>
+
+<p>Sent by <a href="https://github.com/awdeorio/mailmerge">mailmerge</a></p>
+
+</body>
+</html>
+```
+
+
 # Hacking
 Set up development environment.  This will install a `mailmerge` executable in your `PATH` which points to your python development source code.
 ```
