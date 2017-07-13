@@ -17,3 +17,9 @@ set -x
 
 # Unit tests
 python -m unittest discover tests
+
+# Success
+set +x
+python --version
+echo "PASS functional tests"
+exit 0

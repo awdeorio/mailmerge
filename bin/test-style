@@ -41,3 +41,9 @@ set -x
 pycodestyle ${SRC}
 pydocstyle ${SRC}
 pylint --reports=n ${SRC}
+
+# Success
+set +x
+python --version
+echo "PASS style tests"
+exit 0

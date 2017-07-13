@@ -2,6 +2,14 @@
 #
 # Regression test with python2 and python3.  Tests both style and functional.
 
+# Stop on errors
+set -e
+set -o pipefail
+
+# Check working directory
+PROJECT_ROOT=`cd $(dirname $0)/.. && pwd -P`
+cd ${PROJECT_ROOT}
+
 # Check for virtual env
 if [ -n "${VIRTUAL_ENV}" ]; then
   echo "Error: detected virtual environment $VIRTUAL_ENV.  Try:"
@@ -10,20 +18,13 @@ if [ -n "${VIRTUAL_ENV}" ]; then
 fi
 
 # Check for stale files
-if [ -n "`git clean -xdn`" ]; then
-  git clean -xdn
-  echo "Error: found stale build products or uncommitted files.  Try:"
-  echo "$ git clean -xdf"
+if [ -d env2 ] || [ -d env3 ]; then
+  echo "Error: detected virtual environment clobber.  Try:"
+  echo "$ rm -rf env2 env3"
   exit 1
 fi
 
-# Check working directory
-PROJECT_ROOT=`cd $(dirname $0)/.. && pwd -P`
-cd ${PROJECT_ROOT}
-
-# Stop on errors, print commands
-set -e
-set -o pipefail
+# Print commands
 set -x
 
 # Run unit tests with python2
