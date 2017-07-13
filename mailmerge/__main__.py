@@ -9,10 +9,7 @@ import mailmerge.api
 import click
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
+@click.command(context_settings={"help_option_names": ['-h', '--help']})
 @click.version_option()  # Auto detect version
 @click.option("--sample", is_flag=True, default=False,
               help="Create sample database, template email, and config")
