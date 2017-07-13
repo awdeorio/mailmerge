@@ -12,8 +12,9 @@ fi
 # Check for stale files
 if [ -n "`git clean -xdn`" ]; then
   git clean -xdn
-  echo "Warning: found stale build products or uncommitted files.  Try:"
+  echo "Error: found stale build products or uncommitted files.  Try:"
   echo "$ git clean -xdf"
+  exit 1
 fi
 
 # Check working directory
@@ -27,25 +28,23 @@ set -x
 
 # Run unit tests with python2
 echo "Testing with python2"
-if [ ! -d env2 ]; then
-  virtualenv -p python2 env2 &> /dev/null
-fi
+virtualenv -p python2 env2 &> /dev/null
 source env2/bin/activate &> /dev/null
 pip install . &> /dev/null
 ./bin/test-style
 ./bin/test-functional
 deactivate &> /dev/null
+rm -rf env2
 
 # Test with python3
 echo "Testing with python3"
-if [ ! -d env3 ]; then
-  python3 -m venv env3 &> /dev/null
-fi
+python3 -m venv env3 &> /dev/null
 source env3/bin/activate &> /dev/null
 pip install . &> /dev/null
 ./bin/test-style
 ./bin/test-functional
 deactivate &> /dev/null
+rm -rf env3
 
 # All done
 set +x
