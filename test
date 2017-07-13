@@ -1,0 +1,34 @@
+#!/bin/bash
+#
+# Regression test
+#
+# Andrew DeOrio <awdeorio@umich.edu>
+
+
+SRC="\
+  mailmerge
+  setup.py
+"
+
+# Stop on errors
+set -e
+set -o pipefail
+
+# Make sure tools are installed locally
+if ! which pylint | grep -q env &> /dev/null ||
+   ! which pydocstyle | grep -q env &> /dev/null ||
+   ! which pycodestyle | grep -q env &> /dev/null; then
+  set -x  # Print commands
+  pip install pylint pycodestyle pydocstyle
+fi
+
+# Print commands
+set -x
+
+# Test code style
+pycodestyle ${SRC}
+pydocstyle ${SRC}
+pylint --reports=n ${SRC}
+
+# Unit tests
+python -m unittest discover tests

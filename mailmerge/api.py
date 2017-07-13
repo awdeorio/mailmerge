@@ -14,7 +14,6 @@ import configparser
 import getpass
 import csv
 import jinja2
-import click
 
 
 # Configuration
@@ -24,10 +23,8 @@ CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
 
 
 def sendmail(text, config_filename):
-    """Send email message using Python SMTP library"""
-
+    """Send email message using Python SMTP library."""
     # Read config file from disk to get SMTP server host, port, username
-    # FIXME: move config stuff out of this function?
     if not hasattr(sendmail, "host"):
         config = configparser.RawConfigParser()
         config.read(config_filename)
@@ -62,7 +59,8 @@ def sendmail(text, config_filename):
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
     else:
-        raise configparser.Error("Unrecognized security type: {}".format(sendmail.security))
+        raise configparser.Error("Unrecognized security type: {}".format(
+            sendmail.security))
 
     # Send credentials
     smtp.login(sendmail.username, sendmail.password)
@@ -84,7 +82,7 @@ def sendmail(text, config_filename):
 def create_sample_input_files(template_filename,
                               database_filename,
                               config_filename):
-    """Create sample template email and database"""
+    """Create sample template email and database."""
     print("Creating sample template email {}".format(template_filename))
     if os.path.exists(template_filename):
         print("Error: file exists: " + template_filename)
@@ -129,14 +127,14 @@ def create_sample_input_files(template_filename,
             u"# security = SSL/TLS\n"
             u"# username = YOUR_USERNAME_HERE\n"
             u"#\n"
-            u"# Example: University of Michigan EECS Dept., with STARTTLS security\n"
+            u"# Example: University of Michigan EECS Dept., with STARTTLS security\n"  # noqa: E501
             u"# [smtp_server]\n"
             u"# host = newman.eecs.umich.edu\n"
             u"# port = 25\n"
             u"# security = STARTTLS\n"
             u"# username = YOUR_USERNAME_HERE\n"
             u"#\n"
-            u"# Example: University of Michigan EECS Dept., with no encryption\n"
+            u"# Example: University of Michigan EECS Dept., with no encryption\n"  # noqa: E501
             u"# [smtp_server]\n"
             u"# host = newman.eecs.umich.edu\n"
             u"# port = 25\n"
@@ -153,13 +151,14 @@ def main(sample=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
          config_filename=CONFIG_FILENAME_DEFAULT):
-    """mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>
+    """Python API for mailmerge.
+
+    mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>.
 
     A simple, command line mail merge tool.
 
     Render an email template for each line in a CSV database.
     """
-
     # Create a sample email template and database if there isn't one already
     if sample:
         create_sample_input_files(template_filename,
@@ -168,11 +167,11 @@ def main(sample=False,
         sys.exit(0)
     if not os.path.exists(template_filename):
         print("Error: can't find template email " + template_filename)
-        print("Create a sample with --sample or specify a file with --template")
+        print("Create a sample (--sample) or specify a file (--template)")
         sys.exit(1)
     if not os.path.exists(database_filename):
         print("Error: can't find database_filename " + database_filename)
-        print("Create a sample with --sample or specify a file with --database")
+        print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
 
     try:
@@ -213,7 +212,7 @@ def main(sample=False,
                   "To remove the limit, use the --no-limit option.")
         if dry_run:
             print((">>> This was a dry run.  "
-                  "To send messages, use the --no-dry-run option."))
+                   "To send messages, use the --no-dry-run option."))
 
     except jinja2.exceptions.TemplateError as err:
         print(">>> Error in Jinja2 template: {}".format(err))

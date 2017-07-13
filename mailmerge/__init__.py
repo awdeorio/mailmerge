@@ -1,5 +1,5 @@
 """
-Mail merge command line utility and module
+Mail merge module importable API.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
