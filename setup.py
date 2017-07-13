@@ -1,13 +1,18 @@
 """Mailmerge build and install configuration."""
+import os
 
 try:
     from setuptools import setup
 except ImportError:
     from distutils.core import setup
 
+with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme_file:
+    README = readme_file.read()
+
 setup(
     name="mailmerge",
     description="A simple, command line mail merge tool",
+    long_description=README,
     version="1.7.2",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
