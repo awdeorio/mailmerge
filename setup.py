@@ -21,7 +21,6 @@ setup(
         "configparser",
         "jinja2",
     ],
-    test_suite='nose2.collector.collector',
 
     # Python command line utilities will be installed in a PATH-accessible bin/
     entry_points={

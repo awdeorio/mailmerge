@@ -28,6 +28,7 @@ Your number is 42.
 
 
 class TestSimple(unittest.TestCase):
+    """Simple tests of defaults."""
     def setUp(self):
         """Change directory to tests/ before any unit test."""
         os.chdir(os.path.dirname(__file__))
