@@ -13,6 +13,7 @@ class TestUTF8(unittest.TestCase):
 
     def test_uft8(self):
         """Input email template with UTF8."""
+        # pylint: disable=no-self-use
 
         # Run executable on sample input files
         mailmerge.api.main(
