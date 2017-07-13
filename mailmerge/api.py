@@ -45,10 +45,12 @@ def sendmail(text, config_filename):
     message = email.parser.Parser().parsestr(text)
 
     # Prompt for password
-    if not hasattr(sendmail, "password"):
+    if not hasattr(sendmail, "password") and sendmail.security != "Dummy":
         prompt = ">>> password for {} on {}: ".format(sendmail.username,
                                                       sendmail.host)
         sendmail.password = getpass.getpass(prompt)
+    else:
+        sendmail.password = None
 
     # Connect to SMTP server
     if sendmail.security == "SSL/TLS":
