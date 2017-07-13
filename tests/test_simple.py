@@ -35,6 +35,7 @@ class TestSimple(unittest.TestCase):
 
     def test(self):
         """A basic test using the default options"""
+        # pylint: disable=no-self-use
 
         # Run executable on sample input files
         mailmerge.api.main(

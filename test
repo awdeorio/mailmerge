@@ -29,7 +29,7 @@ set -x
 # Test code style
 pycodestyle ${SRC}
 pydocstyle ${SRC}
-pylint --reports=n ${SRC} || true
+pylint --reports=n ${SRC}
 
 # Unit tests
 python -m unittest discover tests

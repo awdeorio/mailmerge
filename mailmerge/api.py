@@ -159,6 +159,8 @@ def main(sample=False,
 
     Render an email template for each line in a CSV database.
     """
+    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
+    # NOTE: this function needs a refactor, then remove ^^^
     # Create a sample email template and database if there isn't one already
     if sample:
         create_sample_input_files(template_filename,
