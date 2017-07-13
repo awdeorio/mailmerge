@@ -1,9 +1,10 @@
 """
-Mail merge using CSV database and jinja2 template email
+Mail merge using CSV database and jinja2 template email.
+
+API implementation.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-
 import os
 import io
 import sys
@@ -145,31 +146,6 @@ def create_sample_input_files(template_filename,
     print("Edit these files, and then run mailmerge again")
 
 
-CONTEXT_SETTINGS = dict(help_option_names=['-h', '--help'])
-
-
-@click.command(context_settings=CONTEXT_SETTINGS)
-@click.version_option() #version autodetected via setuptools
-@click.option("--sample", is_flag=True, default=False,
-              help="Create sample database, template email, and config")
-@click.option("--dry-run/--no-dry-run", default=True,
-              help="Don't send email, just print")
-@click.option("--limit", is_flag=False, default=1,
-              help="Limit the number of messages; default 1")
-@click.option("--no-limit", is_flag=True, default=False,
-              help="Do not limit the number of messages")
-@click.option("--database", "database_filename",
-              default=DATABASE_FILENAME_DEFAULT,
-              help="database CSV file name; default " +
-                   DATABASE_FILENAME_DEFAULT)
-@click.option("--template", "template_filename",
-              default=TEMPLATE_FILENAME_DEFAULT,
-              help="template email file name; default " +
-                   TEMPLATE_FILENAME_DEFAULT)
-@click.option("--config", "config_filename",
-              default=CONFIG_FILENAME_DEFAULT,
-              help="configuration file name; default " +
-                   CONFIG_FILENAME_DEFAULT)
 def main(sample=False,
          dry_run=True,
          limit=1,
@@ -252,6 +228,3 @@ def main(sample=False,
         print(">>> Error reading config file {}: {}".format(
             config_filename, err))
         sys.exit(1)
-
-if __name__ == "__main__":
-    main()

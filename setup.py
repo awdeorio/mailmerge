@@ -15,15 +15,16 @@ setup(
     packages = ["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-    "click",
-    "configparser",
-    "jinja2",
-    "nose2",
-    "sh",
+        "click",
+        "configparser",
+        "jinja2",
     ],
     test_suite='nose2.collector.collector',
-    entry_points="""
-    [console_scripts]
-    mailmerge=mailmerge.main:main
-    """
+
+    # Python command line utilities will be installed in a PATH-accessible bin/
+    entry_points={
+        'console_scripts': [
+            'mailmerge = mailmerge.__main__:cli',
+        ]
+    },
 )
