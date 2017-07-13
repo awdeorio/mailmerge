@@ -81,16 +81,13 @@ def sendmail(text, config_filename):
     smtp.login(sendmail.username, sendmail.password)
 
     # Send message
-    try:
-        # Python 3.x
-        smtp.send_message(message)
-    except AttributeError:
-        # Python 2.7.x
-        smtp.sendmail(
-            message["from"],
-            message["to"],
-            message.as_string(),
-            )
+    # NOTE: we can't use the elegant "smtp.send_message(message)" because it's
+    # python3 only
+    smtp.sendmail(
+        message["from"],
+        message["to"],
+        message.as_string(),
+    )
     smtp.close()
 
 
