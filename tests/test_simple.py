@@ -1,17 +1,9 @@
-"""
-This test runs the mailmerge command line utility in a shell and diffs the
-output.
-"""
-
+"""Test simple example inputs."""
 import os
-import sh
-from mailmerge import \
-     TEMPLATE_FILENAME_DEFAULT, \
-     DATABASE_FILENAME_DEFAULT, \
-     CONFIG_FILENAME_DEFAULT
+import unittest
+import mailmerge
 
-CORRECT_OUTPUT = \
-u""">>> message 0
+CORRECT_OUTPUT = u""">>> message 0
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
@@ -35,30 +27,19 @@ Your number is 42.
 """
 
 
-def test():
-    """A basic test using the default options"""
+class TestSimple(unittest.TestCase):
+    def setUp(self):
+        """Change directory to tests/ before any unit test."""
+        os.chdir(os.path.dirname(__file__))
 
-    # Remove input files, if they exist
-    if os.path.exists(DATABASE_FILENAME_DEFAULT):
-        os.remove(DATABASE_FILENAME_DEFAULT)
-    if os.path.exists(TEMPLATE_FILENAME_DEFAULT):
-        os.remove(TEMPLATE_FILENAME_DEFAULT)
-    if os.path.exists(CONFIG_FILENAME_DEFAULT):
-        os.remove(CONFIG_FILENAME_DEFAULT)
+    def test(self):
+        """A basic test using the default options"""
 
-    # Object references local command
-    mailmerge_cmd = sh.Command("mailmerge")
-
-    # Create sample input files
-    output = mailmerge_cmd("--sample")
-
-    # Run executable on sample input files
-    output = mailmerge_cmd("--dry-run", "--no-limit")
-
-    # Check output
-    assert output == CORRECT_OUTPUT
-
-    # Clean up
-    os.remove(TEMPLATE_FILENAME_DEFAULT)
-    os.remove(DATABASE_FILENAME_DEFAULT)
-    os.remove(CONFIG_FILENAME_DEFAULT)
+        # Run executable on sample input files
+        mailmerge.api.main(
+            database_filename="test_simple.database.csv",
+            template_filename="test_simple.template.txt",
+            config_filename="test_simple.server.conf",
+            dry_run=True,
+            no_limit=True,
+        )
