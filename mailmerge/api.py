@@ -22,7 +22,7 @@ try:
     # Python 2.7.x
     import future.backports.email as email
     import future.backports.email.parser  # pylint: disable=unused-import
-except AttributeError:
+except ImportError:
     # Python 3.x
     import email.parser
 
