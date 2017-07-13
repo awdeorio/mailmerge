@@ -1,10 +1,21 @@
-*.pyc
-*~
+# Mailmerge config files
 mailmerge_database.csv
 mailmerge_template.txt
 mailmerge_server.conf
-venv/
-.venv/
+
+# Python temporary files
+*.pyc
+__pycache__
+
+# Python virtual environment 
+/env/
+/env2/
+/env3/
+
+# Python distribution productions
 dist/
 build/
-mailmerge.egg-info/
+*.egg-info/
+
+# Editors
+*~
