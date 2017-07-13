@@ -1,0 +1,19 @@
+TO: {{email}}
+SUBJECT: Barocker Stückwahl
+FROM: Tobias Giess <tobias.giess@gmail.com>
+
+Hallo {{firstname}},
+
+Die Barocker Stückwahl ist eröffnet!
+
+Die Barocker Stückwahl läuft dieses Jahr in mehreren Phasen ab.
+
+1. Phase: Du kannst maximal 2 Vorschläge bis zur GV (5. Mai) abgeben.
+2. Phase: Die MuKo macht eine erste Triage und wird ungeeignete Stücke wieder entfernen.
+3. Phase: Abstimmung, jeder darf für 2 Vorschläge voten.
+4. Phase: (evtl.) 2. Abstimmung, jeder darf nur noch für 1 Vorschlag voten.
+
+Hier ist dein persönlicher Link für die Barocker Stückwahl. Gebe den Link niemanden weiter!
+
+Grüsse
+Die MuKo
