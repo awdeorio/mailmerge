@@ -15,6 +15,7 @@ import configparser
 import getpass
 import csv
 import jinja2
+from . import smtp_dummy
 
 
 # Configuration
@@ -40,14 +41,14 @@ def sendmail(text, config_filename):
         print(">>>   username = {}".format(sendmail.username))
         print(">>>   security = {}".format(sendmail.security))
 
+    # Parse message headers
+    message = email.parser.Parser().parsestr(text)
+
     # Prompt for password
     if not hasattr(sendmail, "password"):
         prompt = ">>> password for {} on {}: ".format(sendmail.username,
                                                       sendmail.host)
         sendmail.password = getpass.getpass(prompt)
-
-    # Parse message headers
-    message = email.parser.Parser().parsestr(text)
 
     # Connect to SMTP server
     if sendmail.security == "SSL/TLS":
@@ -59,6 +60,8 @@ def sendmail(text, config_filename):
         smtp.ehlo()
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
+    elif sendmail.security == "Dummy":
+        smtp = smtp_dummy.SMTP_dummy()
     else:
         raise configparser.Error("Unrecognized security type: {}".format(
             sendmail.security))
