@@ -8,7 +8,7 @@ http://andrewdeorio.com<br>
 
 # Quickstart
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
-```
+```shellsession
 $ pip install mailmerge
 $ mailmerge
 ```
@@ -18,12 +18,16 @@ If you get a `Permission denied` error, use `sudo pip install mailmerge` or `vir
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
 ### Create a sample template email, database, and config
-```
+```shellsession
 $ mailmerge --sample
+Creating sample template email mailmerge_template.txt
+Creating sample database mailmerge_database.csv
+Creating sample config file mailmerge_server.conf
+Edit these files, and then run mailmerge again
 ```
 
 ### Edit the SMTP server config `mailmerge_server.conf`
-The defaults are set up for gmail.  Be sure to change your username.  If you use 2-factor authentication, you may need to set up a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page.
+The defaults are set up for gmail.  Be sure to change your username.  If you use 2-factor authentication, you may need to set up a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page.  Other configuration examples are in the comments of `mailmerge_server.conf`.
 ```
 [smtp_server]
 host = smtp.gmail.com
@@ -32,18 +36,8 @@ security = SSL/TLS
 username = YOUR_USERNAME_HERE
 ```
 
-Here's another example for University of Michigan EECS servers:
-```
-[smtp_server]
-host = newman.eecs.umich.edu
-port = 25
-security = STARTTLS
-username = YOUR_USERNAME_HERE
-```
-
-
 ### Edit the template email message `mailmerge_template.txt`
-Take note that `TO`, `SUBJECT`, and `FROM` fields are required.  The remainder is the body of the message.  Use `{{ }}` to indicate customized parameters that will be read from the database.  For example, `{{email}}` will be filled in from the `email` column of `mailmerge_database.csv`.
+The `TO`, `SUBJECT`, and `FROM` fields are required.  The remainder is the body of the message.  Use `{{ }}` to indicate customized parameters that will be read from the database.  For example, `{{email}}` will be filled in from the `email` column of `mailmerge_database.csv`.
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -66,7 +60,7 @@ bob@bobdomain.com,"Bob",42
 
 ### Dry run
 First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
-```
+```shellsession
 $ mailmerge --dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -83,7 +77,7 @@ Your number is 17.
 ```
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
-```
+```shellsession
 $ mailmerge --dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -110,7 +104,7 @@ Your number is 42.
 
 ### Send first email
 We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email*.  Recall that you added yourself as the first email recipient.
-```
+```shellsession
 $ mailmerge --no-dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -128,7 +122,7 @@ Your number is 17.
 Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
 
 ### Send all emails
-```
+```shellsession
 $ mailmerge --no-dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -153,7 +147,7 @@ Your number is 42.
 ```
 
 # A more complicated example
-This example will send progress reports to students.  The template uses some more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
+This example will send progress reports to students.  The template uses more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
 
 **progress_report_template.txt**
 ```
@@ -196,7 +190,7 @@ failing@fixme.com,"Failing Name",0,0,0,0,F
 
 **Dry run one message**<br>
 Test one message without actually sending any email.
-```
+```shellsession
 $ mailmerge --template progress_report_template.txt --database progress_report_database.csv 
 >>> message 0
 TO: myself@mydomain.com
@@ -245,19 +239,23 @@ Content-Type: text/html
 
 
 # Hacking
-Set up development environment.  This will install a `mailmerge` executable in your `PATH` which points to your python development source code.
-```
-virtualenv venv
-source venv/bin/activate
-pip install -e .   # same as `python setup.py develop`
-```
-
-Run unit tests
-```
-nose2
+Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
+```shellsession
+$ python3 -m venv env  # or "virtualenv env" for python2
+$ source env/bin/activate
+$ pip install --editable .
 ```
 
-Test python2/python3 compatibility
+Test code style and run unit tests
+```shellsession
+$ ./bin/test-style
+PASS style tests
+$ ./bin/test-functional
+PASS functional tests
 ```
-./bin/test_python2_python3
+
+Test python2/python3 compatibility.  This will automatically create two virtual environments and run all style and functional tests in each environment.
+```shellsession
+$ ./bin/test_python2_python3
+PASS
 ```

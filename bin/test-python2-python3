@@ -1,0 +1,52 @@
+#!/bin/bash
+#
+# Regression test with python2 and python3.  Tests both style and functional.
+
+# Stop on errors
+set -e
+set -o pipefail
+
+# Check working directory
+PROJECT_ROOT=`cd $(dirname $0)/.. && pwd -P`
+cd ${PROJECT_ROOT}
+
+# Check for virtual env
+if [ -n "${VIRTUAL_ENV}" ]; then
+  echo "Error: detected virtual environment $VIRTUAL_ENV.  Try:"
+  echo "$ deactivate"
+  exit 1
+fi
+
+# Check for stale files
+if [ -d env2 ] || [ -d env3 ]; then
+  echo "Error: detected virtual environment clobber.  Try:"
+  echo "$ rm -rf env2 env3"
+  exit 1
+fi
+
+# Print commands
+set -x
+
+# Run unit tests with python2
+echo "Testing with python2"
+virtualenv -p python2 env2 &> /dev/null
+source env2/bin/activate &> /dev/null
+pip install . &> /dev/null
+./bin/test-style
+./bin/test-functional
+deactivate &> /dev/null
+rm -rf env2
+
+# Test with python3
+echo "Testing with python3"
+python3 -m venv env3 &> /dev/null
+source env3/bin/activate &> /dev/null
+pip install . &> /dev/null
+./bin/test-style
+./bin/test-functional
+deactivate &> /dev/null
+rm -rf env3
+
+# All done
+set +x
+echo "PASS"

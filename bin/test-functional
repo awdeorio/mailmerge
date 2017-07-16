@@ -1,0 +1,25 @@
+#!/bin/bash
+#
+# Regression test
+#
+# Andrew DeOrio <awdeorio@umich.edu>
+
+# Stop on errors, print commands
+set -e
+set -o pipefail
+
+# Check working directory
+PROJECT_ROOT=`cd $(dirname $0)/.. && pwd -P`
+cd ${PROJECT_ROOT}
+
+# Print commands
+set -x
+
+# Unit tests
+python -m unittest discover tests
+
+# Success
+set +x
+python --version
+echo "PASS functional tests"
+exit 0

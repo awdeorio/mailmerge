@@ -1,0 +1,49 @@
+#!/bin/bash
+#
+# Test Python coding style
+#
+# Andrew DeOrio <awdeorio@umich.edu>
+
+
+SRC="\
+  mailmerge
+  tests
+  setup.py
+"
+
+# Stop on errors
+set -e
+set -o pipefail
+
+# Check for virtual env
+if [ -z "${VIRTUAL_ENV}" ]; then
+  echo "Error: did you forget to activate a virtual environment?  Try:"
+  echo "$ python3 -m venv env"
+  echo "$ source env/bin/activate"
+  echo "  OR"
+  echo "$ virtualenv env && source env/bin/activate  # python2"
+  echo "$ source env/bin/activate"
+  exit 1
+fi
+
+# Make sure tools are installed locally
+if ! which pylint | grep -q env &> /dev/null ||
+   ! which pydocstyle | grep -q env &> /dev/null ||
+   ! which pycodestyle | grep -q env &> /dev/null; then
+  set -x  # Print commands
+  pip install pylint pycodestyle pydocstyle
+fi
+
+# Print commands
+set -x
+
+# Test code style
+pycodestyle ${SRC}
+pydocstyle ${SRC}
+pylint --reports=n ${SRC}
+
+# Success
+set +x
+python --version
+echo "PASS style tests"
+exit 0
