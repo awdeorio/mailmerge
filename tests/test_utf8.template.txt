@@ -1,0 +1,48 @@
+To: "{{nome}} {{cognome}}" <{{email}}>
+Subject: [Test] test subject 
+From: Test From <me@example.com>
+Cc: Test CC <me@example.com>
+Reply-To: <another@example.com>
+
+Ciao {{nome}}
+
+Questo è un messaggio inviato automaticamente, dalle nostre registrazioni
+risulta che devi rinnovare l'iscrizione.
+
+Il 1 Maggio di ogni anno scade l'iscrizione all'associazione e
+va rinnovata entro la fine del mese
+
+Come rinnovare
+---------------
+
+Se intendi rinnovare devi versare la quota annuale di iscrizione, pari a 30 EUR,
+tramite bonifico bancario; ecco le coordinate e la **causale**:
+
+  intestazione: Test Intertazione
+  IBAN: GBXXX000012298346625144353655532
+  causale: {{nome}} {{cognome}} rinnovo
+
+  BIC: BICBICBIC
+  Nome istituto: Test Nome Istituto
+
+Per velocizzare la procedura di rinnovo, per favore ove disponibile invia la
+copia della contabile all'indirizzo email another@example.com
+
+Se hai già provveduto al pagamento e ti arriva questa notifica significa che la
+quota non è ancora stata accreditata sul conto corrente dell'associazione ed
+occorre attendere qualche giorno.
+
+Come disdire
+-------------
+
+Se non intendi rinnovare, per favore rispondi a questo messaggio specificando
+la tua intenzione 
+
+Nel caso tu abbia in prestito un kit dell'associazione, per favore organizzati
+per restituircelo il prima possibile.
+
+Ciao e grazie
+Giovanni
+
+--
+Test User <me@example.com>

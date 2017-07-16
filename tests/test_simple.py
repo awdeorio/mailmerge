@@ -41,7 +41,7 @@ class TestSimple(unittest.TestCase):
         mailmerge.api.main(
             database_filename="test_simple.database.csv",
             template_filename="test_simple.template.txt",
-            config_filename="test_simple.server.conf",
+            config_filename="server_dummy.conf",
             dry_run=True,
             no_limit=True,
         )

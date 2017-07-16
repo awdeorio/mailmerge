@@ -10,11 +10,21 @@ import os
 import io
 import sys
 import smtplib
-import email.parser
 import configparser
 import getpass
 import csv
 import jinja2
+from . import smtp_dummy
+
+# The email library is very different in Python2 and Python3.  We need the
+# Python3 version to support UTF8 formatted emails.
+try:
+    # Python 2.7.x
+    import future.backports.email as email
+    import future.backports.email.parser  # pylint: disable=unused-import
+except ImportError:
+    # Python 3.x
+    import email.parser
 
 
 # Configuration
@@ -40,14 +50,16 @@ def sendmail(text, config_filename):
         print(">>>   username = {}".format(sendmail.username))
         print(">>>   security = {}".format(sendmail.security))
 
+    # Parse message headers
+    message = email.parser.Parser().parsestr(text)
+
     # Prompt for password
-    if not hasattr(sendmail, "password"):
+    if not hasattr(sendmail, "password") and sendmail.security != "Dummy":
         prompt = ">>> password for {} on {}: ".format(sendmail.username,
                                                       sendmail.host)
         sendmail.password = getpass.getpass(prompt)
-
-    # Parse message headers
-    message = email.parser.Parser().parsestr(text)
+    else:
+        sendmail.password = None
 
     # Connect to SMTP server
     if sendmail.security == "SSL/TLS":
@@ -59,6 +71,8 @@ def sendmail(text, config_filename):
         smtp.ehlo()
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
+    elif sendmail.security == "Dummy":
+        smtp = smtp_dummy.SMTP_dummy()
     else:
         raise configparser.Error("Unrecognized security type: {}".format(
             sendmail.security))
@@ -67,16 +81,13 @@ def sendmail(text, config_filename):
     smtp.login(sendmail.username, sendmail.password)
 
     # Send message
-    try:
-        # Python 3.x
-        smtp.send_message(message)
-    except AttributeError:
-        # Python 2.7.x
-        smtp.sendmail(
-            message["from"],
-            message["to"],
-            message.as_string(),
-            )
+    # NOTE: we can't use the elegant "smtp.send_message(message)" because it's
+    # python3 only
+    smtp.sendmail(
+        message["from"],
+        message["to"],
+        message.as_string(),
+    )
     smtp.close()
 
 

@@ -11,6 +11,8 @@ __pycache__
 /env/
 /env2/
 /env3/
+/.venv/
+/venv/
 
 # Python distribution productions
 dist/

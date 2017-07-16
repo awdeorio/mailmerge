@@ -25,6 +25,7 @@ setup(
         "click",
         "configparser",
         "jinja2",
+        "future",
     ],
 
     # Python command line utilities will be installed in a PATH-accessible bin/
