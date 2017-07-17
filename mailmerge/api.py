@@ -12,19 +12,11 @@ import sys
 import smtplib
 import configparser
 import getpass
-import csv
+from backports import csv  # UTF8 support in Python 2.x
+import future.backports.email as email  # UTF8 support in Python 2.x
+import future.backports.email.parser  # pylint: disable=unused-import
 import jinja2
 from . import smtp_dummy
-
-# The email library is very different in Python2 and Python3.  We need the
-# Python3 version to support UTF8 formatted emails.
-try:
-    # Python 2.7.x
-    import future.backports.email as email
-    import future.backports.email.parser  # pylint: disable=unused-import
-except ImportError:
-    # Python 3.x
-    import email.parser
 
 
 # Configuration

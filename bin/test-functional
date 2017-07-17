@@ -16,7 +16,7 @@ cd ${PROJECT_ROOT}
 set -x
 
 # Unit tests
-python -m unittest discover tests
+python -m unittest discover --verbose tests
 
 # Success
 set +x
