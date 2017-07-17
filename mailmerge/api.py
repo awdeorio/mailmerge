@@ -12,7 +12,7 @@ import sys
 import smtplib
 import configparser
 import getpass
-import csv
+from backports import csv  # UTF8 support in Python 2.x
 import jinja2
 from . import smtp_dummy
 
