@@ -26,6 +26,7 @@ setup(
         "configparser",
         "jinja2",
         "future",
+        "backports.csv",
     ],
 
     # Python command line utilities will be installed in a PATH-accessible bin/
