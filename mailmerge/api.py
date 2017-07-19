@@ -51,7 +51,7 @@ def sendmail(text, config_filename):
             sendmail.password = None
         else:
             prompt = ">>> password for {} on {}: ".format(sendmail.username,
-                                                      sendmail.host)
+                                                          sendmail.host)
             sendmail.password = getpass.getpass(prompt)
 
     # Connect to SMTP server
