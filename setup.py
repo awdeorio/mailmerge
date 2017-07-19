@@ -17,7 +17,6 @@ setup(
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
-    download_url="https://github.com/awdeorio/mailmerge/tarball/1.7.2",
     license="MIT",
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
