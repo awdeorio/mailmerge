@@ -15,6 +15,7 @@ import getpass
 from backports import csv  # UTF8 support in Python 2.x
 import future.backports.email as email  # UTF8 support in Python 2.x
 import future.backports.email.parser  # pylint: disable=unused-import
+import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
 from . import smtp_dummy
 
@@ -23,6 +24,17 @@ from . import smtp_dummy
 TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
 DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
+
+
+def parsemail(text):
+    """Parse message headers, then remove BCC header."""
+    message = email.parser.Parser().parsestr(text)
+    addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
+        email.utils.getaddresses(message.get_all("CC", [])) + \
+        email.utils.getaddresses(message.get_all("BCC", []))
+    recipients = [x[1] for x in addrs]
+    message.__delitem__("bcc")
+    return (message, recipients)
 
 
 def sendmail(text, config_filename):
@@ -43,7 +55,7 @@ def sendmail(text, config_filename):
         print(">>>   security = {}".format(sendmail.security))
 
     # Parse message headers
-    message = email.parser.Parser().parsestr(text)
+    (message, recipients) = parsemail(text)
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
@@ -73,12 +85,11 @@ def sendmail(text, config_filename):
     # Send credentials
     smtp.login(sendmail.username, sendmail.password)
 
-    # Send message
-    # NOTE: we can't use the elegant "smtp.send_message(message)" because it's
-    # python3 only
+    # Send message.  Note that we can't use the elegant
+    # "smtp.send_message(message)" because that's python3 only
     smtp.sendmail(
         message["from"],
-        message["to"],
+        recipients,
         message.as_string(),
     )
     smtp.close()
