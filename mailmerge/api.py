@@ -15,7 +15,7 @@ import getpass
 from backports import csv  # UTF8 support in Python 2.x
 import future.backports.email as email  # UTF8 support in Python 2.x
 import future.backports.email.parser  # pylint: disable=unused-import
-import future.backports.email.utils
+import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
 from . import smtp_dummy
 
@@ -30,8 +30,8 @@ def parsemail(text):
     """Parse message headers, then remove BCC header."""
     message = email.parser.Parser().parsestr(text)
     addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
-            email.utils.getaddresses(message.get_all("CC", [])) + \
-            email.utils.getaddresses(message.get_all("BCC", []))
+        email.utils.getaddresses(message.get_all("CC", [])) + \
+        email.utils.getaddresses(message.get_all("BCC", []))
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
     return (message, recipients)

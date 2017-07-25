@@ -13,7 +13,6 @@ class SMTP_dummy(object):
     def login(self, login, password):
         """Do nothing."""
 
-
     def sendmail(self, msg_from, msg_to, msg):
         """Remember the recipients."""
         SMTP_dummy.msg_from = msg_from
@@ -24,8 +23,7 @@ class SMTP_dummy(object):
         """Do nothing."""
         pass
 
-
-    def clear():
+    def clear(self):
         """Reset class variables."""
         SMTP_dummy.msg_from = None
         SMTP_dummy.msg_to = []

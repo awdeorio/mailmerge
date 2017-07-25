@@ -11,8 +11,9 @@ class TestCCBCC(unittest.TestCase):
         """Change directory to tests/ before any unit test."""
         os.chdir(os.path.dirname(__file__))
 
-        # Reset dummy SMTP server
-        SMTP_dummy.clear()
+        # Initialize dummy SMTP server
+        self.smtp = SMTP_dummy()
+        self.smtp.clear()
 
     def test_cc_bcc(self):
         """CC recipients should receive a copy."""
@@ -25,13 +26,13 @@ class TestCCBCC(unittest.TestCase):
         )
 
         # Check SMTP server after
-        self.assertEqual(SMTP_dummy.msg_from, "My Self <myself@mydomain.com>")
+        self.assertEqual(self.smtp.msg_from, "My Self <myself@mydomain.com>")
         recipients = ["myself@mydomain.com",
                       "mycolleague@mydomain.com",
                       "secret@mydomain.com"]
-        self.assertEqual(SMTP_dummy.msg_to, recipients)
+        self.assertEqual(self.smtp.msg_to, recipients)
 
         # Make sure BCC recipients are *not* in the message
-        self.assertNotIn("BCC", SMTP_dummy.msg)
-        self.assertNotIn("secret@mydomain.com", SMTP_dummy.msg)
-        self.assertNotIn("Secret", SMTP_dummy.msg)
+        self.assertNotIn("BCC", self.smtp.msg)
+        self.assertNotIn("secret@mydomain.com", self.smtp.msg)
+        self.assertNotIn("Secret", self.smtp.msg)
