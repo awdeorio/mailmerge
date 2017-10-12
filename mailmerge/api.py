@@ -59,7 +59,7 @@ def sendmail(text, config_filename):
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
-        if sendmail.security == "Dummy":
+        if sendmail.security == "Dummy" or sendmail.username == "None":
             sendmail.password = None
         else:
             prompt = ">>> password for {} on {}: ".format(sendmail.username,
@@ -83,7 +83,8 @@ def sendmail(text, config_filename):
             sendmail.security))
 
     # Send credentials
-    smtp.login(sendmail.username, sendmail.password)
+    if sendmail.username != "None":
+        smtp.login(sendmail.username, sendmail.password)
 
     # Send message.  Note that we can't use the elegant
     # "smtp.send_message(message)" because that's python3 only
@@ -135,6 +136,13 @@ def create_sample_input_files(template_filename,
             u"port = 465\n"
             u"security = SSL/TLS\n"
             u"username = YOUR_USERNAME_HERE\n"
+            u"#\n"
+            u"# Example: Wide open\n"
+            u"# [smtp_server]\n"
+            u"# host = open-smtp.example.com\n"
+            u"# port = 25\n"
+            u"# security = Never\n"
+            u"# username = None\n"
             u"#\n"
             u"# Example: University of Michigan\n"
             u"# [smtp_server]\n"
