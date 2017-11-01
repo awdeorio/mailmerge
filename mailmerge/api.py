@@ -17,6 +17,7 @@ import future.backports.email as email  # UTF8 support in Python 2.x
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
+import chardet
 from . import smtp_dummy
 
 
@@ -26,18 +27,28 @@ DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
 
 
-def parsemail(text):
+def parsemail(raw_message):
     """Parse message headers, then remove BCC header."""
-    message = email.parser.Parser().parsestr(text)
+    message = email.parser.Parser().parsestr(raw_message)
+
+    # Detect encoding
+    detected = chardet.detect(bytearray(raw_message, "utf-8"))
+    encoding = detected["encoding"]
+    message.set_charset(encoding)
+    print(">>> encoding {}".format(encoding))
+
+    # Extract recipients
     addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
         email.utils.getaddresses(message.get_all("CC", [])) + \
         email.utils.getaddresses(message.get_all("BCC", []))
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
-    return (message, recipients)
+    text = message.as_string()
+    sender = message["from"]
+    return (text, sender, recipients)
 
 
-def sendmail(text, config_filename):
+def sendmail(text, sender, recipients, config_filename):
     """Send email message using Python SMTP library."""
     # Read config file from disk to get SMTP server host, port, username
     if not hasattr(sendmail, "host"):
@@ -53,9 +64,6 @@ def sendmail(text, config_filename):
         print(">>>   port = {}".format(sendmail.port))
         print(">>>   username = {}".format(sendmail.username))
         print(">>>   security = {}".format(sendmail.security))
-
-    # Parse message headers
-    (message, recipients) = parsemail(text)
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
@@ -88,11 +96,7 @@ def sendmail(text, config_filename):
 
     # Send message.  Note that we can't use the elegant
     # "smtp.send_message(message)" because that's python3 only
-    smtp.sendmail(
-        message["from"],
-        recipients,
-        message.as_string(),
-    )
+    smtp.sendmail(sender, recipients, text)
     smtp.close()
 
 
@@ -203,8 +207,7 @@ def main(sample=False,
     try:
         # Read template
         with io.open(template_filename, "r") as template_file:
-            content = template_file.read()
-            content += u"\n"
+            content = template_file.read() + u"\n"
             template = jinja2.Template(content)
 
         # Read CSV file database
@@ -222,14 +225,18 @@ def main(sample=False,
             print(">>> message {}".format(i))
 
             # Fill in template fields using fields from row of CSV file
-            message = template.render(**row)
-            print(message)
+            raw_message = template.render(**row)
+            print(raw_message)
+
+            # Parse message headers and detect encoding
+            (text, sender, recipients) = parsemail(raw_message)
 
             # Send message
             if dry_run:
                 print(">>> sent message {} DRY RUN".format(i))
             else:
-                sendmail(message, config_filename)
+                # Send message
+                sendmail(text, sender, recipients, config_filename)
                 print(">>> sent message {}".format(i))
 
         # Hints for user
