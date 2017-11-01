@@ -206,8 +206,7 @@ def main(sample=False,
     try:
         # Read template
         with io.open(template_filename, "r") as template_file:
-            content = template_file.read()
-            content += u"\n"
+            content = template_file.read() + u"\n"
             template = jinja2.Template(content)
 
         # Read CSV file database
