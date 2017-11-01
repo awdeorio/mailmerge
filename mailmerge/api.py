@@ -27,21 +27,22 @@ DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
 
 
-def parsemail(raw):
+def parsemail(raw_message):
     """Parse message headers, then remove BCC header."""
-    message = email.parser.Parser().parsestr(raw)
+    message = email.parser.Parser().parsestr(raw_message)
+
+    # Detect encoding
+    detected = chardet.detect(bytearray(raw_message, "utf-8"))
+    encoding = detected["encoding"]
+    message.set_charset(encoding)
+    print(">>> encoding {}".format(encoding))
+
+    # Extract recipients
     addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
         email.utils.getaddresses(message.get_all("CC", [])) + \
         email.utils.getaddresses(message.get_all("BCC", []))
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
-
-    # Detect encoding
-    # import pdb; pdb.set_trace()
-    detected = chardet.detect(message.as_string().encode())
-    encoding = detected["encoding"]
-    print(">>> encoding {}".format(encoding))
-    message.set_charset(encoding)
     text = message.as_string()
     sender = message["from"]
     return (text, sender, recipients)
@@ -227,7 +228,7 @@ def main(sample=False,
             raw_message = template.render(**row)
             print(raw_message)
 
-            # Parse message headers
+            # Parse message headers and detect encoding
             (text, sender, recipients) = parsemail(raw_message)
 
             # Send message
