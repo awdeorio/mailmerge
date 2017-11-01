@@ -238,6 +238,52 @@ Content-Type: text/html
 ```
 
 
+# HTML and plain text formatting example
+This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
+
+**mailmerge_template.txt**
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="outer-boundary"
+
+This is a MIME-encoded message. If you are seeing this, your mail
+reader is old.
+
+--outer-boundary
+Content-Type: text/plain; charset=us-ascii
+
+Hi, {{name}},
+
+Your number is {{number}}.
+
+Sent by mailmerge https://github.com/awdeorio/mailmerge
+
+--outer-boundary
+MIME-Version: 1.0
+Content-Type: multipart/related;
+  type="text/html"; start="<body@here>"; boundary="inner-boundary"
+
+--inner-boundary
+Content-Type: text/html; charset=us-ascii
+Content-Disposition: inline
+Content-ID: <body@here>
+
+<html>
+<body>
+
+<p>Hi, {{name}},</p>
+
+<p>Your number is {{number}}.</p>
+
+<p>Sent by <a href="https://github.com/awdeorio/mailmerge">mailmerge</a></p>
+
+</body>
+</html>
+```
+
 # Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
 ```shellsession
