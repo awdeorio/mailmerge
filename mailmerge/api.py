@@ -17,6 +17,7 @@ import future.backports.email as email  # UTF8 support in Python 2.x
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
+import chardet
 from . import smtp_dummy
 
 
@@ -34,6 +35,13 @@ def parsemail(raw):
         email.utils.getaddresses(message.get_all("BCC", []))
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
+
+    # Detect encoding
+    # import pdb; pdb.set_trace()
+    detected = chardet.detect(message.as_string().encode())
+    encoding = detected["encoding"]
+    print(">>> encoding {}".format(encoding))
+    message.set_charset(encoding)
     text = message.as_string()
     sender = message["from"]
     return (text, sender, recipients)
@@ -220,12 +228,13 @@ def main(sample=False,
             raw_message = template.render(**row)
             print(raw_message)
 
+            # Parse message headers
+            (text, sender, recipients) = parsemail(raw_message)
+
             # Send message
             if dry_run:
                 print(">>> sent message {} DRY RUN".format(i))
             else:
-                # Parse message headers
-                (text, sender, recipients) = parsemail(raw_message)
                 # Send message
                 sendmail(text, sender, recipients, config_filename)
                 print(">>> sent message {}".format(i))

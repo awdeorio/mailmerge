@@ -21,6 +21,7 @@ setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
+        "chardet",
         "click",
         "configparser",
         "jinja2",
