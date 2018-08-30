@@ -239,7 +239,7 @@ def main(sample=False,
                 # Send message
                 try:
                     sendmail(text, sender, recipients, config_filename)
-                except smtplib.SMTPRecipientsRefused as err:
+                except smtplib.SMTPException as err:
                     print(">>> failed to send message {}".format(i))
                     timestamp = '{:%Y-%m-%dT%H:%M:%S}'.format(datetime.datetime.now())
                     print(timestamp, i, err, sep=' ', file=sys.stderr)
