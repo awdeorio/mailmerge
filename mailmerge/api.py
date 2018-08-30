@@ -97,14 +97,8 @@ def sendmail(text, sender, recipients, config_filename):
 
     # Send message.  Note that we can't use the elegant
     # "smtp.send_message(message)" because that's python3 only
-    try:
-        smtp.sendmail(sender, recipients, text)
-    except smtplib.SMTPRecipientsRefused as err:
-        result = err
-    else:
-        result = 0
+    smtp.sendmail(sender, recipients, text)
     smtp.close()
-    return(result)
 
 
 def create_sample_input_files(template_filename,
@@ -243,13 +237,14 @@ def main(sample=False,
                 print(">>> sent message {} DRY RUN".format(i))
             else:
                 # Send message
-                result = sendmail(text, sender, recipients, config_filename)
-                if (result == 0):
-                    print(">>> sent message {}".format(i))
-                else:
+                try:
+                    sendmail(text, sender, recipients, config_filename)
+                except smtplib.SMTPRecipientsRefused as err:
                     print(">>> failed to send message {}".format(i))
                     timestamp = '{:%Y-%m-%dT%H:%M:%S}'.format(datetime.datetime.now())
-                    print(timestamp, i, result, sep=' ', file=sys.stderr)
+                    print(timestamp, i, err, sep=' ', file=sys.stderr)
+                else:
+                    print(">>> sent message {}".format(i))
 
         # Hints for user
         if not no_limit:
