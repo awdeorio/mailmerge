@@ -241,7 +241,7 @@ def main(sample=False,
                     sendmail(text, sender, recipients, config_filename)
                 except smtplib.SMTPException as err:
                     print(">>> failed to send message {}".format(i))
-                    timestamp = '{:%Y-%m-%dT%H:%M:%S}'.format(datetime.datetime.now())
+                    timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
                     print(timestamp, i, err, sep=' ', file=sys.stderr)
                 else:
                     print(">>> sent message {}".format(i))
