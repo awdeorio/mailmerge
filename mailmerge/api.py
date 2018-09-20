@@ -12,13 +12,13 @@ import sys
 import smtplib
 import configparser
 import getpass
+import datetime
 from backports import csv  # UTF8 support in Python 2.x
 import future.backports.email as email  # UTF8 support in Python 2.x
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
 import chardet
-import datetime
 from . import smtp_dummy
 
 
@@ -242,7 +242,9 @@ def main(sample=False,
                     sendmail(text, sender, recipients, config_filename)
                 except smtplib.SMTPException as err:
                     print(">>> failed to send message {}".format(i))
-                    timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(datetime.datetime.now())
+                    timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(
+                        datetime.datetime.now()
+                    )
                     print(timestamp, i, err, sep=' ', file=sys.stderr)
                 else:
                     print(">>> sent message {}".format(i))

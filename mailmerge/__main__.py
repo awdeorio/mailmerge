@@ -5,8 +5,8 @@ Command line interface implementation.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import mailmerge.api
 import click
+import mailmerge.api
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
