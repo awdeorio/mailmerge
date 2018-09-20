@@ -44,6 +44,7 @@ def parsemail(raw_message):
         email.utils.getaddresses(message.get_all("BCC", []))
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
+    message.__setitem__('Date', email.utils.formatdate())
     text = message.as_string()
     sender = message["from"]
     return (text, sender, recipients)
