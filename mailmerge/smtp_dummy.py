@@ -1,7 +1,7 @@
 """Dummy SMTP API."""
 
 
-class SMTP_dummy(object):
+class SMTP_dummy(object):  # pylint: disable=useless-object-inheritance
     # pylint: disable=invalid-name, no-self-use
     """Dummy SMTP API."""
 

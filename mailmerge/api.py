@@ -13,8 +13,9 @@ import smtplib
 import configparser
 import getpass
 import datetime
-from backports import csv  # UTF8 support in Python 2.x
-import future.backports.email as email  # UTF8 support in Python 2.x
+# NOTE: Python 2.x UTF8 support requires csv and email backports
+from backports import csv
+import future.backports.email as email  # pylint: disable=useless-import-alias
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
@@ -190,12 +191,15 @@ def main(sample=False,
     Render an email template for each line in a CSV database.
     """
     # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
+    # pylint: disable=too-many-statements
     # NOTE: this function needs a refactor, then remove ^^^
     # Create a sample email template and database if there isn't one already
     if sample:
-        create_sample_input_files(template_filename,
-                                  database_filename,
-                                  config_filename)
+        create_sample_input_files(
+            template_filename,
+            database_filename,
+            config_filename,
+        )
         sys.exit(0)
     if not os.path.exists(template_filename):
         print("Error: can't find template email " + template_filename)
