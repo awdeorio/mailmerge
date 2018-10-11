@@ -36,8 +36,11 @@ def parsemail(raw_message):
     # Detect encoding
     detected = chardet.detect(bytearray(raw_message, "utf-8"))
     encoding = detected["encoding"]
-    message.set_charset(encoding)
     print(">>> encoding {}".format(encoding))
+    for part in message.walk():
+        if part.get_content_maintype() == 'multipart':
+            continue
+        part.set_charset(encoding)
 
     # Extract recipients
     addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
