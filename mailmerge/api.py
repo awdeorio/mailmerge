@@ -91,7 +91,7 @@ def addattachments(message, attachment_list, attachment_list_parent_dir):
         part.add_header('Content-Disposition',
                         'attachment; filename="{}"'.format(filename))
         message.attach(part)
-        print(">>>   attached {}".format(normalized_path))
+        print(">>> attached {}".format(normalized_path))
 
     return message
 

@@ -284,6 +284,60 @@ Content-ID: <body@here>
 </html>
 ```
 
+# Attachments
+For convenience, `mailmerge` also directly supports sending attachments with emails. Modify the sample `mailmerge_attachments_list.txt` file to specify the attachments.
+
+**mailmerge_attachments_list.txt**
+```
+# Lines beginning with an octothorpe are comments.
+# Filenames and paths are relative to the parent directory of this file.
+
+file1.pdf
+file2.docx
+../files/file3.txt
+
+# You can also specify a templated filepath to be populated with information
+# from the database file. For instance:
+../files/{{name}}_submission.txt
+```
+
+To specify that your emails must include attachments, use the `--attachments-list` flag. Dry running the `mailmerge` script checks that all attachments are valid and that they exist. If your attachment list includes template, be sure to dry run with the `--no-limit` flag before actually sending the emails.
+
+```shellsession
+$ mailmerge --no-limit --attachments-list mailmerge_attachments_list.txt
+>>> message 0
+TO: myself@mydomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+
+Hi, Myself,
+
+Your number is 17.
+
+>>> encoding ascii
+>>> attached /demo/file1.pdf
+>>> attached /demo/file2.docx
+>>> attached /files/file3.txt
+>>> attached /files/Myself_submission.txt
+>>> sent message 0 DRY RUN
+>>> message 1
+TO: bob@bobdomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+
+Hi, Bob,
+
+Your number is 42.
+
+>>> encoding ascii
+>>> attached /demo/file1.pdf
+>>> attached /demo/file2.docx
+>>> attached /files/file3.txt
+>>> attached /files/Bob_submission.txt
+>>> sent message 1 DRY RUN
+>>> This was a dry run.  To send messages, use the --no-dry-run option.
+```
+
 # Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
 ```shellsession
