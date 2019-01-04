@@ -31,8 +31,12 @@ import mailmerge.api
               default=mailmerge.api.CONFIG_FILENAME_DEFAULT,
               help="configuration file name; default " +
               mailmerge.api.CONFIG_FILENAME_DEFAULT)
+@click.option("--attachments-list", "attachments_list_filename",
+              default=None,
+              help="attachments list file name; none by default")
 def cli(sample, dry_run, limit, no_limit,
-        database_filename, template_filename, config_filename):
+        database_filename, template_filename, config_filename,
+        attachments_list_filename):
     """Command line interface."""
     # pylint: disable=too-many-arguments
     mailmerge.api.main(
@@ -43,6 +47,7 @@ def cli(sample, dry_run, limit, no_limit,
         database_filename=database_filename,
         template_filename=template_filename,
         config_filename=config_filename,
+        attachments_list_filename=attachments_list_filename,
     )
 
 
