@@ -1,0 +1,17 @@
+# Lines beginning with the '#' character are ignored.
+# List the filepaths of files that you would like to attach to
+# every email. Paths are relative to the directory containing
+# this file.
+
+test_send_attachment_1.txt
+test_send_attachment_2.pdf
+
+# You can also specify a templated filepath to be populated
+# with information from the database file. For instance:
+test_send_attachment_{{number}}.txt
+
+# Using this attachments lists file, every email sent would
+# have three attachments.
+
+# NOTE: Don't forget to explicitly specify this attachments
+# list file when running mailmerge.

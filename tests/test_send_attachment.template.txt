@@ -1,0 +1,7 @@
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+
+Hi, {{name}},
+
+Your number is {{number}}.
