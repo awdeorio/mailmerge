@@ -331,8 +331,8 @@ def main(sample=False,
             if attachments_list_filename is not None:
                 attachment_list = attachment_template.render(**row)
                 message = addattachments(message,
-                                                 attachment_list,
-                                                 attachment_parent_dir)
+                                         attachment_list,
+                                         attachment_parent_dir)
 
             # Send message
             if dry_run:

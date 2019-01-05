@@ -1,9 +1,9 @@
 """Test messages with attachments."""
 import os
 import unittest
+import future.backports.email as email
 import mailmerge
 from mailmerge.smtp_dummy import SMTP_dummy
-import future.backports.email as email
 
 
 class TestSendAttachment(unittest.TestCase):
@@ -16,7 +16,7 @@ class TestSendAttachment(unittest.TestCase):
         self.smtp = SMTP_dummy()
         self.smtp.clear()
 
-    def _validateMessageContents(self, message):
+    def _validate_message_contents(self, message):
         """Validate the contents and attachments of the message."""
         self.assertTrue(message.is_multipart())
         # Make sure the attachments are all present and valid
@@ -32,7 +32,8 @@ class TestSendAttachment(unittest.TestCase):
             if part['content-type'].startswith('text/plain'):
                 # This is the email body
                 email_body = part.get_payload()
-                self.assertEqual(email_body, 'Hi, Myself,\n\nYour number is 17.\n')
+                expected_email_body = 'Hi, Myself,\n\nYour number is 17.\n'
+                self.assertEqual(email_body, expected_email_body)
                 email_body_present = True
             elif part['content-type'].startswith('application/octet-stream'):
                 # This is an attachment
@@ -40,8 +41,8 @@ class TestSendAttachment(unittest.TestCase):
                 file_contents = part.get_payload(decode=True)
                 self.assertIn(filename, expected_attachments)
                 self.assertFalse(expected_attachments[filename])
-                with open(filename, 'rb') as f:
-                    correct_file_contents = f.read()
+                with open(filename, 'rb') as expected_attachment:
+                    correct_file_contents = expected_attachment.read()
                 self.assertEqual(file_contents, correct_file_contents)
                 expected_attachments[filename] = True
         self.assertTrue(email_body_present)
@@ -65,4 +66,4 @@ class TestSendAttachment(unittest.TestCase):
 
         # Check that the message is multipart
         message = email.parser.Parser().parsestr(self.smtp.msg)
-        self._validateMessageContents(message)
+        self._validate_message_contents(message)
