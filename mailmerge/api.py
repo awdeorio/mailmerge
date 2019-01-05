@@ -330,7 +330,7 @@ def main(sample=False,
             # Add attachments if any
             if attachments_list_filename is not None:
                 attachment_list = attachment_template.render(**row)
-                num_attachments = addattachments(message,
+                message = addattachments(message,
                                                  attachment_list,
                                                  attachment_parent_dir)
 
@@ -351,7 +351,7 @@ def main(sample=False,
                     print(">>> sent message {}".format(i))
 
         # Hints for user
-        if attachments_list_filename is None or num_attachments == 0:
+        if attachments_list_filename is None:
             print((">>> No attachments were sent with the emails. "
                    "To specify attachments, use the"
                    "--attachments-list option."))
