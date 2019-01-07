@@ -31,7 +31,6 @@ from . import smtp_dummy
 TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
 DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
-ATTACHMENTS_LIST_FILENAME_DEFAULT = "mailmerge_attachments_list.txt"
 
 
 def parsemail(raw_message):
@@ -59,8 +58,11 @@ def parsemail(raw_message):
     return (message, sender, recipients)
 
 
-def addattachments(message, attachment_list, attachment_list_parent_dir):
+def addattachments(message, template_path):
     """Add the attachments from the message from the commandline options."""
+    if 'attachments' not in message:
+        return message, 0
+
     # If the message is not already a multipart message, then make it so
     if not message.is_multipart():
         multipart_message = email.mime.multipart.MIMEMultipart()
@@ -71,14 +73,14 @@ def addattachments(message, attachment_list, attachment_list_parent_dir):
         multipart_message.attach(email.mime.text.MIMEText(original_text))
         message = multipart_message
 
-    # Remove all comments and empty lines from the attachment list
-    attachment_filenames = [line
-                            for line in attachment_list.split('\n')
-                            if len(line) != 0 and line[0] != '#']
+    attachment_filepaths = [filepath.strip()
+                            for filepath in message['attachments'].split(',')
+                            if filepath.strip()]
+    template_parent_dir = os.path.dirname(template_path)
 
-    for attachment_filepath in attachment_filenames:
+    for attachment_filepath in attachment_filepaths:
         # Check that the attachment exists
-        full_path = attachment_list_parent_dir + attachment_filepath
+        full_path = template_parent_dir + attachment_filepath
         normalized_path = os.path.abspath(full_path)
         if not os.path.exists(normalized_path):
             print("Error: can't find attachment " + normalized_path)
@@ -93,7 +95,8 @@ def addattachments(message, attachment_list, attachment_list_parent_dir):
         message.attach(part)
         print(">>> attached {}".format(normalized_path))
 
-    return message
+    del message['attachments']
+    return message, len(attachment_filepaths)
 
 
 def sendmail(message, sender, recipients, config_filename):
@@ -150,8 +153,7 @@ def sendmail(message, sender, recipients, config_filename):
 
 def create_sample_input_files(template_filename,
                               database_filename,
-                              config_filename,
-                              attachments_list_filename):
+                              config_filename):
     """Create sample template email and database."""
     print("Creating sample template email {}".format(template_filename))
     if os.path.exists(template_filename):
@@ -218,33 +220,6 @@ def create_sample_input_files(template_filename,
             u"# security = Never\n"
             u"# username = YOUR_USERNAME_HERE\n"
         )
-    if attachments_list_filename is None:
-        attachments_list_filename = ATTACHMENTS_LIST_FILENAME_DEFAULT
-    print("Creating sample attachments list file",
-          attachments_list_filename)
-    if os.path.exists(attachments_list_filename):
-        print("Error: file exists: " + attachments_list_filename)
-        sys.exit(1)
-    with io.open(attachments_list_filename, "w") as attachments_list_file:
-        attachments_list_file.write(
-            u"# Lines beginning with the '#' character are ignored.\n"
-            u'# List the filepaths of files that you would like to attach to\n'
-            u'# every email. Paths are relative to the directory containing\n'
-            u'# this file.\n'
-            u'\n'
-            u'attachment1.txt\n'
-            u'attachment2.pdf\n'
-            u'\n'
-            u'# You can also specify a templated filepath to be populated\n'
-            u'# with information from the database file. For instance:\n'
-            u"../grades/{{name}}/grades.pdf\n"
-            u'\n'
-            u'# Using this attachments lists file, every email sent would\n'
-            u'# have three attachments.\n'
-            u'\n'
-            u"# NOTE: Don't forget to explicitly specify this attachments\n"
-            u"# list file when running mailmerge.\n"
-        )
     print("Edit these files, and then run mailmerge again")
 
 
@@ -254,8 +229,7 @@ def main(sample=False,
          no_limit=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
-         config_filename=CONFIG_FILENAME_DEFAULT,
-         attachments_list_filename=None):
+         config_filename=CONFIG_FILENAME_DEFAULT):
     """Python API for mailmerge.
 
     mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>.
@@ -273,7 +247,6 @@ def main(sample=False,
             template_filename,
             database_filename,
             config_filename,
-            attachments_list_filename,
         )
         sys.exit(0)
     if not os.path.exists(template_filename):
@@ -284,15 +257,6 @@ def main(sample=False,
         print("Error: can't find database_filename " + database_filename)
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
-    if attachments_list_filename is not None:
-        print(">>> Reading attachment list from",
-              attachments_list_filename)
-        if not os.path.exists(attachments_list_filename):
-            print("Error: can't find attachments_list_filename",
-                  attachments_list_filename)
-            print("Create a sample (--sample)",
-                  "or specify a file (--attachments-list)")
-            sys.exit(1)
 
     try:
         # Read template
@@ -306,13 +270,6 @@ def main(sample=False,
             reader = csv.DictReader(database_file)
             for row in reader:
                 database.append(row)
-
-        # Read attachment list template
-        if attachments_list_filename is not None:
-            attachment_parent_dir = os.path.dirname(attachments_list_filename)
-            with io.open(attachments_list_filename, "r") as attachment_list:
-                attachment_list_content = attachment_list.read() + u"\n"
-                attachment_template = jinja2.Template(attachment_list_content)
 
         # Each row corresponds to one email message
         for i, row in enumerate(database):
@@ -328,11 +285,8 @@ def main(sample=False,
             # Parse message headers and detect encoding
             (message, sender, recipients) = parsemail(raw_message)
             # Add attachments if any
-            if attachments_list_filename is not None:
-                attachment_list = attachment_template.render(**row)
-                message = addattachments(message,
-                                         attachment_list,
-                                         attachment_parent_dir)
+            (message, num_attachments) = addattachments(message,
+                                                        template_filename)
 
             # Send message
             if dry_run:
@@ -351,10 +305,8 @@ def main(sample=False,
                     print(">>> sent message {}".format(i))
 
         # Hints for user
-        if attachments_list_filename is None:
-            print((">>> No attachments were sent with the emails. "
-                   "To specify attachments, use the"
-                   "--attachments-list option."))
+        if num_attachments == 0:
+            print(">>> No attachments were sent with the emails.")
         if not no_limit:
             print(">>> Limit was {} messages.  ".format(limit) +
                   "To remove the limit, use the --no-limit option.")

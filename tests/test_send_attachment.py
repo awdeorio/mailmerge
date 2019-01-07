@@ -51,7 +51,6 @@ class TestSendAttachment(unittest.TestCase):
     def test_send_attachment(self):
         """Attachments should be sent as part of the email."""
         mailmerge.api.main(
-            attachments_list_filename="test_send_attachment_list.txt",
             database_filename="test_send_attachment.database.csv",
             template_filename="test_send_attachment.template.txt",
             config_filename="server_dummy.conf",

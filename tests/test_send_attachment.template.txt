@@ -1,6 +1,7 @@
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+Attachments: test_send_attachment_1.txt, test_send_attachment_2.pdf, , test_send_attachment_{{number}}.txt,
 
 Hi, {{name}},
 
