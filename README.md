@@ -242,6 +242,7 @@ Content-Type: text/html
 This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
 
 **mailmerge_template.txt**
+
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -285,26 +286,26 @@ Content-ID: <body@here>
 ```
 
 # Attachments
-For convenience, `mailmerge` also directly supports sending attachments with emails. Modify the sample `mailmerge_attachments_list.txt` file to specify the attachments.
+For convenience, `mailmerge` also directly supports sending attachments with emails. Simply add an "Attachments" header to the template. Attachments are comma-separated, with filenames and paths relative to the template's parent directory.
 
-**mailmerge_attachments_list.txt**
+**/demo/mailmerge_template.txt**
+
 ```
-# Lines beginning with an octothorpe are comments.
-# Filenames and paths are relative to the parent directory of this file.
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+ATTACHMENTS: file1.docx, ../files/file2.pdf, {{name}}_submission.txt
 
-file1.pdf
-file2.docx
-../files/file3.txt
+Hi, {{name}},
 
-# You can also specify a templated filepath to be populated with information
-# from the database file. For instance:
-../files/{{name}}_submission.txt
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
 ```
 
-To specify that your emails must include attachments, use the `--attachments-list` flag. Dry running the `mailmerge` script checks that all attachments are valid and that they exist. If your attachment list includes template, be sure to dry run with the `--no-limit` flag before actually sending the emails.
+Dry running the `mailmerge` script checks that all attachments are valid and that they exist. If your attachment list includes templates, it's a good idea to dry run with the `--no-limit` flag before actually sending the emails.
 
 ```shellsession
-$ mailmerge --no-limit --attachments-list mailmerge_attachments_list.txt
+$ mailmerge --no-limit
 >>> message 0
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
@@ -312,13 +313,13 @@ FROM: My Self <myself@mydomain.com>
 
 Hi, Myself,
 
-Your number is 17.
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
 
 >>> encoding ascii
->>> attached /demo/file1.pdf
->>> attached /demo/file2.docx
->>> attached /files/file3.txt
->>> attached /files/Myself_submission.txt
+>>> attached file1.docx
+>>> attached ../files/file2.pdf
+>>> attached ../files/Myself_submission.txt
 >>> sent message 0 DRY RUN
 >>> message 1
 TO: bob@bobdomain.com
@@ -327,13 +328,13 @@ FROM: My Self <myself@mydomain.com>
 
 Hi, Bob,
 
-Your number is 42.
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
 
 >>> encoding ascii
->>> attached /demo/file1.pdf
->>> attached /demo/file2.docx
->>> attached /files/file3.txt
->>> attached /files/Bob_submission.txt
+>>> attached file1.docx
+>>> attached ../files/file2.pdf
+>>> attached ../files/Bob_submission.txt
 >>> sent message 1 DRY RUN
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
