@@ -119,7 +119,7 @@ Your number is 17.
 >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
 ```
 
-Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
+Now, check your email and make sure the message went through.  If everything looks OK, then it's time to send all the messages.
 
 ### Send all emails
 ```shellsession
