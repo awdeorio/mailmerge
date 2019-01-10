@@ -286,7 +286,9 @@ Content-ID: <body@here>
 ```
 
 # Attachments
-For convenience, `mailmerge` also directly supports sending attachments with emails. Simply add an "Attachments" header to the template. Attachments are comma-separated, with filenames and paths relative to the template's parent directory.
+For convenience, `mailmerge` also directly supports sending attachments with emails. Simply add an "Attachments" header to the template. Attachments are comma-separated, with filenames and paths relative to the template's parent directory. Absolute paths are also supported.
+
+_Note: The Unix-style home directory specifier (`~`) is not supported._
 
 **/demo/mailmerge_template.txt**
 
@@ -294,7 +296,9 @@ For convenience, `mailmerge` also directly supports sending attachments with ema
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
-ATTACHMENTS: file1.docx, ../files/file2.pdf, {{name}}_submission.txt
+ATTACHMENT: file1.docx
+ATTACHMENT: ../files/file2.pdf
+ATTACHMENT: /files/{{name}}_submission.txt
 
 Hi, {{name}},
 
@@ -317,9 +321,9 @@ This email contains three attachments.
 Pro-tip: Use Jinja to customize the attachments based on your database!
 
 >>> encoding ascii
->>> attached file1.docx
->>> attached ../files/file2.pdf
->>> attached ../files/Myself_submission.txt
+>>> attached /demo/file1.docx
+>>> attached /files/file2.pdf
+>>> attached /files/Myself_submission.txt
 >>> sent message 0 DRY RUN
 >>> message 1
 TO: bob@bobdomain.com
@@ -332,9 +336,9 @@ This email contains three attachments.
 Pro-tip: Use Jinja to customize the attachments based on your database!
 
 >>> encoding ascii
->>> attached file1.docx
->>> attached ../files/file2.pdf
->>> attached ../files/Bob_submission.txt
+>>> attached /demo/file1.docx
+>>> attached /files/file2.pdf
+>>> attached /files/Bob_submission.txt
 >>> sent message 1 DRY RUN
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
