@@ -242,7 +242,6 @@ Content-Type: text/html
 This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
 
 **mailmerge_template.txt**
-
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
