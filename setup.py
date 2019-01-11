@@ -33,6 +33,8 @@ setup(
             'pylint',
             'pydocstyle',
             'pycodestyle',
+            'pytest',
+            'tox',
         ]
     },
 
