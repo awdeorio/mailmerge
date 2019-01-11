@@ -7,7 +7,7 @@ install:
   - pip install .[dev]
 
 script:
-  - pytest
+  - pytest --verbose
   - pycodestyle mailmerge tests setup.py
   - pydocstyle mailmerge tests setup.py
   - pylint --reports=n  mailmerge tests setup.py
