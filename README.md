@@ -323,8 +323,6 @@ Pro-tip: Use Jinja to customize the attachments based on your database!
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-Note: The Unix-style home directory specifier (`~`) is not supported.
-
 # Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
 ```shellsession

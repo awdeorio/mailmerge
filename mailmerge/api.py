@@ -80,7 +80,7 @@ def addattachments(message, template_path):
     template_parent_dir = os.path.dirname(template_path)
 
     for attachment_filepath in attachment_filepaths:
-        attachment_filepath = attachment_filepath.strip()
+        attachment_filepath = os.path.expanduser(attachment_filepath.strip())
         if not attachment_filepath:
             continue
         if not os.path.isabs(attachment_filepath):
