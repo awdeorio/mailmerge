@@ -1,0 +1,13 @@
+language: python
+python:
+  - "2.7"
+  - "3.6"
+
+install:
+  - pip install .[dev]
+
+script:
+  - pytest
+  - pycodestyle mailmerge tests setup.py
+  - pydocstyle mailmerge tests setup.py
+  - pylint --reports=n  mailmerge tests setup.py
