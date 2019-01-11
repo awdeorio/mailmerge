@@ -285,19 +285,16 @@ Content-ID: <body@here>
 ```
 
 # Attachments
-For convenience, `mailmerge` also directly supports sending attachments with emails. Simply add an "Attachments" header to the template. Attachments are comma-separated, with filenames and paths relative to the template's parent directory. Absolute paths are also supported.
+This example shows how to add attachments with a special `ATTACHMENT` header.
 
-_Note: The Unix-style home directory specifier (`~`) is not supported._
-
-**/demo/mailmerge_template.txt**
-
+**mailmerge_template.txt**
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 ATTACHMENT: file1.docx
-ATTACHMENT: ../files/file2.pdf
-ATTACHMENT: /files/{{name}}_submission.txt
+ATTACHMENT: ../file2.pdf
+ATTACHMENT: /z/shared/{{name}}_submission.txt
 
 Hi, {{name}},
 
@@ -305,10 +302,9 @@ This email contains three attachments.
 Pro-tip: Use Jinja to customize the attachments based on your database!
 ```
 
-Dry running the `mailmerge` script checks that all attachments are valid and that they exist. If your attachment list includes templates, it's a good idea to dry run with the `--no-limit` flag before actually sending the emails.
-
+Dry run to verify attachment files exist. If an attachment filename includes a template, it's a good idea to dry run with the `--no-limit` flag.
 ```shellsession
-$ mailmerge --no-limit
+$ mailmerge
 >>> message 0
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
@@ -320,27 +316,14 @@ This email contains three attachments.
 Pro-tip: Use Jinja to customize the attachments based on your database!
 
 >>> encoding ascii
->>> attached /demo/file1.docx
->>> attached /files/file2.pdf
->>> attached /files/Myself_submission.txt
+>>> attached /Users/awdeorio/Documents/test/file1.docx
+>>> attached /Users/awdeorio/Documents/file2.pdf
+>>> attached /z/shared/Myself_submission.txt
 >>> sent message 0 DRY RUN
->>> message 1
-TO: bob@bobdomain.com
-SUBJECT: Testing mailmerge
-FROM: My Self <myself@mydomain.com>
-
-Hi, Bob,
-
-This email contains three attachments.
-Pro-tip: Use Jinja to customize the attachments based on your database!
-
->>> encoding ascii
->>> attached /demo/file1.docx
->>> attached /files/file2.pdf
->>> attached /files/Bob_submission.txt
->>> sent message 1 DRY RUN
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
+
+Note: The Unix-style home directory specifier (`~`) is not supported.
 
 # Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
