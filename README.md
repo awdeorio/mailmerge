@@ -10,7 +10,7 @@ A simple, command line mail merge tool.
 - [Example](#example)
 - [Advanced template example](#advanced-template-example)
 - [HTML formatting](#html-formatting)
-- [Hacking](#hacking)
+- [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 
 ## Quickstart
