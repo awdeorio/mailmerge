@@ -289,19 +289,22 @@ Set up a development environment.  This will install a `mailmerge` executable in
 ```console
 $ python3 -m venv env  # or "virtualenv env" for python2
 $ source env/bin/activate
-$ pip install --editable .
+$ pip install --editable .[dev]
 ```
 
-Test code style and run unit tests
+Run unit tests
 ```console
-$ ./bin/test-style
-PASS style tests
-$ ./bin/test-functional
-PASS functional tests
+$ pytest
 ```
 
-Test python2/python3 compatibility.  This will automatically create two virtual environments and run all style and functional tests in each environment.
+Test code style
 ```console
-$ ./bin/test_python2_python3
-PASS
+$ pycodestyle mailmerge tests setup.py
+$ pydocstyle mailmerge tests setup.py
+$ pylint --reports=n  mailmerge tests setup.py
+```
+
+Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.
+```console
+$ tox
 ```
