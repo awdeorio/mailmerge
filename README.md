@@ -285,11 +285,11 @@ Content-ID: <body@here>
 ```
 
 # Hacking
-Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
+Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.  It will also install development dependencies like `pylint`.
 ```shellsession
 $ python3 -m venv env  # or "virtualenv env" for python2
 $ source env/bin/activate
-$ pip install --editable .
+$ pip install --editable .[dev]
 ```
 
 Test code style and run unit tests
