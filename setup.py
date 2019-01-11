@@ -28,6 +28,15 @@ setup(
         "future",
         "backports.csv",
     ],
+    extras_require={
+        'dev': [
+            'pylint',
+            'pydocstyle',
+            'pycodestyle',
+            'pytest',
+            'tox',
+        ]
+    },
 
     # Python command line utilities will be installed in a PATH-accessible bin/
     entry_points={
