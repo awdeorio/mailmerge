@@ -2,11 +2,25 @@ Contributing to Mailmerge
 =========================
 
 ## Install development environment
-Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
+Set up a development virtual environment.
 ```console
-$ python3 -m venv env  # or "virtualenv env" for python2
+$ python3 -m venv env
 $ source env/bin/activate
 $ pip install --editable .[dev]
+```
+
+A `mailmerge` entry point script is installed in your virtual environment.
+```console
+$ which mailmerge
+/Users/awdeorio/src/mailmerge/env/bin/mailmerge
+```
+
+### Python2 development environment
+Mailmerge is tested to work in both Python 2 and Python 3.  Set up a Python 2 virtual environment.
+```console
+$ virtualenv -p python2 env2
+$ source env2/bin/activate
+$ pip install -e .[dev]
 ```
 
 ## Testing and code quality
