@@ -8,7 +8,7 @@ http://andrewdeorio.com<br>
 
 # Quickstart
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
-```shellsession
+```console
 $ pip install mailmerge
 $ mailmerge
 ```
@@ -18,7 +18,7 @@ If you get a `Permission denied` error, use `sudo pip install mailmerge` or `vir
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
 ### Create a sample template email, database, and config
-```shellsession
+```console
 $ mailmerge --sample
 Creating sample template email mailmerge_template.txt
 Creating sample database mailmerge_database.csv
@@ -60,7 +60,7 @@ bob@bobdomain.com,"Bob",42
 
 ### Dry run
 First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
-```shellsession
+```console
 $ mailmerge --dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -77,7 +77,7 @@ Your number is 17.
 ```
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
-```shellsession
+```console
 $ mailmerge --dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -104,7 +104,7 @@ Your number is 42.
 
 ### Send first email
 We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email*.  Recall that you added yourself as the first email recipient.
-```shellsession
+```console
 $ mailmerge --no-dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -122,7 +122,7 @@ Your number is 17.
 Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
 
 ### Send all emails
-```shellsession
+```console
 $ mailmerge --no-dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -190,7 +190,7 @@ failing@fixme.com,"Failing Name",0,0,0,0,F
 
 **Dry run one message**<br>
 Test one message without actually sending any email.
-```shellsession
+```console
 $ mailmerge --template progress_report_template.txt --database progress_report_database.csv 
 >>> message 0
 TO: myself@mydomain.com
@@ -286,14 +286,14 @@ Content-ID: <body@here>
 
 # Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
-```shellsession
+```console
 $ python3 -m venv env  # or "virtualenv env" for python2
 $ source env/bin/activate
 $ pip install --editable .
 ```
 
 Test code style and run unit tests
-```shellsession
+```console
 $ ./bin/test-style
 PASS style tests
 $ ./bin/test-functional
@@ -301,7 +301,7 @@ PASS functional tests
 ```
 
 Test python2/python3 compatibility.  This will automatically create two virtual environments and run all style and functional tests in each environment.
-```shellsession
+```console
 $ ./bin/test_python2_python3
 PASS
 ```
