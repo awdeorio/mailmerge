@@ -1,3 +1,8 @@
+# Travis Configuration
+#
+# Travis runs the tests configured in tox.ini using tox-travis.  Tox is a
+# automation tool for running tests in isolated virtual environments.
+
 language: python
 python:
   - "2.7"
