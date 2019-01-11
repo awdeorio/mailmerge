@@ -1,20 +1,38 @@
-# mailmerge
+Mailmerge
+=========
 A simple, command line mail merge tool.
 
-Andrew DeOrio <awdeorio@umich.edu><br>
-http://andrewdeorio.com<br>
+`mailmerge` uses plain text files and the [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
 
-`mailmerge` uses plain text files and the powerful [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
+**Table of Contents**
+- [Quickstart](#quickstart)
+- [Install](#install)
+- [Example](#example)
+- [Advanced template example](#advanced-template-example)
+- [HTML formatting](#html-formatting)
+- [Hacking](#hacking)
+- [Acknowledgements](#acknowledgements)
 
-# Quickstart
-`mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
+## Quickstart
 ```console
 $ pip install mailmerge
 $ mailmerge
 ```
-If you get a `Permission denied` error, use `sudo pip install mailmerge` or `virtualenv venv && source venv/bin/activate && pip install mailmerge`
 
-# Example
+`mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
+
+## Install
+System-wide install
+```console
+$ pip install mailmerge
+```
+
+If you get a `Permission denied` error, use administrator privileges.  Alternatively, see the development install instructions.
+```console
+$ sudo pip install mailmerge
+```
+
+## Example
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
 ### Create a sample template email, database, and config
@@ -146,10 +164,10 @@ Your number is 42.
 >>> sent message 1
 ```
 
-# A more complicated example
+## Advanced template example
 This example will send progress reports to students.  The template uses more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
 
-**progress_report_template.txt**
+#### Template `progress_report_template.txt`
 ```
 TO: {{email}}
 SUBJECT: EECS 280 Mid-semester Progress Report
@@ -179,7 +197,7 @@ If you plan to continue in the course, I urge you to see your instructor in offi
 {% endif -%}
 ```
 
-**progress_report_database.csv**
+#### Database `progress_report_database.csv`
 Again, we'll use the best practice of making yourself the first recipient, which is helpful for testing.
 ```
 email,name,p1,p2,p3,midterm,grade
@@ -188,7 +206,7 @@ borderline@fixme.com,"Borderline Name",50,50,50,50,C-
 failing@fixme.com,"Failing Name",0,0,0,0,F
 ```
 
-**Dry run one message**<br>
+### Dry run one message
 Test one message without actually sending any email.
 ```console
 $ mailmerge --template progress_report_template.txt --database progress_report_database.csv 
@@ -214,10 +232,13 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-# HTML formatting example
+## HTML formatting
+Mailmerge support HTML formatting.
+
+### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
 
-**mailmerge_template.txt**
+#### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -238,10 +259,10 @@ Content-Type: text/html
 ```
 
 
-# HTML and plain text formatting example
+### HTML and plain text
 This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
 
-**mailmerge_template.txt**
+#### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -284,7 +305,7 @@ Content-ID: <body@here>
 </html>
 ```
 
-# Hacking
+## Hacking
 Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
 ```console
 $ python3 -m venv env  # or "virtualenv env" for python2
@@ -308,3 +329,6 @@ Test python2/python3 compatibility.  This will automatically create virtual envi
 ```console
 $ tox
 ```
+
+## Acknowledgements
+Mailmerge is written by Andrew DeOrio <awdeorio@umich.edu>, [http://andrewdeorio.com](http://andrewdeorio.com).
