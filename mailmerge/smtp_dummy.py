@@ -21,7 +21,6 @@ class SMTP_dummy(object):  # pylint: disable=useless-object-inheritance
 
     def close(self):
         """Do nothing."""
-        pass
 
     def clear(self):
         """Reset class variables."""
