@@ -32,8 +32,8 @@ class TestSendAttachment(unittest.TestCase):
             if part['content-type'].startswith('text/plain'):
                 # This is the email body
                 email_body = part.get_payload()
-                expected_email_body = 'Hi, Myself,\n\nYour number is 17.\n'
-                self.assertEqual(email_body, expected_email_body)
+                expected_email_body = 'Hi, Myself,\n\nYour number is 17.'
+                self.assertEqual(email_body.rstrip(), expected_email_body)
                 email_body_present = True
             elif part['content-type'].startswith('application/octet-stream'):
                 # This is an attachment
@@ -54,8 +54,8 @@ class TestSendAttachment(unittest.TestCase):
             database_filename="test_send_attachment.database.csv",
             template_filename="test_send_attachment.template.txt",
             config_filename="server_dummy.conf",
-            dry_run=False,
             no_limit=False,
+            dry_run=False,
         )
 
         # Check SMTP server after
