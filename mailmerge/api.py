@@ -16,6 +16,10 @@ import datetime
 # NOTE: Python 2.x UTF8 support requires csv and email backports
 from backports import csv
 import future.backports.email as email  # pylint: disable=useless-import-alias
+import future.backports.email.mime  # pylint: disable=unused-import
+import future.backports.email.mime.application  # pylint: disable=unused-import
+import future.backports.email.mime.multipart  # pylint: disable=unused-import
+import future.backports.email.mime.text  # pylint: disable=unused-import
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
 import jinja2
@@ -49,12 +53,79 @@ def parsemail(raw_message):
     recipients = [x[1] for x in addrs]
     message.__delitem__("bcc")
     message.__setitem__('Date', email.utils.formatdate())
-    text = message.as_string()
     sender = message["from"]
-    return (text, sender, recipients)
+
+    return (message, sender, recipients)
 
 
-def sendmail(text, sender, recipients, config_filename):
+def _create_boundary(message):
+    """Add boundary parameter to multipart message if they are not present."""
+    if not message.is_multipart() or message.get_boundary() is not None:
+        return message
+    # HACK: Python2 lists do not natively have a `copy` method. Unfortunately,
+    # due to a bug in the Backport for the email module, the method
+    # `Message.set_boundary` converts the Message headers into a native list,
+    # so that other methods that rely on "copying" the Message headers fail.
+    # `Message.set_boundary` is called from `Generator.handle_multipart` if the
+    # message does not already have a boundary present. (This method itself is
+    # called from `Message.as_string`.)
+    # Hence, to prevent `Message.set_boundary` from being called, add a
+    # boundary header manually.
+    from future.backports.email.generator import Generator
+    # pylint: disable=protected-access
+    boundary = Generator._make_boundary(message.policy.linesep)
+    message.set_param('boundary', boundary)
+    return message
+
+
+def addattachments(message, template_path):
+    """Add the attachments from the message from the commandline options."""
+    if 'attachment' not in message:
+        return message, 0
+
+    # If the message is not already a multipart message, then make it so
+    if not message.is_multipart():
+        multipart_message = email.mime.multipart.MIMEMultipart()
+        for header_key in set(message.keys()):
+            # Preserve duplicate headers
+            values = message.get_all(header_key, failobj=[])
+            for value in values:
+                multipart_message[header_key] = value
+        original_text = message.get_payload()
+        multipart_message.attach(email.mime.text.MIMEText(original_text))
+        message = multipart_message
+
+    attachment_filepaths = message.get_all('attachment', failobj=[])
+    template_parent_dir = os.path.dirname(template_path)
+
+    for attachment_filepath in attachment_filepaths:
+        attachment_filepath = os.path.expanduser(attachment_filepath.strip())
+        if not attachment_filepath:
+            continue
+        if not os.path.isabs(attachment_filepath):
+            # Relative paths are relative to the template's parent directory
+            attachment_filepath = os.path.join(template_parent_dir,
+                                               attachment_filepath)
+        normalized_path = os.path.abspath(attachment_filepath)
+        # Check that the attachment exists
+        if not os.path.exists(normalized_path):
+            print("Error: can't find attachment " + normalized_path)
+            sys.exit(1)
+
+        filename = os.path.basename(normalized_path)
+        with open(normalized_path, "rb") as attachment:
+            part = email.mime.application.MIMEApplication(attachment.read(),
+                                                          Name=filename)
+        part.add_header('Content-Disposition',
+                        'attachment; filename="{}"'.format(filename))
+        message.attach(part)
+        print(">>> attached {}".format(normalized_path))
+
+    del message['attachments']
+    return message, len(attachment_filepaths)
+
+
+def sendmail(message, sender, recipients, config_filename):
     """Send email message using Python SMTP library."""
     # Read config file from disk to get SMTP server host, port, username
     if not hasattr(sendmail, "host"):
@@ -102,7 +173,7 @@ def sendmail(text, sender, recipients, config_filename):
 
     # Send message.  Note that we can't use the elegant
     # "smtp.send_message(message)" because that's python3 only
-    smtp.sendmail(sender, recipients, text)
+    smtp.sendmail(sender, recipients, message.as_string())
     smtp.close()
 
 
@@ -238,7 +309,12 @@ def main(sample=False,
             print(raw_message)
 
             # Parse message headers and detect encoding
-            (text, sender, recipients) = parsemail(raw_message)
+            (message, sender, recipients) = parsemail(raw_message)
+            # Add attachments if any
+            (message, num_attachments) = addattachments(message,
+                                                        template_filename)
+            # HACK: For Python2 (see comments in `_create_boundary`)
+            message = _create_boundary(message)
 
             # Send message
             if dry_run:
@@ -246,7 +322,7 @@ def main(sample=False,
             else:
                 # Send message
                 try:
-                    sendmail(text, sender, recipients, config_filename)
+                    sendmail(message, sender, recipients, config_filename)
                 except smtplib.SMTPException as err:
                     print(">>> failed to send message {}".format(i))
                     timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(
@@ -257,6 +333,8 @@ def main(sample=False,
                     print(">>> sent message {}".format(i))
 
         # Hints for user
+        if num_attachments == 0:
+            print(">>> No attachments were sent with the emails.")
         if not no_limit:
             print(">>> Limit was {} messages.  ".format(limit) +
                   "To remove the limit, use the --no-limit option.")

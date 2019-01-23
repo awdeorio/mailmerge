@@ -10,6 +10,7 @@ A simple, command line mail merge tool.
 - [Example](#example)
 - [Advanced template example](#advanced-template-example)
 - [HTML formatting](#html-formatting)
+- [Attachments](#attachments)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 
@@ -303,6 +304,45 @@ Content-ID: <body@here>
 
 </body>
 </html>
+```
+
+## Attachments
+This example shows how to add attachments with a special `ATTACHMENT` header.
+
+#### Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+ATTACHMENT: file1.docx
+ATTACHMENT: ../file2.pdf
+ATTACHMENT: /z/shared/{{name}}_submission.txt
+
+Hi, {{name}},
+
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
+```
+
+Dry run to verify attachment files exist. If an attachment filename includes a template, it's a good idea to dry run with the `--no-limit` flag.
+```console
+$ mailmerge
+>>> message 0
+TO: myself@mydomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+
+Hi, Myself,
+
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
+
+>>> encoding ascii
+>>> attached /Users/awdeorio/Documents/test/file1.docx
+>>> attached /Users/awdeorio/Documents/file2.pdf
+>>> attached /z/shared/Myself_submission.txt
+>>> sent message 0 DRY RUN
+>>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 ## Contributing
