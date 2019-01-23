@@ -1,24 +1,43 @@
-# mailmerge
+Mailmerge
+=========
 A simple, command line mail merge tool.
 
-Andrew DeOrio <awdeorio@umich.edu><br>
-http://andrewdeorio.com<br>
+`mailmerge` uses plain text files and the [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
 
-`mailmerge` uses plain text files and the powerful [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
+**Table of Contents**
+- [Quickstart](#quickstart)
+- [Install](#install)
+- [Example](#example)
+- [Advanced template example](#advanced-template-example)
+- [HTML formatting](#html-formatting)
+- [Attachments](#attachments)
+- [Contributing](#contributing)
+- [Acknowledgements](#acknowledgements)
 
-# Quickstart
-`mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
-```shellsession
+## Quickstart
+```console
 $ pip install mailmerge
 $ mailmerge
 ```
-If you get a `Permission denied` error, use `sudo pip install mailmerge` or `virtualenv venv && source venv/bin/activate && pip install mailmerge`
 
-# Example
+`mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
+
+## Install
+System-wide install
+```console
+$ pip install mailmerge
+```
+
+If you get a `Permission denied` error, use administrator privileges.  Alternatively, see the development install instructions.
+```console
+$ sudo pip install mailmerge
+```
+
+## Example
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
 ### Create a sample template email, database, and config
-```shellsession
+```console
 $ mailmerge --sample
 Creating sample template email mailmerge_template.txt
 Creating sample database mailmerge_database.csv
@@ -60,7 +79,7 @@ bob@bobdomain.com,"Bob",42
 
 ### Dry run
 First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
-```shellsession
+```console
 $ mailmerge --dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -77,7 +96,7 @@ Your number is 17.
 ```
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
-```shellsession
+```console
 $ mailmerge --dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -104,7 +123,7 @@ Your number is 42.
 
 ### Send first email
 We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email*.  Recall that you added yourself as the first email recipient.
-```shellsession
+```console
 $ mailmerge --no-dry-run --limit 1
 >>> message 0
 TO: myself@mydomain.com
@@ -122,7 +141,7 @@ Your number is 17.
 Now, check your email and make sure the message went through.  If everything looks OK, then it's time to send all the messages.
 
 ### Send all emails
-```shellsession
+```console
 $ mailmerge --no-dry-run --no-limit
 >>> message 0
 TO: myself@mydomain.com
@@ -146,10 +165,10 @@ Your number is 42.
 >>> sent message 1
 ```
 
-# A more complicated example
+## Advanced template example
 This example will send progress reports to students.  The template uses more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
 
-**progress_report_template.txt**
+#### Template `progress_report_template.txt`
 ```
 TO: {{email}}
 SUBJECT: EECS 280 Mid-semester Progress Report
@@ -179,7 +198,7 @@ If you plan to continue in the course, I urge you to see your instructor in offi
 {% endif -%}
 ```
 
-**progress_report_database.csv**
+#### Database `progress_report_database.csv`
 Again, we'll use the best practice of making yourself the first recipient, which is helpful for testing.
 ```
 email,name,p1,p2,p3,midterm,grade
@@ -188,9 +207,9 @@ borderline@fixme.com,"Borderline Name",50,50,50,50,C-
 failing@fixme.com,"Failing Name",0,0,0,0,F
 ```
 
-**Dry run one message**<br>
+### Dry run one message
 Test one message without actually sending any email.
-```shellsession
+```console
 $ mailmerge --template progress_report_template.txt --database progress_report_database.csv 
 >>> message 0
 TO: myself@mydomain.com
@@ -214,10 +233,13 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-# HTML formatting example
+## HTML formatting
+Mailmerge support HTML formatting.
+
+### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
 
-**mailmerge_template.txt**
+#### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -238,10 +260,10 @@ Content-Type: text/html
 ```
 
 
-# HTML and plain text formatting example
+### HTML and plain text
 This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
 
-**mailmerge_template.txt**
+#### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
@@ -284,24 +306,48 @@ Content-ID: <body@here>
 </html>
 ```
 
-# Hacking
-Set up a development environment.  This will install a `mailmerge` executable in virtual environment's `PATH` which points to the local python development source code.
-```shellsession
-$ python3 -m venv env  # or "virtualenv env" for python2
-$ source env/bin/activate
-$ pip install --editable .
+## Attachments
+This example shows how to add attachments with a special `ATTACHMENT` header.
+
+#### Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+ATTACHMENT: file1.docx
+ATTACHMENT: ../file2.pdf
+ATTACHMENT: /z/shared/{{name}}_submission.txt
+
+Hi, {{name}},
+
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
 ```
 
-Test code style and run unit tests
-```shellsession
-$ ./bin/test-style
-PASS style tests
-$ ./bin/test-functional
-PASS functional tests
+Dry run to verify attachment files exist. If an attachment filename includes a template, it's a good idea to dry run with the `--no-limit` flag.
+```console
+$ mailmerge
+>>> message 0
+TO: myself@mydomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+
+Hi, Myself,
+
+This email contains three attachments.
+Pro-tip: Use Jinja to customize the attachments based on your database!
+
+>>> encoding ascii
+>>> attached /Users/awdeorio/Documents/test/file1.docx
+>>> attached /Users/awdeorio/Documents/file2.pdf
+>>> attached /z/shared/Myself_submission.txt
+>>> sent message 0 DRY RUN
+>>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-Test python2/python3 compatibility.  This will automatically create two virtual environments and run all style and functional tests in each environment.
-```shellsession
-$ ./bin/test_python2_python3
-PASS
-```
+## Contributing
+Contributions from the community are welcome! Check out the [guide for contributing](CONTRIBUTING.md).
+
+
+## Acknowledgements
+Mailmerge is written by Andrew DeOrio <awdeorio@umich.edu>, [http://andrewdeorio.com](http://andrewdeorio.com).
