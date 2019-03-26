@@ -234,7 +234,7 @@ At this time, your estimated letter grade is A+.
 ```
 
 ## HTML formatting
-Mailmerge support HTML formatting.
+Mailmerge supports HTML and plain text formatting.
 
 ### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
