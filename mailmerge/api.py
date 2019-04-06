@@ -111,7 +111,7 @@ def convert_markdown(message):
                 original_text = payload_item.get_payload()
                 html_text = markdown.markdown(original_text)
                 html_payload = future.backports.email.mime.text.MIMEText(
-                    html_text,
+                    "<html><body>{}</body></html>".format(html_text),
                     "html",
                 )
                 message.attach(html_payload)

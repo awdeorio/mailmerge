@@ -26,7 +26,9 @@ class TestMarkdown(TestSMTPBase):
         self.assertTrue(html_contenttype.startswith("text/html"))
         htmltext = payload[1].get_payload()
 
-        self.assertEqual(markdown.markdown(plaintext), htmltext.strip())
+        converted_html = markdown.markdown(plaintext)
+        self.assertEqual("<html><body>{}</body></html>".format(converted_html),
+                         htmltext.strip())
 
     def test_markdown(self):
         """Markdown messages should be converted to HTML before being sent."""
