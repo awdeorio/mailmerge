@@ -91,6 +91,8 @@ def make_message_multipart(message):
         original_text = message.get_payload()
         multipart_message.attach(email.mime.text.MIMEText(original_text))
         message = multipart_message
+    # HACK: For Python2 (see comments in `_create_boundary`)
+    message = _create_boundary(message)
     return message
 
 
@@ -346,8 +348,6 @@ def main(sample=False,
             # Add attachments if any
             (message, num_attachments) = addattachments(message,
                                                         template_filename)
-            # HACK: For Python2 (see comments in `_create_boundary`)
-            message = _create_boundary(message)
 
             # Send message
             if dry_run:
