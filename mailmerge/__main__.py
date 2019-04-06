@@ -19,6 +19,8 @@ import mailmerge.api
               help="Limit the number of messages; default 1")
 @click.option("--no-limit", is_flag=True, default=False,
               help="Do not limit the number of messages")
+@click.option("--markdown", "use_markdown", is_flag=True, default=False,
+              help="Convert markdown in email message to HTML")
 @click.option("--database", "database_filename",
               default=mailmerge.api.DATABASE_FILENAME_DEFAULT,
               help="database CSV file name; default " +
@@ -31,7 +33,7 @@ import mailmerge.api
               default=mailmerge.api.CONFIG_FILENAME_DEFAULT,
               help="configuration file name; default " +
               mailmerge.api.CONFIG_FILENAME_DEFAULT)
-def cli(sample, dry_run, limit, no_limit,
+def cli(sample, dry_run, limit, no_limit, use_markdown,
         database_filename, template_filename, config_filename):
     """Command line interface."""
     # pylint: disable=too-many-arguments
@@ -40,6 +42,7 @@ def cli(sample, dry_run, limit, no_limit,
         dry_run=dry_run,
         limit=limit,
         no_limit=no_limit,
+        use_markdown=use_markdown,
         database_filename=database_filename,
         template_filename=template_filename,
         config_filename=config_filename,
