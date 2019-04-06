@@ -233,8 +233,8 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-## HTML formatting
-Mailmerge support HTML formatting.
+## HTML/Markdown formatting
+Mailmerge supports HTML and Markdown formatting.
 
 ### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
@@ -260,50 +260,37 @@ Content-Type: text/html
 ```
 
 
-### HTML and plain text
-This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
+### Markdown
+You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax). The email will include both HTML and plain text version of the email. (A user's mail reader can select either one.)
+
+Mailmerge will only convert Markdown if you run it with the `--markdown` option.
+```console
+$ mailmerge --dry-run --markdown
+```
 
 #### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
-MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="outer-boundary"
 
-This is a MIME-encoded message. If you are seeing this, your mail
-reader is old.
+You can add:
 
---outer-boundary
-Content-Type: text/plain; charset=us-ascii
+- Emphasis, aka italics, with *asterisks*.
+- Strong emphasis, aka bold, with **asterisks**.
+- Combined emphasis with **asterisks and _underscores_**.
+- Unordered lists like this one.
+- Ordered lists with numbers:
+    1. Item 1
+    2. Item 2
+- Preformatted text with `backticks`.
+- How about some [hyperlinks](http://bit.ly/eecs485-wn19-p6)?
 
-Hi, {{name}},
+# This is a heading.
+## And another heading.
 
-Your number is {{number}}.
-
-Sent by mailmerge https://github.com/awdeorio/mailmerge
-
---outer-boundary
-MIME-Version: 1.0
-Content-Type: multipart/related;
-  type="text/html"; start="<body@here>"; boundary="inner-boundary"
-
---inner-boundary
-Content-Type: text/html; charset=us-ascii
-Content-Disposition: inline
-Content-ID: <body@here>
-
-<html>
-<body>
-
-<p>Hi, {{name}},</p>
-
-<p>Your number is {{number}}.</p>
-
-<p>Sent by <a href="https://github.com/awdeorio/mailmerge">mailmerge</a></p>
-
-</body>
-</html>
+Here's an image not attached with the email:
+![python logo not attached](http://pluspng.com/img-png/python-logo-png-open-2000.png)
 ```
 
 ## Attachments
