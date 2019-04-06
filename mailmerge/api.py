@@ -101,7 +101,7 @@ def convert_markdown(message):
     else:
         # Convert the text from markdown and then make the message multipart
         message = make_message_multipart(message)
-        for payload_item in message.get_payload().copy():
+        for payload_item in set(message.get_payload()):
             # Assume the plaintext item is formatted with markdown.
             # Add corresponding HTML version of the item as the last part of
             # the multipart message (as per RFC 2046)
@@ -149,7 +149,7 @@ def addattachments(message, template_path):
         message.attach(part)
         print(">>> attached {}".format(normalized_path))
 
-    del message['attachments']
+    del message['attachment']
     return message, len(attachment_filepaths)
 
 
