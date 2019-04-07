@@ -1,5 +1,9 @@
 Mailmerge
 =========
+
+![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)
+![Travis (.com)](https://img.shields.io/travis/com/awdeorio/mailmerge.svg)
+
 A simple, command line mail merge tool.
 
 `mailmerge` uses plain text files and the [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
