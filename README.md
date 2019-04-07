@@ -261,9 +261,9 @@ Content-Type: text/html
 
 
 ### Markdown
-You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax). The email will include both HTML and plain text version of the email. (A user's mail reader can select either one.)
+You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax) with the `--markdown` option. Emails sent with this option will include both HTML and plain text versions. (A user's mail reader can select either one.)
 
-Mailmerge will only convert Markdown if you run it with the `--markdown` option.
+Don't forget to include the `--markdown` flag to enable this feature!
 ```console
 $ mailmerge --dry-run --markdown
 ```
