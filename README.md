@@ -10,6 +10,7 @@ A simple, command line mail merge tool.
 - [Example](#example)
 - [Advanced template example](#advanced-template-example)
 - [HTML formatting](#html-formatting)
+- [Markdown formatting](#markdown-formatting)
 - [Attachments](#attachments)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
@@ -233,8 +234,8 @@ At this time, your estimated letter grade is A+.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
-## HTML/Markdown formatting
-Mailmerge supports HTML and Markdown formatting.
+## HTML formatting
+Mailmerge supports HTML formatting.
 
 ### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
@@ -260,7 +261,54 @@ Content-Type: text/html
 ```
 
 
-### Markdown
+### HTML and plain text
+This example shows how to provide both HTML and plain text versions in the same message.  A user's mail reader can select either one.
+
+#### Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: multipart/alternative; boundary="outer-boundary"
+
+This is a MIME-encoded message. If you are seeing this, your mail
+reader is old.
+
+--outer-boundary
+Content-Type: text/plain; charset=us-ascii
+
+Hi, {{name}},
+
+Your number is {{number}}.
+
+Sent by mailmerge https://github.com/awdeorio/mailmerge
+
+--outer-boundary
+MIME-Version: 1.0
+Content-Type: multipart/related;
+  type="text/html"; start="<body@here>"; boundary="inner-boundary"
+
+--inner-boundary
+Content-Type: text/html; charset=us-ascii
+Content-Disposition: inline
+Content-ID: <body@here>
+
+<html>
+<body>
+
+<p>Hi, {{name}},</p>
+
+<p>Your number is {{number}}.</p>
+
+<p>Sent by <a href="https://github.com/awdeorio/mailmerge">mailmerge</a></p>
+
+</body>
+</html>
+```
+
+
+## Markdown formatting
 You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax) with the `--markdown` option. Emails sent with this option will include both HTML and plain text versions. (A user's mail reader can select either one.)
 
 Don't forget to include the `--markdown` flag to enable this feature!
@@ -268,7 +316,7 @@ Don't forget to include the `--markdown` flag to enable this feature!
 $ mailmerge --dry-run --markdown
 ```
 
-#### Template `mailmerge_template.txt`
+### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
