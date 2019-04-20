@@ -38,7 +38,6 @@ class TestMarkdown(TestSMTPBase):
             template_filename="test_markdown.template.txt",
             no_limit=False,
             dry_run=False,
-            use_markdown=True,
         )
 
         # Check SMTP server after

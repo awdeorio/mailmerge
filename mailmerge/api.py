@@ -98,23 +98,23 @@ def make_message_multipart(message):
 
 def convert_markdown(message):
     """Convert markdown in message text to HTML."""
-    if message.is_multipart():
-        print(">>> Warning: Markdown conversion requires non-multipart email.")
-    else:
-        # Convert the text from markdown and then make the message multipart
-        message = make_message_multipart(message)
-        for payload_item in set(message.get_payload()):
-            # Assume the plaintext item is formatted with markdown.
-            # Add corresponding HTML version of the item as the last part of
-            # the multipart message (as per RFC 2046)
-            if payload_item['Content-Type'].startswith('text/plain'):
-                original_text = payload_item.get_payload()
-                html_text = markdown.markdown(original_text)
-                html_payload = future.backports.email.mime.text.MIMEText(
-                    "<html><body>{}</body></html>".format(html_text),
-                    "html",
-                )
-                message.attach(html_payload)
+    if not message['Content-Type'].startswith("text/markdown"):
+        return message
+    del message['Content-Type']
+    # Convert the text from markdown and then make the message multipart
+    message = make_message_multipart(message)
+    for payload_item in set(message.get_payload()):
+        # Assume the plaintext item is formatted with markdown.
+        # Add corresponding HTML version of the item as the last part of
+        # the multipart message (as per RFC 2046)
+        if payload_item['Content-Type'].startswith('text/plain'):
+            original_text = payload_item.get_payload()
+            html_text = markdown.markdown(original_text)
+            html_payload = future.backports.email.mime.text.MIMEText(
+                "<html><body>{}</body></html>".format(html_text),
+                "html",
+            )
+            message.attach(html_payload)
     return message
 
 
@@ -151,7 +151,7 @@ def addattachments(message, template_path):
         message.attach(part)
         print(">>> attached {}".format(normalized_path))
 
-    del message['attachment']
+    del message['attachments']
     return message, len(attachment_filepaths)
 
 
@@ -283,7 +283,6 @@ def main(sample=False,
          dry_run=True,
          limit=1,
          no_limit=False,
-         use_markdown=False,
          database_filename=DATABASE_FILENAME_DEFAULT,
          template_filename=TEMPLATE_FILENAME_DEFAULT,
          config_filename=CONFIG_FILENAME_DEFAULT):
@@ -339,8 +338,7 @@ def main(sample=False,
             # Parse message headers and detect encoding
             (message, sender, recipients) = parsemail(raw_message)
             # Convert message from markdown to HTML if requested
-            if use_markdown:
-                message = convert_markdown(message)
+            message = convert_markdown(message)
 
             print(">>> message {}".format(i))
             print(message.as_string())
