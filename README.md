@@ -309,18 +309,14 @@ Content-ID: <body@here>
 
 
 ## Markdown formatting
-You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax) with the `--markdown` option. Emails sent with this option will include both HTML and plain text versions. (A user's mail reader can select either one.)
-
-Don't forget to include the `--markdown` flag to enable this feature!
-```console
-$ mailmerge --dry-run --markdown
-```
+You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax) by including a custom header `Content-Type: text/markdown` in the message. Email templtes with this custom header will include both HTML and plain text versions. (A user's mail reader can select either one.)
 
 ### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+CONTENT-TYPE: text/markdown
 
 You can add:
 
