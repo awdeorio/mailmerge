@@ -121,7 +121,7 @@ def addattachments(message, template_path):
         message.attach(part)
         print(">>> attached {}".format(normalized_path))
 
-    del message['attachments']
+    del message['attachment']
     return message, len(attachment_filepaths)
 
 
