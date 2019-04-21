@@ -309,7 +309,7 @@ Content-ID: <body@here>
 
 
 ## Markdown formatting
-You can format an email using [Markdown](https://daringfireball.net/projects/markdown/syntax) by including a custom header `Content-Type: text/markdown` in the message. Email templtes with this custom header will include both HTML and plain text versions. (A user's mail reader can select either one.)
+Mailmerge support [Markdown](https://daringfireball.net/projects/markdown/syntax) formatting by including the custom custom header `Content-Type: text/markdown` in the message. Mailmerge will render the markdown to HTML, then include both HTML and plain text versions in a multiplart message. A recipient's mail reader can then select either format.
 
 ### Template `mailmerge_template.txt`
 ```
