@@ -98,8 +98,7 @@ def make_message_multipart(message):
 
 def convert_markdown(message):
     """Convert markdown in message text to HTML."""
-    if not message['Content-Type'].startswith("text/markdown"):
-        return message
+    assert not message['Content-Type'].startswith("text/markdown")
     del message['Content-Type']
     # Convert the text from markdown and then make the message multipart
     message = make_message_multipart(message)
@@ -338,7 +337,8 @@ def main(sample=False,
             # Parse message headers and detect encoding
             (message, sender, recipients) = parsemail(raw_message)
             # Convert message from markdown to HTML if requested
-            message = convert_markdown(message)
+            if message['Content-Type'].startswith("text/markdown"):
+                message = convert_markdown(message)
 
             print(">>> message {}".format(i))
             print(message.as_string())
