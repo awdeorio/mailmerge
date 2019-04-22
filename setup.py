@@ -27,6 +27,7 @@ setup(
         "jinja2",
         "future",
         "backports.csv",
+        "markdown",
     ],
     extras_require={
         'dev': [
