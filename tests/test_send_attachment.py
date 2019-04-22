@@ -1,20 +1,11 @@
 """Test messages with attachments."""
-import os
-import unittest
 import future.backports.email as email
 import mailmerge
-from mailmerge.smtp_dummy import SMTP_dummy
+from tests.test_smtp_base import TestSMTPBase
 
 
-class TestSendAttachment(unittest.TestCase):
+class TestSendAttachment(TestSMTPBase):
     """Test messages with attachments."""
-    def setUp(self):
-        """Change directory to tests/ before any unit test."""
-        os.chdir(os.path.dirname(__file__))
-
-        # Initialize dummy SMTP server
-        self.smtp = SMTP_dummy()
-        self.smtp.clear()
 
     def _validate_message_contents(self, message):
         """Validate the contents and attachments of the message."""
@@ -51,9 +42,9 @@ class TestSendAttachment(unittest.TestCase):
     def test_send_attachment(self):
         """Attachments should be sent as part of the email."""
         mailmerge.api.main(
-            database_filename="test_send_attachment.database.csv",
+            database_filename=self.DATABASE_FILENAME,
+            config_filename=self.SERVER_CONFIG_FILENAME,
             template_filename="test_send_attachment.template.txt",
-            config_filename="server_dummy.conf",
             no_limit=False,
             dry_run=False,
         )

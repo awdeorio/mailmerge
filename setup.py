@@ -13,7 +13,7 @@ setup(
     name="mailmerge",
     description="A simple, command line mail merge tool",
     long_description=README,
-    version="1.8",
+    version="1.9",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
@@ -27,6 +27,7 @@ setup(
         "jinja2",
         "future",
         "backports.csv",
+        "markdown",
     ],
     extras_require={
         'dev': [
