@@ -26,7 +26,7 @@ setup(
         "configparser",
         "jinja2",
         "future",
-        "backports.csv",
+        "backports.csv;python_version<='2.7'",
         "markdown",
     ],
     extras_require={
