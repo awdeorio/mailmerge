@@ -13,8 +13,13 @@ import smtplib
 import configparser
 import getpass
 import datetime
+
 # NOTE: Python 2.x UTF8 support requires csv and email backports
-from backports import csv
+try:
+    from backports import csv
+except ImportError:
+    import csv
+
 import future.backports.email as email  # pylint: disable=useless-import-alias
 import future.backports.email.mime  # pylint: disable=unused-import
 import future.backports.email.mime.application  # pylint: disable=unused-import
