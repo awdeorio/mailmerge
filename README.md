@@ -38,6 +38,9 @@ If you get a `Permission denied` error, use administrator privileges.  Alternati
 $ sudo pip install mailmerge
 ```
 
+mailmerge is also packaged and available on Fedora.  You can install it with the following command:
+```sudo dnf install python3-mailmerge```
+
 ## Example
 This example will walk you through the steps for creating a template email, database and STMP server configuration.  Then, it will show how to test it before sending real emails.
 
