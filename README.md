@@ -28,14 +28,19 @@ $ mailmerge
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
 
 ## Install
-System-wide install
+System-wide install.
 ```console
 $ pip install mailmerge
 ```
 
-If you get a `Permission denied` error, use administrator privileges.  Alternatively, see the development install instructions.
+System-wide install requiring administrator privileges.  Use this if you get a `Permission denied` error.
 ```console
 $ sudo pip install mailmerge
+```
+
+Fedora package install.
+```console
+$ sudo dnf install python3-mailmerge
 ```
 
 ## Example
