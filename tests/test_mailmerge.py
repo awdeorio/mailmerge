@@ -134,6 +134,8 @@ def test_markdown(mock_SMTP):
 def test_attachment(mock_SMTP):
     """Attachments should be sent as part of the email."""
     with cd.cd(TESTDATA_DIR):
+        # Execute mailmerge inside testdata directory so that mailmerge can
+        # find the attachment files
         mailmerge.api.main(
             database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
             template_filename=os.path.join(TESTDATA_DIR, "attachment_template.txt"),
@@ -185,3 +187,31 @@ def test_attachment(mock_SMTP):
             expected_attachments[filename] = True
     assert email_body_present
     assert False not in expected_attachments.values()
+
+
+@unittest.mock.patch('smtplib.SMTP')
+def test_utf8_template(mock_SMTP):
+    """Verify UTF8 support in email template."""
+    mailmerge.api.main(
+        database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
+        template_filename=os.path.join(TESTDATA_DIR, "utf8_template.txt"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
+        dry_run=False,
+    )
+
+    # Parse sender, recipients and message from mock calls to sendmail
+    smtp = mock_SMTP.return_value
+    assert len(smtp.sendmail.call_args_list) == 1
+    raw_message = smtp.sendmail.call_args_list[0][0][2]
+    message = email.parser.Parser().parsestr(raw_message)
+
+    # Verify encoding
+    assert message.get_content_maintype() == "text"
+    assert message.get_content_subtype() == "plain"
+    assert message.get_content_charset() == "utf-8"
+
+    # Verify content
+    # NOTE: to decode a base46-encoded string:
+    # print((str(base64.b64decode(payload), "utf-8")))
+    payload = message.get_payload()
+    assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2gg\nR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVy\nIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vs\nw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndl\nbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXou\nCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2Vu\ndCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv\nCg==\n'  # pylint: disable=line-too-long
