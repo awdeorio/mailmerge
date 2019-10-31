@@ -1,10 +1,16 @@
 """Mailmerge unit tests."""
 import os
-import unittest.mock
 import email
 import cd
 import markdown
 import mailmerge
+
+
+# NOTE: Python 2.x mock lives in a different place
+try:
+    from unittest import mock
+except ImportError:
+    import mock
 
 
 # We're going to use mock_SMTP because it mimics the real SMTP library
@@ -38,7 +44,7 @@ def test_stdout(capsys):
     assert ">>> sent message 1 DRY RUN" in stdout
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_smtp(mock_SMTP):
     """Verify SMTP library calls."""
     mailmerge.api.main(
@@ -54,7 +60,7 @@ def test_smtp(mock_SMTP):
     assert smtp.sendmail.call_count == 1
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_cc_bcc(mock_SMTP):
     """CC recipients should receive a copy."""
     mailmerge.api.main(
@@ -86,7 +92,7 @@ def test_cc_bcc(mock_SMTP):
     assert "Secret" not in raw_message
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_markdown(mock_SMTP):
     """Markdown messages should be converted to HTML before being sent."""
     mailmerge.api.main(
@@ -127,10 +133,11 @@ def test_markdown(mock_SMTP):
     # Verify rendered Markdown
     htmltext = payload[1].get_payload()
     rendered = markdown.markdown(plaintext)
-    assert f"<html><body>{rendered}</body></html>" == htmltext.strip()
+    htmltext_correct = "<html><body>{}</body></html>".format(rendered)
+    assert htmltext.strip() == htmltext_correct.strip()
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_attachment(mock_SMTP):
     """Attachments should be sent as part of the email."""
     with cd.cd(TESTDATA):
@@ -192,7 +199,7 @@ def test_attachment(mock_SMTP):
     assert False not in expected_attachments.values()
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_utf8_template(mock_SMTP):
     """Verify UTF8 support in email template."""
     mailmerge.api.main(
@@ -220,7 +227,7 @@ def test_utf8_template(mock_SMTP):
     assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2gg\nR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVy\nIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vs\nw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndl\nbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXou\nCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2Vu\ndCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv\nCg==\n'  # noqa: E501 pylint: disable=line-too-long
 
 
-@unittest.mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP')
 def test_utf8_database(mock_SMTP):
     """Verify UTF8 support when template is rendered with UTF-8 value."""
     mailmerge.api.main(
