@@ -13,6 +13,9 @@ import os
 class cd:
     """Change directory using context manager syntax ('with')."""
 
+    # The name "cd" makes more sense than "CD"
+    # pylint: disable=invalid-name
+
     def __init__(self, new_pwd):
         """Save future pwd."""
         self.new_pwd = os.path.expanduser(new_pwd)
