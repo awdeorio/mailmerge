@@ -30,7 +30,6 @@ import future.backports.email.utils  # pylint: disable=unused-import
 import markdown
 import jinja2
 import chardet
-from . import smtp_dummy
 
 
 # Configuration
@@ -178,7 +177,7 @@ def sendmail(message, sender, recipients, config_filename):
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
-        if sendmail.security == "Dummy" or sendmail.username == "None":
+        if sendmail.username == "None":
             sendmail.password = None
         else:
             prompt = ">>> password for {} on {}: ".format(sendmail.username,
@@ -195,8 +194,6 @@ def sendmail(message, sender, recipients, config_filename):
         smtp.ehlo()
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
-    elif sendmail.security == "Dummy":
-        smtp = smtp_dummy.SMTP_dummy()
     else:
         raise configparser.Error("Unrecognized security type: {}".format(
             sendmail.security))
