@@ -27,6 +27,7 @@ import future.backports.email.mime.multipart  # pylint: disable=unused-import
 import future.backports.email.mime.text  # pylint: disable=unused-import
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
+import future.backports.email.generator
 import markdown
 import jinja2
 import chardet
@@ -76,9 +77,9 @@ def _create_boundary(message):
     # called from `Message.as_string`.)
     # Hence, to prevent `Message.set_boundary` from being called, add a
     # boundary header manually.
-    from future.backports.email.generator import Generator
+
     # pylint: disable=protected-access
-    boundary = Generator._make_boundary(message.policy.linesep)
+    boundary = email.generator.Generator._make_boundary(message.policy.linesep)
     message.set_param('boundary', boundary)
     return message
 
