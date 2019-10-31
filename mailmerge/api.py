@@ -20,7 +20,7 @@ try:
 except ImportError:
     import csv
 
-import future.backports.email as email  # pylint: disable=useless-import-alias
+import future.backports.email as email
 import future.backports.email.mime  # pylint: disable=unused-import
 import future.backports.email.mime.application  # pylint: disable=unused-import
 import future.backports.email.mime.multipart  # pylint: disable=unused-import
