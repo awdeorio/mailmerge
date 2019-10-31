@@ -45,3 +45,35 @@ def test_smtp(SMTP):
     # Mock smtp object with function calls recorded
     smtp = SMTP.return_value
     assert smtp.sendmail.call_count == 1
+
+
+@unittest.mock.patch('smtplib.SMTP')
+def test_cc_bcc(SMTP):
+    """CC recipients should receive a copy."""
+    mailmerge.api.main(
+        database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
+        template_filename=os.path.join(TESTDATA_DIR, "test_cc_bcc_template.txt"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
+        dry_run=False,
+        no_limit=False,
+    )
+
+    # Parse sender and recipients from mock calls to sendmail
+    smtp = SMTP.return_value
+    assert len(smtp.sendmail.call_args_list) == 1
+    sender = smtp.sendmail.call_args_list[0][0][0]
+    recipients = smtp.sendmail.call_args_list[0][0][1]
+    message = smtp.sendmail.call_args_list[0][0][2]
+
+    # Verify recipients include CC and BCC
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == [
+        "myself@mydomain.com",
+        "mycolleague@mydomain.com",
+        "secret@mydomain.com",
+    ]
+
+    # Make sure BCC recipients are *not* in the message
+    assert "BCC" not in message
+    assert "secret@mydomain.com" not in message
+    assert "Secret" not in message
