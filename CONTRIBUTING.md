@@ -36,7 +36,8 @@ $ pydocstyle mailmerge tests setup.py
 $ pylint --reports=n  mailmerge tests setup.py
 ```
 
-Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.
+Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.  Use `pyenv` to provide different versions of Python.
 ```console
+$ eval "$(pyenv init -)"
 $ tox
 ```
