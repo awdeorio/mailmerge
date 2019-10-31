@@ -4,6 +4,10 @@ import unittest.mock
 import mailmerge
 
 
+# We're going to use mock_SMTP because it mimics the real SMTP library
+# pylint: disable=invalid-name
+
+
 # Directories containing test input files
 TEST_DIR = os.path.dirname(__file__)
 TESTDATA_DIR = os.path.join(TEST_DIR, "testdata")
@@ -32,7 +36,7 @@ def test_stdout(capsys):
 
 
 @unittest.mock.patch('smtplib.SMTP')
-def test_smtp(SMTP):
+def test_smtp(mock_SMTP):
     """Verify SMTP library calls."""
     mailmerge.api.main(
         database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
@@ -43,12 +47,12 @@ def test_smtp(SMTP):
     )
 
     # Mock smtp object with function calls recorded
-    smtp = SMTP.return_value
+    smtp = mock_SMTP.return_value
     assert smtp.sendmail.call_count == 1
 
 
 @unittest.mock.patch('smtplib.SMTP')
-def test_cc_bcc(SMTP):
+def test_cc_bcc(mock_SMTP):
     """CC recipients should receive a copy."""
     mailmerge.api.main(
         database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
@@ -59,7 +63,7 @@ def test_cc_bcc(SMTP):
     )
 
     # Parse sender and recipients from mock calls to sendmail
-    smtp = SMTP.return_value
+    smtp = mock_SMTP.return_value
     assert len(smtp.sendmail.call_args_list) == 1
     sender = smtp.sendmail.call_args_list[0][0][0]
     recipients = smtp.sendmail.call_args_list[0][0][1]
