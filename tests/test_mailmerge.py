@@ -1,6 +1,8 @@
 """Mailmerge unit tests."""
 import os
 import unittest.mock
+import email
+import markdown
 import mailmerge
 
 
@@ -56,7 +58,7 @@ def test_cc_bcc(mock_SMTP):
     """CC recipients should receive a copy."""
     mailmerge.api.main(
         database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA_DIR, "test_cc_bcc_template.txt"),
+        template_filename=os.path.join(TESTDATA_DIR, "cc_bcc_template.txt"),
         config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
         dry_run=False,
         no_limit=False,
@@ -81,3 +83,47 @@ def test_cc_bcc(mock_SMTP):
     assert "BCC" not in message
     assert "secret@mydomain.com" not in message
     assert "Secret" not in message
+
+
+@unittest.mock.patch('smtplib.SMTP')
+def test_markdown(mock_SMTP):
+    """Markdown messages should be converted to HTML before being sent."""
+    mailmerge.api.main(
+        database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
+        template_filename=os.path.join(TESTDATA_DIR, "markdown_template.txt"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
+        no_limit=False,
+        dry_run=False,
+    )
+
+    # Parse sender and recipients from mock calls to sendmail
+    smtp = mock_SMTP.return_value
+    assert len(smtp.sendmail.call_args_list) == 1
+    sender = smtp.sendmail.call_args_list[0][0][0]
+    recipients = smtp.sendmail.call_args_list[0][0][1]
+    raw_message = smtp.sendmail.call_args_list[0][0][2]
+    message = email.parser.Parser().parsestr(raw_message)
+
+    # Verify sender and recipients
+    assert sender == "Bob <bob@bobdomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+
+    # Verify message is multipart
+    assert message.is_multipart()
+
+    # Make sure there is a plaintext part and an HTML part
+    payload = message.get_payload()
+    assert len(payload) == 2
+
+    # Ensure that the first part is plaintext and the last part
+    # is HTML (as per RFC 2046)
+    plaintext_contenttype = payload[0]['Content-Type']
+    assert plaintext_contenttype.startswith("text/plain")
+    plaintext = payload[0].get_payload()
+    html_contenttype = payload[1]['Content-Type']
+    assert html_contenttype.startswith("text/html")
+
+    # Verify rendered Markdown
+    htmltext = payload[1].get_payload()
+    rendered = markdown.markdown(plaintext)
+    assert f"<html><body>{rendered}</body></html>" == htmltext.strip()
