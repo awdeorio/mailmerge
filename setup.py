@@ -36,6 +36,7 @@ setup(
             'pycodestyle',
             'pytest',
             'tox',
+            'pdbpp'
         ]
     },
 
