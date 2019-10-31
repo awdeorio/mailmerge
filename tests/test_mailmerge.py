@@ -70,7 +70,7 @@ def test_cc_bcc(mock_SMTP):
     assert len(smtp.sendmail.call_args_list) == 1
     sender = smtp.sendmail.call_args_list[0][0][0]
     recipients = smtp.sendmail.call_args_list[0][0][1]
-    message = smtp.sendmail.call_args_list[0][0][2]
+    raw_message = smtp.sendmail.call_args_list[0][0][2]
 
     # Verify recipients include CC and BCC
     assert sender == "My Self <myself@mydomain.com>"
@@ -81,9 +81,9 @@ def test_cc_bcc(mock_SMTP):
     ]
 
     # Make sure BCC recipients are *not* in the message
-    assert "BCC" not in message
-    assert "secret@mydomain.com" not in message
-    assert "Secret" not in message
+    assert "BCC" not in raw_message
+    assert "secret@mydomain.com" not in raw_message
+    assert "Secret" not in raw_message
 
 
 @unittest.mock.patch('smtplib.SMTP')
@@ -215,3 +215,38 @@ def test_utf8_template(mock_SMTP):
     # print((str(base64.b64decode(payload), "utf-8")))
     payload = message.get_payload()
     assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2gg\nR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVy\nIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vs\nw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndl\nbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXou\nCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2Vu\ndCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv\nCg==\n'  # pylint: disable=line-too-long
+
+
+@unittest.mock.patch('smtplib.SMTP')
+def test_utf8_database(mock_SMTP):
+    """Verify UTF8 support when template is rendered with UTF-8 value."""
+    mailmerge.api.main(
+        database_filename=os.path.join(TESTDATA_DIR, "utf8_database.csv"),
+        template_filename=os.path.join(TESTDATA_DIR, "simple_template.txt"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
+        dry_run=False,
+    )
+
+    # Parse sender, recipients and message from mock calls to sendmail
+    smtp = mock_SMTP.return_value
+    assert len(smtp.sendmail.call_args_list) == 1
+    sender = smtp.sendmail.call_args_list[0][0][0]
+    recipients = smtp.sendmail.call_args_list[0][0][1]
+    raw_message = smtp.sendmail.call_args_list[0][0][2]
+    message = email.parser.Parser().parsestr(raw_message)
+
+    # Verify sender and recipients
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+
+    # Verify message encoding.  The template was ASCII, but when the template
+    # is rendered with UTF-8 data, the result is UTF-8 encoding.
+    assert message.get_content_maintype() == "text"
+    assert message.get_content_subtype() == "plain"
+    assert message.get_content_charset() == "utf-8"
+
+    # Verify content
+    # NOTE: to decode a base46-encoded string:
+    # print((str(base64.b64decode(payload), "utf-8")))
+    payload = message.get_payload()
+    assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcuCg==\n'
