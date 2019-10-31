@@ -18,7 +18,7 @@ def test_stdout(capsys):
     mailmerge.api.main(
         database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
         template_filename=os.path.join(TESTDATA_DIR, "simple_template.txt"),
-        config_filename=os.path.join(TESTDATA_DIR, "simple_server.conf"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
         no_limit=True,
     )
 
@@ -31,17 +31,17 @@ def test_stdout(capsys):
     assert ">>> sent message 1 DRY RUN" in stdout
 
 
-@unittest.mock.patch('smtplib.SMTP_SSL')
-def test_smtp(SMTP_SSL):
+@unittest.mock.patch('smtplib.SMTP')
+def test_smtp(SMTP):
     """Verify SMTP library calls."""
     mailmerge.api.main(
         database_filename=os.path.join(TESTDATA_DIR, "simple_database.csv"),
         template_filename=os.path.join(TESTDATA_DIR, "simple_template.txt"),
-        config_filename=os.path.join(TESTDATA_DIR, "server_ssl.conf"),
+        config_filename=os.path.join(TESTDATA_DIR, "server_open.conf"),
         limit=1,
         dry_run=False,
     )
 
     # Mock smtp object with function calls recorded
-    smtp = SMTP_SSL.return_value
+    smtp = SMTP.return_value
     assert smtp.sendmail.call_count == 1
