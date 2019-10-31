@@ -20,17 +20,17 @@ try:
 except ImportError:
     import csv
 
-import future.backports.email as email  # pylint: disable=useless-import-alias
+import future.backports.email as email
 import future.backports.email.mime  # pylint: disable=unused-import
 import future.backports.email.mime.application  # pylint: disable=unused-import
 import future.backports.email.mime.multipart  # pylint: disable=unused-import
 import future.backports.email.mime.text  # pylint: disable=unused-import
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
+import future.backports.email.generator
 import markdown
 import jinja2
 import chardet
-from . import smtp_dummy
 
 
 # Configuration
@@ -77,9 +77,9 @@ def _create_boundary(message):
     # called from `Message.as_string`.)
     # Hence, to prevent `Message.set_boundary` from being called, add a
     # boundary header manually.
-    from future.backports.email.generator import Generator
+
     # pylint: disable=protected-access
-    boundary = Generator._make_boundary(message.policy.linesep)
+    boundary = email.generator.Generator._make_boundary(message.policy.linesep)
     message.set_param('boundary', boundary)
     return message
 
@@ -178,7 +178,7 @@ def sendmail(message, sender, recipients, config_filename):
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
-        if sendmail.security == "Dummy" or sendmail.username == "None":
+        if sendmail.username == "None":
             sendmail.password = None
         else:
             prompt = ">>> password for {} on {}: ".format(sendmail.username,
@@ -195,8 +195,6 @@ def sendmail(message, sender, recipients, config_filename):
         smtp.ehlo()
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
-    elif sendmail.security == "Dummy":
-        smtp = smtp_dummy.SMTP_dummy()
     else:
         raise configparser.Error("Unrecognized security type: {}".format(
             sendmail.security))

@@ -28,6 +28,7 @@ setup(
         "future",
         "backports.csv;python_version<='2.7'",
         "markdown",
+        "mock;python_version<='2.7'",
     ],
     extras_require={
         'dev': [
@@ -36,6 +37,7 @@ setup(
             'pycodestyle',
             'pytest',
             'tox',
+            'pdbpp'
         ]
     },
 
