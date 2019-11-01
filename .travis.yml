@@ -19,3 +19,7 @@ python:
 install: pip install tox-travis codecov
 
 script: tox
+
+after_script:
+  pip install codecov
+  codecov
