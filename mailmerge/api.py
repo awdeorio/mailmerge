@@ -317,10 +317,14 @@ def main(sample=False,
         sys.exit(1)
 
     try:
-        # Read template
-        with io.open(template_filename, "r") as template_file:
-            content = template_file.read() + u"\n"
-            template = jinja2.Template(content)
+        # Configure Jinja2 template engine
+        template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(os.path.dirname(template_filename)),
+            undefined=jinja2.StrictUndefined,
+        )
+        template = template_env.get_template(
+            os.path.basename(template_filename),
+        )
 
         # Read CSV file database
         database = []

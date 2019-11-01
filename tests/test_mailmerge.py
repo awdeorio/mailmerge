@@ -2,6 +2,7 @@
 import os
 import email
 import cd
+import pytest
 import markdown
 import mailmerge
 
@@ -42,6 +43,22 @@ def test_stdout(capsys):
     assert ">>> sent message 0 DRY RUN" in stdout
     assert ">>> message 1" in stdout
     assert ">>> sent message 1 DRY RUN" in stdout
+
+
+@mock.patch('smtplib.SMTP')
+def test_bad_jinja(mock_SMTP):
+    """Bad jinja template should produce an error."""
+    with pytest.raises(SystemExit):
+        mailmerge.api.main(
+            database_filename=os.path.join(TESTDATA, "simple_database.csv"),
+            template_filename=os.path.join(TESTDATA, "bad_template.txt"),
+            config_filename=os.path.join(TESTDATA, "server_open.conf"),
+            dry_run=False,
+        )
+
+    # Verify no emails were sent
+    smtp = mock_SMTP.return_value
+    assert smtp.sendmail.call_count == 0
 
 
 @mock.patch('smtplib.SMTP')
@@ -223,8 +240,8 @@ def test_utf8_template(mock_SMTP):
     # Verify content
     # NOTE: to decode a base46-encoded string:
     # print((str(base64.b64decode(payload), "utf-8")))
-    payload = message.get_payload()
-    assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2gg\nR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVy\nIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vs\nw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndl\nbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXou\nCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2Vu\ndCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv\nCg==\n'  # noqa: E501 pylint: disable=line-too-long
+    payload = message.get_payload().replace("\n", "")
+    assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2ggR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVyIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vsw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndlbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXouCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2VudCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv'  # noqa: E501 pylint: disable=line-too-long
 
 
 @mock.patch('smtplib.SMTP')
@@ -259,4 +276,5 @@ def test_utf8_database(mock_SMTP):
     # NOTE: to decode a base46-encoded string:
     # print((str(base64.b64decode(payload), "utf-8")))
     payload = message.get_payload()
-    assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcuCg==\n'
+    payload = message.get_payload().replace("\n", "")
+    assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'
