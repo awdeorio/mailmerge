@@ -32,6 +32,7 @@ setup(
     ],
     extras_require={
         'dev': [
+            'codecov',
             'pylint',
             'pydocstyle',
             'pycodestyle',
