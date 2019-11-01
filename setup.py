@@ -33,7 +33,7 @@ setup(
     extras_require={
         'dev': [
             'codecov>=1.4.0',
-            'pdbpp'
+            'pdbpp',
             'pycodestyle',
             'pydocstyle',
             'pylint',
