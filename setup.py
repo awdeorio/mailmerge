@@ -36,6 +36,7 @@ setup(
             'pydocstyle',
             'pycodestyle',
             'pytest',
+            'pytest-cov',
             'tox',
             'pdbpp'
         ]
