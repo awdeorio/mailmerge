@@ -32,12 +32,14 @@ setup(
     ],
     extras_require={
         'dev': [
-            'pylint',
-            'pydocstyle',
-            'pycodestyle',
-            'pytest',
-            'tox',
+            'codecov>=1.4.0',
             'pdbpp'
+            'pycodestyle',
+            'pydocstyle',
+            'pylint',
+            'pytest',
+            'pytest-cov',
+            'tox',
         ]
     },
 

@@ -2,6 +2,10 @@
 #
 # Travis runs the tests configured in tox.ini using tox-travis.  Tox is a
 # automation tool for running tests in isolated virtual environments.
+# https://github.com/tox-dev/tox-travis
+#
+# Code coverage reporting
+# https://github.com/codecov/example-python
 
 language: python
 python:
@@ -12,6 +16,10 @@ python:
   - "3.7"
   - "3.8"
 
-install: pip install tox-travis
+install: pip install tox-travis codecov
 
 script: tox
+
+after_script:
+  - pip install codecov
+  - codecov
