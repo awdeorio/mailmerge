@@ -39,6 +39,7 @@ Test code style
 $ pycodestyle mailmerge tests setup.py
 $ pydocstyle mailmerge tests setup.py
 $ pylint mailmerge tests/*.py setup.py
+$ check-manifest
 ```
 
 Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.  Use `pyenv` to provide different versions of Python.

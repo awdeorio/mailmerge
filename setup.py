@@ -32,6 +32,7 @@ setup(
     ],
     extras_require={
         'dev': [
+            'check-manifest',
             'codecov>=1.4.0',
             'pdbpp',
             'pycodestyle',
