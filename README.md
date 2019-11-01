@@ -3,7 +3,6 @@ Mailmerge
 
 [![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
 [![Build Status](https://travis-ci.com/awdeorio/mailmerge.svg?branch=develop)](https://travis-ci.com/awdeorio/mailmerge)
-
 [![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/develop/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
 
 A simple, command line mail merge tool.
