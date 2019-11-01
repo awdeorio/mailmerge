@@ -4,6 +4,8 @@ Mailmerge
 [![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
 [![Build Status](https://travis-ci.com/awdeorio/mailmerge.svg?branch=develop)](https://travis-ci.com/awdeorio/mailmerge)
 
+[![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/master/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
+
 A simple, command line mail merge tool.
 
 `mailmerge` uses plain text files and the [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
@@ -28,14 +30,19 @@ $ mailmerge
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
 
 ## Install
-System-wide install
+System-wide install.
 ```console
 $ pip install mailmerge
 ```
 
-If you get a `Permission denied` error, use administrator privileges.  Alternatively, see the development install instructions.
+System-wide install requiring administrator privileges.  Use this if you get a `Permission denied` error.
 ```console
 $ sudo pip install mailmerge
+```
+
+Fedora package install.
+```console
+$ sudo dnf install python3-mailmerge
 ```
 
 ## Example

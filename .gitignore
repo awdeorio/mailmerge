@@ -1,7 +1,7 @@
 # Mailmerge config files
-mailmerge_database.csv
-mailmerge_template.txt
-mailmerge_server.conf
+/mailmerge_database.csv
+/mailmerge_template.txt
+/mailmerge_server.conf
 
 # Python temporary files
 *.pyc
@@ -24,3 +24,5 @@ build/
 
 # Test tools
 /.tox/
+/tmp/
+/.coverage

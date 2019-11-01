@@ -26,15 +26,19 @@ setup(
         "configparser",
         "jinja2",
         "future",
-        "backports.csv",
+        "backports.csv;python_version<='2.7'",
         "markdown",
+        "mock;python_version<='2.7'",
     ],
     extras_require={
         'dev': [
-            'pylint',
-            'pydocstyle',
+            'codecov>=1.4.0',
+            'pdbpp'
             'pycodestyle',
+            'pydocstyle',
+            'pylint',
             'pytest',
+            'pytest-cov',
             'tox',
         ]
     },
