@@ -175,7 +175,7 @@ class MessageTemplate:
             # Check that the attachment exists
             if not os.path.exists(normalized_path):
                 print("Error: can't find attachment " + normalized_path)
-                sys.exit(1)  # FIXME raise exception
+                sys.exit(1)
 
             filename = os.path.basename(normalized_path)
             with open(normalized_path, "rb") as attachment:
@@ -194,10 +194,11 @@ class MessageTemplate:
 class SendmailClient:
     """Represent a client connection to an SMTP server."""
 
-    def __init__(self, config_filename):
+    def __init__(self, config_filename, dry_run=False):
         """Read configuration from config_filename."""
         config = configparser.RawConfigParser()
         config.read(config_filename)
+        self.dry_run = dry_run
         self.host = config.get("smtp_server", "host")
         self.port = config.getint("smtp_server", "port")
         self.security = config.get("smtp_server", "security")
@@ -210,6 +211,8 @@ class SendmailClient:
 
     def sendmail(self, sender, recipients, message):
         """Send email message."""
+        if self.dry_run:
+            return
         if self.security == "SSL/TLS":
             smtp = smtplib.SMTP_SSL(self.host, self.port)
         elif self.security == "STARTTLS":
@@ -263,15 +266,14 @@ def main(database_path, template_path, config_path, limit, dry_run):
     csv_database = read_csv_database(database_path)
 
     # Read SMTP client configuration
-    sendmail_client = SendmailClient(config_path)
+    sendmail_client = SendmailClient(config_path, dry_run)
 
     # Each row corresponds to one email message
     for i, row in enumerate_limit(csv_database, limit):
         sender, recipients, message = message_template.render(row)
-        print(">>> message {}".format(i))  # FIXME
+        print(">>> message {}".format(i))
         print(message.as_string())
 
         # Send message
-        if not dry_run:
-            sendmail_client.sendmail(sender, recipients, message)
-            print(">>> sent message {}".format(i))  # FIXME
+        sendmail_client.sendmail(sender, recipients, message)
+        print(">>> sent message {}".format(i))
