@@ -257,23 +257,27 @@ def enumerate_limit(iterable, limit):
         yield i, value
 
 
-def main(database_path, template_path, config_path, limit, dry_run):
-    """Read files and render templates."""
-    # Read template
+def sendall(database_path, template_path, config_path, limit, dry_run):
     message_template = MessageTemplate(template_path)
-
-    # Read CSV file database
     csv_database = read_csv_database(database_path)
-
-    # Read SMTP client configuration
     sendmail_client = SendmailClient(config_path, dry_run)
-
-    # Each row corresponds to one email message
     for i, row in enumerate_limit(csv_database, limit):
         sender, recipients, message = message_template.render(row)
+        sendmail_client.sendmail(sender, recipients, message)
+        yield sender, recipients, message, i
+
+
+# FIXME delete
+def main(database_path, template_path, config_path, limit, dry_run):
+    """Read files and render templates."""
+    send_messages_generator = sendall(
+        database_path,
+        template_path,
+        config_path,
+        limit,
+        dry_run,
+    )
+    for _, _, message, i in send_messages_generator:
         print(">>> message {}".format(i))
         print(message.as_string())
-
-        # Send message
-        sendmail_client.sendmail(sender, recipients, message)
         print(">>> sent message {}".format(i))

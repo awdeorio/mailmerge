@@ -26,36 +26,36 @@ import mailmerge.api
               help="Limit the number of messages; default 1")
 @click.option("--no-limit", is_flag=True, default=False,
               help="Do not limit the number of messages")
-@click.option("--database", "database_filename",
+@click.option("--database", "database_path",
               default=mailmerge.api.DATABASE_FILENAME_DEFAULT,
               help="database CSV file name; default " +
               mailmerge.api.DATABASE_FILENAME_DEFAULT)
-@click.option("--template", "template_filename",
+@click.option("--template", "template_path",
               default=mailmerge.api.TEMPLATE_FILENAME_DEFAULT,
               help="template email file name; default " +
               mailmerge.api.TEMPLATE_FILENAME_DEFAULT)
-@click.option("--config", "config_filename",
+@click.option("--config", "config_path",
               default=mailmerge.api.CONFIG_FILENAME_DEFAULT,
               help="configuration file name; default " +
               mailmerge.api.CONFIG_FILENAME_DEFAULT)
 def cli(sample, dry_run, limit, no_limit,
-        database_filename, template_filename, config_filename):
+        database_path, template_path, config_path):
     """Command line interface."""
     # pylint: disable=too-many-arguments
     # Create a sample email template and database if there isn't one already
     if sample:
         create_sample_input_files(
-            template_filename,
-            database_filename,
-            config_filename,
+            template_path,
+            database_path,
+            config_path,
         )
         sys.exit(0)
-    if not os.path.exists(template_filename):
-        print("Error: can't find template email " + template_filename)
+    if not os.path.exists(template_path):
+        print("Error: can't find template email " + template_path)
         print("Create a sample (--sample) or specify a file (--template)")
         sys.exit(1)
-    if not os.path.exists(database_filename):
-        print("Error: can't find database_filename " + database_filename)
+    if not os.path.exists(database_path):
+        print("Error: can't find database_path " + database_path)
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
 
@@ -64,13 +64,17 @@ def cli(sample, dry_run, limit, no_limit,
         limit = -1
 
     try:
-        mailmerge.api.main(
-            database_path=database_filename,
-            template_path=template_filename,
-            config_path=config_filename,
-            limit=limit,
-            dry_run=dry_run,
+        send_messages_generator = mailmerge.api.sendall(
+            database_path,
+            template_path,
+            config_path,
+            limit,
+            dry_run,
         )
+        for _, _, message, i in send_messages_generator:
+            print(">>> message {}".format(i))
+            print(message.as_string())
+            print(">>> sent message {}".format(i))
     except jinja2.exceptions.TemplateError as err:
         print(">>> Error in Jinja2 template: {}".format(err))
         sys.exit(1)
@@ -82,7 +86,7 @@ def cli(sample, dry_run, limit, no_limit,
         sys.exit(1)
     except configparser.Error as err:
         print(">>> Error reading config file {}: {}".format(
-            config_filename, err))
+            config_path, err))
         sys.exit(1)
     except smtplib.SMTPException as err:
         print(">>> Error sending message", err, sep=' ', file=sys.stderr)
@@ -101,15 +105,15 @@ if __name__ == "__main__":
     cli()
 
 
-def create_sample_input_files(template_filename,
-                              database_filename,
-                              config_filename):
+def create_sample_input_files(template_path,
+                              database_path,
+                              config_path):
     """Create sample template email and database."""
-    print("Creating sample template email {}".format(template_filename))
-    if os.path.exists(template_filename):
-        print("Error: file exists: " + template_filename)
+    print("Creating sample template email {}".format(template_path))
+    if os.path.exists(template_path):
+        print("Error: file exists: " + template_path)
         sys.exit(1)
-    with io.open(template_filename, "w") as template_file:
+    with io.open(template_path, "w") as template_file:
         template_file.write(
             u"TO: {{email}}\n"
             u"SUBJECT: Testing mailmerge\n"
@@ -119,21 +123,21 @@ def create_sample_input_files(template_filename,
             u"\n"
             u"Your number is {{number}}.\n"
         )
-    print("Creating sample database {}".format(database_filename))
-    if os.path.exists(database_filename):
-        print("Error: file exists: " + database_filename)
+    print("Creating sample database {}".format(database_path))
+    if os.path.exists(database_path):
+        print("Error: file exists: " + database_path)
         sys.exit(1)
-    with io.open(database_filename, "w") as database_file:
+    with io.open(database_path, "w") as database_file:
         database_file.write(
             u'email,name,number\n'
             u'myself@mydomain.com,"Myself",17\n'
             u'bob@bobdomain.com,"Bob",42\n'
         )
-    print("Creating sample config file {}".format(config_filename))
-    if os.path.exists(config_filename):
-        print("Error: file exists: " + config_filename)
+    print("Creating sample config file {}".format(config_path))
+    if os.path.exists(config_path):
+        print("Error: file exists: " + config_path)
         sys.exit(1)
-    with io.open(config_filename, "w") as config_file:
+    with io.open(config_path, "w") as config_file:
         config_file.write(
             u"# Example: GMail\n"
             u"[smtp_server]\n"
