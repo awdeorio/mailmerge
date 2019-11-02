@@ -33,7 +33,7 @@ def test_stdout(capsys):
         database_path=os.path.join(TESTDATA, "simple_database.csv"),
         template_path=os.path.join(TESTDATA, "simple_template.txt"),
         config_path=os.path.join(TESTDATA, "server_open.conf"),
-        limit=1,
+        limit=-1,
         dry_run=True,
     )
 
@@ -41,9 +41,9 @@ def test_stdout(capsys):
     stdout, stderr = capsys.readouterr()
     assert stderr == ""
     assert ">>> message 0" in stdout
-    assert ">>> sent message 0 DRY RUN" in stdout
+    assert ">>> sent message 0" in stdout
     assert ">>> message 1" in stdout
-    assert ">>> sent message 1 DRY RUN" in stdout
+    assert ">>> sent message 1" in stdout
 
 
 @mock.patch('smtplib.SMTP')

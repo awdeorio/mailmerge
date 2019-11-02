@@ -213,6 +213,8 @@ class SendmailClient:
         """Send email message."""
         if self.dry_run:
             return
+
+        # Connect
         if self.security == "SSL/TLS":
             smtp = smtplib.SMTP_SSL(self.host, self.port)
         elif self.security == "STARTTLS":
@@ -226,7 +228,7 @@ class SendmailClient:
             raise configparser.Error("Unrecognized security type: {}".format(
                 self.security))
 
-        # Send credentials
+        # Authenticate
         if self.security != "Never":
             assert self.username
             assert self.password
@@ -258,6 +260,7 @@ def enumerate_limit(iterable, limit):
 
 
 def sendall(database_path, template_path, config_path, limit, dry_run):
+    """Render a template message and send on each iteration."""
     message_template = MessageTemplate(template_path)
     csv_database = read_csv_database(database_path)
     sendmail_client = SendmailClient(config_path, dry_run)
