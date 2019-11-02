@@ -87,7 +87,7 @@ def test_cc_bcc(mock_SMTP):
         database_path=os.path.join(TESTDATA, "simple_database.csv"),
         template_path=os.path.join(TESTDATA, "cc_bcc_template.txt"),
         config_path=os.path.join(TESTDATA, "server_open.conf"),
-        limit=-1,
+        limit=1,
         dry_run=False,
     )
 
