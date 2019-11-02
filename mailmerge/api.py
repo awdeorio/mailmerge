@@ -45,9 +45,9 @@ class MessageTemplate:
     Jinja2's Template object.
     """
 
-    def __init__(self, template_filename):
+    def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
-        self.template_filename = template_filename
+        self.template_path = template_path
         self.message = None
         self.sender = None
         self.recipients = None
@@ -55,16 +55,16 @@ class MessageTemplate:
 
         # Configure Jinja2 template engine
         template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(os.path.dirname(template_filename)),
+            loader=jinja2.FileSystemLoader(os.path.dirname(template_path)),
             undefined=jinja2.StrictUndefined,
         )
         self.template = template_env.get_template(
-            os.path.basename(template_filename),
+            os.path.basename(template_path),
         )
 
     def render(self, context):
         """Return rendered message object."""
-        raw_message = self.template.render(**context)
+        raw_message = self.template.render(context)
         self.parsemail(raw_message)
         self.convert_markdown()
         self.addattachments()
@@ -158,7 +158,7 @@ class MessageTemplate:
         self.make_message_multipart()
 
         attachment_filepaths = self.message.get_all('attachment', failobj=[])
-        template_parent_dir = os.path.dirname(self.template_filename)
+        template_parent_dir = os.path.dirname(self.template_path)
 
         for attachment_filepath in attachment_filepaths:
             attachment_filepath = attachment_filepath.strip()
@@ -268,19 +268,3 @@ def sendall(database_path, template_path, config_path, limit, dry_run):
         sender, recipients, message = message_template.render(row)
         sendmail_client.sendmail(sender, recipients, message)
         yield sender, recipients, message, i
-
-
-# FIXME delete
-def main(database_path, template_path, config_path, limit, dry_run):
-    """Read files and render templates."""
-    send_messages_generator = sendall(
-        database_path,
-        template_path,
-        config_path,
-        limit,
-        dry_run,
-    )
-    for _, _, message, i in send_messages_generator:
-        print(">>> message {}".format(i))
-        print(message.as_string())
-        print(">>> sent message {}".format(i))
