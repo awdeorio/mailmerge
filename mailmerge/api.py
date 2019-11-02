@@ -175,7 +175,7 @@ class MessageTemplate:
             # Check that the attachment exists
             if not os.path.exists(normalized_path):
                 print("Error: can't find attachment " + normalized_path)
-                sys.exit(1)  # FIXME
+                sys.exit(1)  # FIXME raise exception
 
             filename = os.path.basename(normalized_path)
             with open(normalized_path, "rb") as attachment:
@@ -243,6 +243,17 @@ def read_csv_database(database_path):
             yield row
 
 
+def enumerate_limit(iterable, limit):
+    """Enumerate iterable, stopping after limit iterations.
+
+    When limit == -1, enumerate entire iterable.
+    """
+    for i, value in enumerate(iterable):
+        if limit >= 0 and i >= limit:
+            return
+        yield i, value
+
+
 def main(database_path, template_path, config_path, limit, dry_run):
     """Read files and render templates."""
     # Read template
@@ -255,13 +266,8 @@ def main(database_path, template_path, config_path, limit, dry_run):
     sendmail_client = SendmailClient(config_path)
 
     # Each row corresponds to one email message
-    for i, row in enumerate(csv_database):
-        if limit >= 0 and i >= limit:
-            # limit == -1 for no limit
-            break
-
+    for i, row in enumerate_limit(csv_database, limit):
         sender, recipients, message = message_template.render(row)
-        yield
         print(">>> message {}".format(i))  # FIXME
         print(message.as_string())
 

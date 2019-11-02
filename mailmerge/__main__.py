@@ -65,11 +65,11 @@ def cli(sample, dry_run, limit, no_limit,
 
     try:
         mailmerge.api.main(
-            dry_run=dry_run,
-            limit=limit,
             database_path=database_filename,
             template_path=template_filename,
             config_path=config_filename,
+            limit=limit,
+            dry_run=dry_run,
         )
     except jinja2.exceptions.TemplateError as err:
         print(">>> Error in Jinja2 template: {}".format(err))
