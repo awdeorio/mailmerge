@@ -20,12 +20,12 @@ except ImportError:
     import csv
 
 import future.backports.email as email
-import future.backports.email.mime  # pylint: disable=unused-import
-import future.backports.email.mime.application  # pylint: disable=unused-import
-import future.backports.email.mime.multipart  # pylint: disable=unused-import
-import future.backports.email.mime.text  # pylint: disable=unused-import
-import future.backports.email.parser  # pylint: disable=unused-import
-import future.backports.email.utils  # pylint: disable=unused-import
+import future.backports.email.mime
+import future.backports.email.mime.application
+import future.backports.email.mime.multipart
+import future.backports.email.mime.text
+import future.backports.email.parser
+import future.backports.email.utils
 import future.backports.email.generator
 import markdown
 import jinja2
@@ -101,29 +101,31 @@ class MessageTemplate:
         self.sender = self.message["from"]
 
     def _create_boundary(self):
-        """Add boundary parameter to multipart message if they are not present."""
+        """Add boundary parameter to multipart message if not present."""
         if not self.message.is_multipart():
             return
         if self.message.get_boundary() is not None:
             return
 
-        # HACK: Python2 lists do not natively have a `copy` method. Unfortunately,
-        # due to a bug in the Backport for the email module, the method
-        # `Message.set_boundary` converts the Message headers into a native list,
-        # so that other methods that rely on "copying" the Message headers fail.
-        # `Message.set_boundary` is called from `Generator.handle_multipart` if the
-        # message does not already have a boundary present. (This method itself is
-        # called from `Message.as_string`.)
-        # Hence, to prevent `Message.set_boundary` from being called, add a
-        # boundary header manually.
-        # pylint: disable=protected-access
-        boundary = email.generator.Generator._make_boundary(self.message.policy.linesep)
+        # HACK: Python2 lists do not natively have a `copy`
+        # method. Unfortunately, due to a bug in the Backport for the email
+        # module, the method `Message.set_boundary` converts the Message
+        # headers into a native list, so that other methods that rely on
+        # "copying" the Message headers fail.  `Message.set_boundary` is called
+        # from `Generator.handle_multipart` if the message does not already
+        # have a boundary present. (This method itself is called from
+        # `Message.as_string`.)  Hence, to prevent `Message.set_boundary` from
+        # being called, add a boundary header manually.  pylint:
+        # disable=protected-access
+        boundary = email.generator.Generator._make_boundary(
+            self.message.policy.linesep)
         self.message.set_param('boundary', boundary)
 
     def make_message_multipart(self):
         """Convert a message into a multipart message."""
         if not self.message.is_multipart():
-            multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+            multipart_message = email.mime.multipart.MIMEMultipart(
+                'alternative')
             for header_key in set(self.message.keys()):
                 # Preserve duplicate headers
                 values = self.message.get_all(header_key, failobj=[])
@@ -167,11 +169,12 @@ class MessageTemplate:
         template_parent_dir = os.path.dirname(self.template_filename)
 
         for attachment_filepath in attachment_filepaths:
-            attachment_filepath = os.path.expanduser(attachment_filepath.strip())
+            attachment_filepath = attachment_filepath.strip()
+            attachment_filepath = os.path.expanduser(attachment_filepath)
             if not attachment_filepath:
                 continue
             if not os.path.isabs(attachment_filepath):
-                # Relative paths are relative to the template's parent directory
+                # Relative paths are relative to the template's parent dir
                 attachment_filepath = os.path.join(template_parent_dir,
                                                    attachment_filepath)
             normalized_path = os.path.abspath(attachment_filepath)
@@ -184,8 +187,10 @@ class MessageTemplate:
 
             filename = os.path.basename(normalized_path)
             with open(normalized_path, "rb") as attachment:
-                part = email.mime.application.MIMEApplication(attachment.read(),
-                                                              Name=filename)
+                part = email.mime.application.MIMEApplication(
+                    attachment.read(),
+                    Name=filename,
+                )
             part.add_header('Content-Disposition',
                             'attachment; filename="{}"'.format(filename))
             self.message.attach(part)
