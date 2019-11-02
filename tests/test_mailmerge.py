@@ -2,6 +2,7 @@
 import os
 import email
 import cd
+import jinja2
 import pytest
 import markdown
 import mailmerge
@@ -49,7 +50,7 @@ def test_stdout(capsys):
 @mock.patch('smtplib.SMTP')
 def test_bad_jinja(mock_SMTP):
     """Bad jinja template should produce an error."""
-    with pytest.raises(SystemExit):
+    with pytest.raises(jinja2.exceptions.UndefinedError):
         mailmerge.api.main(
             database_path=os.path.join(TESTDATA, "simple_database.csv"),
             template_path=os.path.join(TESTDATA, "bad_template.txt"),
