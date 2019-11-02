@@ -243,7 +243,7 @@ def read_database(database_path):
             yield row
 
 
-def main(dry_run, limit, database_path, template_path, config_path):
+def main(database_path, template_path, config_path, limit, dry_run):
     """Python API for mailmerge.
 
     mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>.

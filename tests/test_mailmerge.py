@@ -30,10 +30,11 @@ def test_stdout(capsys):
     https://pytest.readthedocs.io/en/2.7.3/capture.html
     """
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA, "simple_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
-        no_limit=True,
+        database_path=os.path.join(TESTDATA, "simple_database.csv"),
+        template_path=os.path.join(TESTDATA, "simple_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        limit=1,
+        dry_run=True,
     )
 
     # Verify mailmerge output
@@ -50,9 +51,10 @@ def test_bad_jinja(mock_SMTP):
     """Bad jinja template should produce an error."""
     with pytest.raises(SystemExit):
         mailmerge.api.main(
-            database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-            template_filename=os.path.join(TESTDATA, "bad_template.txt"),
-            config_filename=os.path.join(TESTDATA, "server_open.conf"),
+            database_path=os.path.join(TESTDATA, "simple_database.csv"),
+            template_path=os.path.join(TESTDATA, "bad_template.txt"),
+            config_path=os.path.join(TESTDATA, "server_open.conf"),
+            limit=1,
             dry_run=False,
         )
 
@@ -65,9 +67,9 @@ def test_bad_jinja(mock_SMTP):
 def test_smtp(mock_SMTP):
     """Verify SMTP library calls."""
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA, "simple_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
+        database_path=os.path.join(TESTDATA, "simple_database.csv"),
+        template_path=os.path.join(TESTDATA, "simple_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
         limit=1,
         dry_run=False,
     )
@@ -81,11 +83,11 @@ def test_smtp(mock_SMTP):
 def test_cc_bcc(mock_SMTP):
     """CC recipients should receive a copy."""
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA, "cc_bcc_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
+        database_path=os.path.join(TESTDATA, "simple_database.csv"),
+        template_path=os.path.join(TESTDATA, "cc_bcc_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        limit=-1,
         dry_run=False,
-        no_limit=False,
     )
 
     # Parse sender and recipients from mock calls to sendmail
@@ -113,10 +115,10 @@ def test_cc_bcc(mock_SMTP):
 def test_markdown(mock_SMTP):
     """Markdown messages should be converted to HTML before being sent."""
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA, "markdown_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
-        no_limit=False,
+        database_path=os.path.join(TESTDATA, "simple_database.csv"),
+        template_path=os.path.join(TESTDATA, "markdown_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        limit=1,
         dry_run=False,
     )
 
@@ -161,13 +163,13 @@ def test_attachment(mock_SMTP):
         # Execute mailmerge inside testdata directory so that mailmerge can
         # find the attachment files
         mailmerge.api.main(
-            database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-            template_filename=os.path.join(
+            database_path=os.path.join(TESTDATA, "simple_database.csv"),
+            template_path=os.path.join(
                 TESTDATA,
                 "attachment_template.txt",
             ),
-            config_filename=os.path.join(TESTDATA, "server_open.conf"),
-            no_limit=False,
+            config_path=os.path.join(TESTDATA, "server_open.conf"),
+            limit=1,
             dry_run=False,
         )
 
@@ -220,9 +222,10 @@ def test_attachment(mock_SMTP):
 def test_utf8_template(mock_SMTP):
     """Verify UTF8 support in email template."""
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "simple_database.csv"),
-        template_filename=os.path.join(TESTDATA, "utf8_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
+        database_path=os.path.join(TESTDATA, "simple_database.csv"),
+        template_path=os.path.join(TESTDATA, "utf8_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        limit=1,
         dry_run=False,
     )
 
@@ -248,9 +251,10 @@ def test_utf8_template(mock_SMTP):
 def test_utf8_database(mock_SMTP):
     """Verify UTF8 support when template is rendered with UTF-8 value."""
     mailmerge.api.main(
-        database_filename=os.path.join(TESTDATA, "utf8_database.csv"),
-        template_filename=os.path.join(TESTDATA, "simple_template.txt"),
-        config_filename=os.path.join(TESTDATA, "server_open.conf"),
+        database_path=os.path.join(TESTDATA, "utf8_database.csv"),
+        template_path=os.path.join(TESTDATA, "simple_template.txt"),
+        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        limit=1,
         dry_run=False,
     )
 
