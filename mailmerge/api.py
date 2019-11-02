@@ -46,6 +46,7 @@ class MessageTemplate:
     """
 
     def __init__(self, template_filename):
+        """Initialize variables and Jinja2 template."""
         self.template_filename = template_filename
         self.message = None
         self.sender = None
@@ -63,19 +64,10 @@ class MessageTemplate:
 
     def render(self, context):
         """Return rendered message object."""
-
-        # Fill in template fields using fields from row of CSV file
         raw_message = self.template.render(**context)
-
-        # Parse message headers and detect encoding
         self.parsemail(raw_message)
-
-        # Convert message from markdown to HTML if requested
         self.convert_markdown()
-
-        # Add attachments if any
         self.addattachments()
-
         return self.sender, self.recipients, self.message
 
     def parsemail(self, raw_message):
@@ -115,8 +107,8 @@ class MessageTemplate:
         # from `Generator.handle_multipart` if the message does not already
         # have a boundary present. (This method itself is called from
         # `Message.as_string`.)  Hence, to prevent `Message.set_boundary` from
-        # being called, add a boundary header manually.  pylint:
-        # disable=protected-access
+        # being called, add a boundary header manually.
+        # pylint: disable=protected-access
         boundary = email.generator.Generator._make_boundary(
             self.message.policy.linesep)
         self.message.set_param('boundary', boundary)
@@ -330,9 +322,6 @@ def main(sample=False,
 
     Render an email template for each line in a CSV database.
     """
-    # pylint: disable=too-many-arguments,too-many-locals,too-many-branches
-    # pylint: disable=too-many-statements
-    # NOTE: this function needs a refactor, then remove ^^^
     # Create a sample email template and database if there isn't one already
     if sample:
         create_sample_input_files(
@@ -381,7 +370,7 @@ def main(sample=False,
                 print(">>> sent message {}".format(i))
 
         # Hints for user
-        if len(message_template.attachments) == 0:
+        if not message_template.attachments:
             print(">>> No attachments were sent with the emails.")
         if not no_limit:
             print(">>> Limit was {} messages.  ".format(limit) +
