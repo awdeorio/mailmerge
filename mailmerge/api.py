@@ -235,7 +235,7 @@ class SendmailClient:
         smtp.close()
 
 
-def read_database(database_path):
+def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time."""
     with io.open(database_path, "r") as database_file:
         reader = csv.DictReader(database_file)
@@ -244,30 +244,24 @@ def read_database(database_path):
 
 
 def main(database_path, template_path, config_path, limit, dry_run):
-    """Python API for mailmerge.
-
-    mailmerge 0.1 by Andrew DeOrio <awdeorio@umich.edu>.
-
-    A simple, command line mail merge tool.
-
-    Render an email template for each line in a CSV database.
-    """
+    """Read files and render templates."""
     # Read template
     message_template = MessageTemplate(template_path)
 
     # Read CSV file database
-    database = read_database(database_path)
+    csv_database = read_csv_database(database_path)
 
     # Read SMTP client configuration
     sendmail_client = SendmailClient(config_path)
 
     # Each row corresponds to one email message
-    for i, row in enumerate(database):
+    for i, row in enumerate(csv_database):
         if limit >= 0 and i >= limit:
             # limit == -1 for no limit
             break
 
         sender, recipients, message = message_template.render(row)
+        yield
         print(">>> message {}".format(i))  # FIXME
         print(message.as_string())
 
