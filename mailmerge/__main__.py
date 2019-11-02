@@ -59,19 +59,19 @@ def cli(sample, dry_run, limit, no_limit,
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
 
+    # No limit is an alias for limit=-1
+    if no_limit:
+        limit = -1
+
     try:
         mailmerge.api.main(
             dry_run=dry_run,
             limit=limit,
-            no_limit=no_limit,
-            database_filename=database_filename,
-            template_filename=template_filename,
-            config_filename=config_filename,
+            database_path=database_filename,
+            template_path=template_filename,
+            config_path=config_filename,
         )
     except jinja2.exceptions.TemplateError as err:
-        print(">>> Error in Jinja2 template: {}".format(err))
-        sys.exit(1)
-    except jinja2.exceptions.UndefinedError as err:
         print(">>> Error in Jinja2 template: {}".format(err))
         sys.exit(1)
     except csv.Error as err:
