@@ -12,7 +12,6 @@ import sys
 import smtplib
 import configparser
 import getpass
-import datetime
 
 # NOTE: Python 2.x UTF8 support requires csv and email backports
 try:
@@ -39,174 +38,204 @@ DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
 CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
 
 
-def parsemail(raw_message):
-    """Parse message headers, then remove BCC header."""
-    message = email.parser.Parser().parsestr(raw_message)
+class MessageTemplate:
+    """Represent a templated email message.
 
-    # Detect encoding
-    detected = chardet.detect(bytearray(raw_message, "utf-8"))
-    encoding = detected["encoding"]
-    print(">>> encoding {}".format(encoding))
-    for part in message.walk():
-        if part.get_content_maintype() == 'multipart':
-            continue
-        part.set_charset(encoding)
+    This object combines an email.message object with the template abilities of
+    Jinja2's Template object.
+    """
 
-    # Extract recipients
-    addrs = email.utils.getaddresses(message.get_all("TO", [])) + \
-        email.utils.getaddresses(message.get_all("CC", [])) + \
-        email.utils.getaddresses(message.get_all("BCC", []))
-    recipients = [x[1] for x in addrs]
-    message.__delitem__("bcc")
-    message.__setitem__('Date', email.utils.formatdate())
-    sender = message["from"]
+    def __init__(self, template_filename):
+        self.template_filename = template_filename
+        self.message = None
+        self.sender = None
+        self.recipients = None
+        self.attachments = []
 
-    return (message, sender, recipients)
+        # Configure Jinja2 template engine
+        template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(os.path.dirname(template_filename)),
+            undefined=jinja2.StrictUndefined,
+        )
+        self.template = template_env.get_template(
+            os.path.basename(template_filename),
+        )
+
+    def render(self, context):
+        """Return rendered message object."""
+
+        # Fill in template fields using fields from row of CSV file
+        raw_message = self.template.render(**context)
+
+        # Parse message headers and detect encoding
+        self.parsemail(raw_message)
+
+        # Convert message from markdown to HTML if requested
+        self.convert_markdown()
+
+        # Add attachments if any
+        self.addattachments()
+
+        return self.sender, self.recipients, self.message
+
+    def parsemail(self, raw_message):
+        """Parse message headers, then remove BCC header."""
+        self.message = email.parser.Parser().parsestr(raw_message)
+
+        # Detect encoding
+        detected = chardet.detect(bytearray(raw_message, "utf-8"))
+        encoding = detected["encoding"]
+        print(">>> encoding {}".format(encoding))
+        for part in self.message.walk():
+            if part.get_content_maintype() == 'multipart':
+                continue
+            part.set_charset(encoding)
+
+        # Extract recipients
+        addrs = email.utils.getaddresses(self.message.get_all("TO", [])) + \
+            email.utils.getaddresses(self.message.get_all("CC", [])) + \
+            email.utils.getaddresses(self.message.get_all("BCC", []))
+        self.recipients = [x[1] for x in addrs]
+        self.message.__delitem__("bcc")
+        self.message.__setitem__('Date', email.utils.formatdate())
+        self.sender = self.message["from"]
+
+    def _create_boundary(self):
+        """Add boundary parameter to multipart message if they are not present."""
+        if not self.message.is_multipart():
+            return
+        if self.message.get_boundary() is not None:
+            return
+
+        # HACK: Python2 lists do not natively have a `copy` method. Unfortunately,
+        # due to a bug in the Backport for the email module, the method
+        # `Message.set_boundary` converts the Message headers into a native list,
+        # so that other methods that rely on "copying" the Message headers fail.
+        # `Message.set_boundary` is called from `Generator.handle_multipart` if the
+        # message does not already have a boundary present. (This method itself is
+        # called from `Message.as_string`.)
+        # Hence, to prevent `Message.set_boundary` from being called, add a
+        # boundary header manually.
+        # pylint: disable=protected-access
+        boundary = email.generator.Generator._make_boundary(self.message.policy.linesep)
+        self.message.set_param('boundary', boundary)
+
+    def make_message_multipart(self):
+        """Convert a message into a multipart message."""
+        if not self.message.is_multipart():
+            multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+            for header_key in set(self.message.keys()):
+                # Preserve duplicate headers
+                values = self.message.get_all(header_key, failobj=[])
+                for value in values:
+                    multipart_message[header_key] = value
+            original_text = self.message.get_payload()
+            multipart_message.attach(email.mime.text.MIMEText(original_text))
+            self.message = multipart_message
+        # HACK: For Python2 (see comments in `_create_boundary`)
+        self._create_boundary()
+
+    def convert_markdown(self):
+        """Convert markdown in message text to HTML."""
+        if not self.message['Content-Type'].startswith("text/markdown"):
+            return
+
+        del self.message['Content-Type']
+        # Convert the text from markdown and then make the message multipart
+        self.make_message_multipart()
+        for payload_item in set(self.message.get_payload()):
+            # Assume the plaintext item is formatted with markdown.
+            # Add corresponding HTML version of the item as the last part of
+            # the multipart message (as per RFC 2046)
+            if payload_item['Content-Type'].startswith('text/plain'):
+                original_text = payload_item.get_payload()
+                html_text = markdown.markdown(original_text)
+                html_payload = future.backports.email.mime.text.MIMEText(
+                    "<html><body>{}</body></html>".format(html_text),
+                    "html",
+                )
+                self.message.attach(html_payload)
+
+    def addattachments(self):
+        """Add the attachments from the message headers."""
+        if 'attachment' not in self.message:
+            return
+
+        self.make_message_multipart()
+
+        attachment_filepaths = self.message.get_all('attachment', failobj=[])
+        template_parent_dir = os.path.dirname(self.template_filename)
+
+        for attachment_filepath in attachment_filepaths:
+            attachment_filepath = os.path.expanduser(attachment_filepath.strip())
+            if not attachment_filepath:
+                continue
+            if not os.path.isabs(attachment_filepath):
+                # Relative paths are relative to the template's parent directory
+                attachment_filepath = os.path.join(template_parent_dir,
+                                                   attachment_filepath)
+            normalized_path = os.path.abspath(attachment_filepath)
+            self.attachments.append(normalized_path)
+
+            # Check that the attachment exists
+            if not os.path.exists(normalized_path):
+                print("Error: can't find attachment " + normalized_path)
+                sys.exit(1)
+
+            filename = os.path.basename(normalized_path)
+            with open(normalized_path, "rb") as attachment:
+                part = email.mime.application.MIMEApplication(attachment.read(),
+                                                              Name=filename)
+            part.add_header('Content-Disposition',
+                            'attachment; filename="{}"'.format(filename))
+            self.message.attach(part)
+            print(">>> attached {}".format(normalized_path))
+
+        del self.message['attachment']
 
 
-def _create_boundary(message):
-    """Add boundary parameter to multipart message if they are not present."""
-    if not message.is_multipart() or message.get_boundary() is not None:
-        return message
-    # HACK: Python2 lists do not natively have a `copy` method. Unfortunately,
-    # due to a bug in the Backport for the email module, the method
-    # `Message.set_boundary` converts the Message headers into a native list,
-    # so that other methods that rely on "copying" the Message headers fail.
-    # `Message.set_boundary` is called from `Generator.handle_multipart` if the
-    # message does not already have a boundary present. (This method itself is
-    # called from `Message.as_string`.)
-    # Hence, to prevent `Message.set_boundary` from being called, add a
-    # boundary header manually.
+class SendmailClient:
+    """Represent a client connection to an SMTP server."""
 
-    # pylint: disable=protected-access
-    boundary = email.generator.Generator._make_boundary(message.policy.linesep)
-    message.set_param('boundary', boundary)
-    return message
-
-
-def make_message_multipart(message):
-    """Convert a message into a multipart message."""
-    if not message.is_multipart():
-        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
-        for header_key in set(message.keys()):
-            # Preserve duplicate headers
-            values = message.get_all(header_key, failobj=[])
-            for value in values:
-                multipart_message[header_key] = value
-        original_text = message.get_payload()
-        multipart_message.attach(email.mime.text.MIMEText(original_text))
-        message = multipart_message
-    # HACK: For Python2 (see comments in `_create_boundary`)
-    message = _create_boundary(message)
-    return message
-
-
-def convert_markdown(message):
-    """Convert markdown in message text to HTML."""
-    assert message['Content-Type'].startswith("text/markdown")
-    del message['Content-Type']
-    # Convert the text from markdown and then make the message multipart
-    message = make_message_multipart(message)
-    for payload_item in set(message.get_payload()):
-        # Assume the plaintext item is formatted with markdown.
-        # Add corresponding HTML version of the item as the last part of
-        # the multipart message (as per RFC 2046)
-        if payload_item['Content-Type'].startswith('text/plain'):
-            original_text = payload_item.get_payload()
-            html_text = markdown.markdown(original_text)
-            html_payload = future.backports.email.mime.text.MIMEText(
-                "<html><body>{}</body></html>".format(html_text),
-                "html",
-            )
-            message.attach(html_payload)
-    return message
-
-
-def addattachments(message, template_path):
-    """Add the attachments from the message from the commandline options."""
-    if 'attachment' not in message:
-        return message, 0
-
-    message = make_message_multipart(message)
-
-    attachment_filepaths = message.get_all('attachment', failobj=[])
-    template_parent_dir = os.path.dirname(template_path)
-
-    for attachment_filepath in attachment_filepaths:
-        attachment_filepath = os.path.expanduser(attachment_filepath.strip())
-        if not attachment_filepath:
-            continue
-        if not os.path.isabs(attachment_filepath):
-            # Relative paths are relative to the template's parent directory
-            attachment_filepath = os.path.join(template_parent_dir,
-                                               attachment_filepath)
-        normalized_path = os.path.abspath(attachment_filepath)
-        # Check that the attachment exists
-        if not os.path.exists(normalized_path):
-            print("Error: can't find attachment " + normalized_path)
-            sys.exit(1)
-
-        filename = os.path.basename(normalized_path)
-        with open(normalized_path, "rb") as attachment:
-            part = email.mime.application.MIMEApplication(attachment.read(),
-                                                          Name=filename)
-        part.add_header('Content-Disposition',
-                        'attachment; filename="{}"'.format(filename))
-        message.attach(part)
-        print(">>> attached {}".format(normalized_path))
-
-    del message['attachment']
-    return message, len(attachment_filepaths)
-
-
-def sendmail(message, sender, recipients, config_filename):
-    """Send email message using Python SMTP library."""
-    # Read config file from disk to get SMTP server host, port, username
-    if not hasattr(sendmail, "host"):
+    def __init__(self, config_filename):
+        """Read configuration from config_filename."""
         config = configparser.RawConfigParser()
         config.read(config_filename)
-        sendmail.host = config.get("smtp_server", "host")
-        sendmail.port = config.getint("smtp_server", "port")
-        sendmail.username = config.get("smtp_server", "username")
-        sendmail.security = config.get("smtp_server", "security")
-        print(">>> Read SMTP server configuration from {}".format(
-            config_filename))
-        print(">>>   host = {}".format(sendmail.host))
-        print(">>>   port = {}".format(sendmail.port))
-        print(">>>   username = {}".format(sendmail.username))
-        print(">>>   security = {}".format(sendmail.security))
+        self.host = config.get("smtp_server", "host")
+        self.port = config.getint("smtp_server", "port")
+        self.security = config.get("smtp_server", "security")
 
-    # Prompt for password
-    if not hasattr(sendmail, "password"):
-        if sendmail.username == "None":
-            sendmail.password = None
+        if self.security != "Never":
+            self.username = config.get("smtp_server", "username")
+            prompt = ">>> password for {} on {}: ".format(
+                self.username, self.host)
+            self.password = getpass.getpass(prompt)
+
+    def sendmail(self, sender, recipients, message):
+        """Send email message."""
+        if self.security == "SSL/TLS":
+            smtp = smtplib.SMTP_SSL(self.host, self.port)
+        elif self.security == "STARTTLS":
+            smtp = smtplib.SMTP(self.host, self.port)
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+        elif self.security == "Never":
+            smtp = smtplib.SMTP(self.host, self.port)
         else:
-            prompt = ">>> password for {} on {}: ".format(sendmail.username,
-                                                          sendmail.host)
-            sendmail.password = getpass.getpass(prompt)
+            raise configparser.Error("Unrecognized security type: {}".format(
+                self.security))
 
-    # Connect to SMTP server
-    if sendmail.security == "SSL/TLS":
-        smtp = smtplib.SMTP_SSL(sendmail.host, sendmail.port)
-    elif sendmail.security == "STARTTLS":
-        smtp = smtplib.SMTP(sendmail.host, sendmail.port)
-        smtp.ehlo()
-        smtp.starttls()
-        smtp.ehlo()
-    elif sendmail.security == "Never":
-        smtp = smtplib.SMTP(sendmail.host, sendmail.port)
-    else:
-        raise configparser.Error("Unrecognized security type: {}".format(
-            sendmail.security))
+        # Send credentials
+        if self.security != "Never":
+            assert self.username
+            assert self.password
+            smtp.login(self.username, self.password)
 
-    # Send credentials
-    if sendmail.username != "None":
-        smtp.login(sendmail.username, sendmail.password)
-
-    # Send message.  Note that we can't use the elegant
-    # "smtp.send_message(message)" because that's python3 only
-    smtp.sendmail(sender, recipients, message.as_string())
-    smtp.close()
+        # Send message.  Note that we can't use the elegant
+        # "smtp.send_message(message)" because that's python3 only
+        smtp.sendmail(sender, recipients, message.as_string())
+        smtp.close()
 
 
 def create_sample_input_files(template_filename,
@@ -317,14 +346,8 @@ def main(sample=False,
         sys.exit(1)
 
     try:
-        # Configure Jinja2 template engine
-        template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(os.path.dirname(template_filename)),
-            undefined=jinja2.StrictUndefined,
-        )
-        template = template_env.get_template(
-            os.path.basename(template_filename),
-        )
+        # Read template
+        message_template = MessageTemplate(template_filename)
 
         # Read CSV file database
         database = []
@@ -333,45 +356,27 @@ def main(sample=False,
             for row in reader:
                 database.append(row)
 
+        # Read SMTP client configuration
+        sendmail_client = SendmailClient(config_filename)
+
         # Each row corresponds to one email message
         for i, row in enumerate(database):
             if not no_limit and i >= limit:
                 break
 
-            # Fill in template fields using fields from row of CSV file
-            raw_message = template.render(**row)
-
-            # Parse message headers and detect encoding
-            (message, sender, recipients) = parsemail(raw_message)
-            # Convert message from markdown to HTML if requested
-            if message['Content-Type'].startswith("text/markdown"):
-                message = convert_markdown(message)
-
+            sender, recipients, message = message_template.render(row)
             print(">>> message {}".format(i))
             print(message.as_string())
-
-            # Add attachments if any
-            (message, num_attachments) = addattachments(message,
-                                                        template_filename)
 
             # Send message
             if dry_run:
                 print(">>> sent message {} DRY RUN".format(i))
             else:
-                # Send message
-                try:
-                    sendmail(message, sender, recipients, config_filename)
-                except smtplib.SMTPException as err:
-                    print(">>> failed to send message {}".format(i))
-                    timestamp = '{:%Y-%m-%d %H:%M:%S}'.format(
-                        datetime.datetime.now()
-                    )
-                    print(timestamp, i, err, sep=' ', file=sys.stderr)
-                else:
-                    print(">>> sent message {}".format(i))
+                sendmail_client.sendmail(sender, recipients, message)
+                print(">>> sent message {}".format(i))
 
         # Hints for user
-        if num_attachments == 0:
+        if len(message_template.attachments) == 0:
             print(">>> No attachments were sent with the emails.")
         if not no_limit:
             print(">>> Limit was {} messages.  ".format(limit) +
@@ -393,3 +398,5 @@ def main(sample=False,
         print(">>> Error reading config file {}: {}".format(
             config_filename, err))
         sys.exit(1)
+    except smtplib.SMTPException as err:
+        print(">>> Error sending message", err, sep=' ', file=sys.stderr)
