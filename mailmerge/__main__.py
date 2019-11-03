@@ -27,17 +27,14 @@ import mailmerge.api
 @click.option("--no-limit", is_flag=True, default=False,
               help="Do not limit the number of messages")
 @click.option("--database", "database_path",
-              default=mailmerge.api.DATABASE_FILENAME_DEFAULT,
-              help="database CSV file name; default " +
-              mailmerge.api.DATABASE_FILENAME_DEFAULT)
+              default="mailmerge_database.csv",
+              help="database CSV file name; default mailmerge_database.csv ")
 @click.option("--template", "template_path",
-              default=mailmerge.api.TEMPLATE_FILENAME_DEFAULT,
-              help="template email file name; default " +
-              mailmerge.api.TEMPLATE_FILENAME_DEFAULT)
+              default="mailmerge_template.txt",
+              help="template email file name; default mailmerge_template.txt")
 @click.option("--config", "config_path",
-              default=mailmerge.api.CONFIG_FILENAME_DEFAULT,
-              help="configuration file name; default " +
-              mailmerge.api.CONFIG_FILENAME_DEFAULT)
+              default="mailmerge_server.conf",
+              help="configuration file name; default mailmerge_server.conf")
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """Command line interface."""

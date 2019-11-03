@@ -32,12 +32,6 @@ import jinja2
 import chardet
 
 
-# Configuration
-TEMPLATE_FILENAME_DEFAULT = "mailmerge_template.txt"
-DATABASE_FILENAME_DEFAULT = "mailmerge_database.csv"
-CONFIG_FILENAME_DEFAULT = "mailmerge_server.conf"
-
-
 class MessageTemplate:
     """Represent a templated email message.
 
