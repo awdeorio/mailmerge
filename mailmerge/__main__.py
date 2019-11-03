@@ -14,7 +14,7 @@ import configparser
 import smtplib
 import jinja2
 import click
-from . api import sendall
+from . utils import sendall
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})

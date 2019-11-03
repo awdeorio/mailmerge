@@ -1,8 +1,8 @@
-"""Mailmerge system tests."""
+"""Tests for utility functions."""
 import os
 import sh
 import utils
-import mailmerge.api
+import mailmerge.utils
 
 
 def test_stdout():
@@ -33,7 +33,7 @@ def test_stdout():
 def test_enumerate_limit_no_limit():
     """Verify limit=-1 results in no early termination."""
     iterations = 0
-    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], -1):
+    for _, _ in mailmerge.utils.enumerate_limit(["a", "b", "c"], -1):
         iterations += 1
     assert iterations == 3
 
@@ -41,14 +41,14 @@ def test_enumerate_limit_no_limit():
 def test_enumerate_limit_values():
     """Verify limit=-1 results in no early termination."""
     values = ["a", "b", "c"]
-    for i, a in mailmerge.api.enumerate_limit(values, -1):
-        assert a == values[i]
+    for i, value in mailmerge.utils.enumerate_limit(values, -1):
+        assert value == values[i]
 
 
 def test_enumerate_limit_stop_early():
     """Verify limit results in early termination."""
     iterations = 0
-    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], 2):
+    for _, _ in mailmerge.utils.enumerate_limit(["a", "b", "c"], 2):
         iterations += 1
     assert iterations == 2
 
@@ -56,6 +56,6 @@ def test_enumerate_limit_stop_early():
 def test_enumerate_limit_zero():
     """Verify limit results in early termination."""
     iterations = 0
-    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], 0):
+    for _, _ in mailmerge.utils.enumerate_limit(["a", "b", "c"], 0):
         iterations += 1
     assert iterations == 0

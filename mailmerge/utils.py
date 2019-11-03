@@ -1,11 +1,4 @@
-"""
-Mail merge using CSV database and jinja2 template email.
-
-API implementation.
-
-Andrew DeOrio <awdeorio@umich.edu>
-"""
-from __future__ import print_function
+"""Utility functions."""
 import io
 from .message_template import MessageTemplate
 from .sendmail_client import SendmailClient
