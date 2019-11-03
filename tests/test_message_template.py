@@ -5,7 +5,7 @@ import jinja2
 import pytest
 import markdown
 import mailmerge.message_template
-import utils
+from . import utils
 
 # Python 2.x UTF8 support requires csv backport
 try:

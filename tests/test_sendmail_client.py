@@ -2,8 +2,8 @@
 import os
 import future.backports.email as email
 import future.backports.email.parser
-import utils
 from mailmerge.sendmail_client import SendmailClient
+from . import utils
 
 # NOTE: Python 2.x mock lives in a different place
 try:
