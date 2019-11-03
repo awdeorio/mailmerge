@@ -6,17 +6,6 @@ import utils
 import mailmerge.api
 
 
-# NOTE: Python 2.x mock lives in a different place
-try:
-    from unittest import mock
-except ImportError:
-    import mock
-
-
-# We're going to use mock_SMTP because it mimics the real SMTP library
-# pylint: disable=invalid-name
-
-
 def test_stdout():
     """Verify stdout and stderr.
 
@@ -40,23 +29,6 @@ def test_stdout():
     assert ">>> sent message 0" in stdout
     assert ">>> message 1" in stdout
     assert ">>> sent message 1" in stdout
-
-
-@mock.patch('smtplib.SMTP')
-def test_smtp(mock_SMTP):
-    """Verify SMTP library calls."""
-    mailmerge_cmd = sh.Command("mailmerge")
-    output = mailmerge_cmd(
-        "--template", os.path.join(utils.TESTDATA, "simple_template.txt"),
-        "--database", os.path.join(utils.TESTDATA, "simple_database.csv"),
-        "--config", os.path.join(utils.TESTDATA, "server_open.conf"),
-        "--no-limit",
-        "--no-dry-run",
-    )
-
-    # Mock smtp object with function calls recorded
-    smtp = mock_SMTP.return_value
-    assert smtp.sendmail.call_count == 1
 
 
 @mock.patch('smtplib.SMTP')
