@@ -14,7 +14,8 @@ import configparser
 import smtplib
 import jinja2
 import click
-from . utils import sendall
+from .message_template import MessageTemplate
+from .sendmail_client import SendmailClient
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -39,36 +40,23 @@ from . utils import sendall
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """Command line interface."""
-    # pylint: disable=too-many-arguments, too-many-branches
-    if sample:
-        create_sample_input_files(
-            template_path,
-            database_path,
-            config_path,
-        )
-        sys.exit(0)
-    if not os.path.exists(template_path):
-        print("Error: can't find template email " + template_path)
-        print("Create a sample (--sample) or specify a file (--template)")
-        sys.exit(1)
-    if not os.path.exists(database_path):
-        print("Error: can't find database_path " + database_path)
-        print("Create a sample (--sample) or specify a file (--database)")
-        sys.exit(1)
+    # We need an argument for each command line option.  That also means a lot
+    # of local variables.
+    # pylint: disable=too-many-arguments, too-many-locals
+
+    check_input_files(template_path, database_path, config_path, sample)
 
     # No limit is an alias for limit=-1
     if no_limit:
         limit = -1
 
     try:
-        send_messages_generator = sendall(
-            database_path,
-            template_path,
-            config_path,
-            limit,
-            dry_run,
-        )
-        for _, _, message, i in send_messages_generator:
+        message_template = MessageTemplate(template_path)
+        csv_database = read_csv_database(database_path)
+        sendmail_client = SendmailClient(config_path, dry_run)
+        for i, row in enumerate_limit(csv_database, limit):
+            sender, recipients, message = message_template.render(row)
+            sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(i))
             print(message.as_string())
             print(">>> sent message {}".format(i))
@@ -82,8 +70,7 @@ def cli(sample, dry_run, limit, no_limit,
         print(">>> Authentication error: {}".format(err))
         sys.exit(1)
     except configparser.Error as err:
-        print(">>> Error reading config file {}: {}".format(
-            config_path, err))
+        print(">>> Error reading config file {}: {}".format(config_path, err))
         sys.exit(1)
     except smtplib.SMTPException as err:
         print(">>> Error sending message", err, sep=' ', file=sys.stderr)
@@ -104,6 +91,25 @@ def cli(sample, dry_run, limit, no_limit,
 if __name__ == "__main__":
     # pylint: disable=no-value-for-parameter
     cli()
+
+
+def check_input_files(template_path, database_path, config_path, sample):
+    """Check if input files are present and hint the user."""
+    if sample:
+        create_sample_input_files(
+            template_path,
+            database_path,
+            config_path,
+        )
+        sys.exit(0)
+    if not os.path.exists(template_path):
+        print("Error: can't find template email " + template_path)
+        print("Create a sample (--sample) or specify a file (--template)")
+        sys.exit(1)
+    if not os.path.exists(database_path):
+        print("Error: can't find database_path " + database_path)
+        print("Create a sample (--sample) or specify a file (--database)")
+        sys.exit(1)
 
 
 def create_sample_input_files(template_path,
@@ -176,3 +182,22 @@ def create_sample_input_files(template_path,
             u"# username = YOUR_USERNAME_HERE\n"
         )
     print("Edit these files, and then run mailmerge again")
+
+
+def read_csv_database(database_path):
+    """Read database CSV file, providing one line at a time."""
+    with io.open(database_path, "r") as database_file:
+        reader = csv.DictReader(database_file)
+        for row in reader:
+            yield row
+
+
+def enumerate_limit(iterable, limit):
+    """Enumerate iterable, stopping after limit iterations.
+
+    When limit == -1, enumerate entire iterable.
+    """
+    for i, value in enumerate(iterable):
+        if limit != -1 and i >= limit:
+            return
+        yield i, value
