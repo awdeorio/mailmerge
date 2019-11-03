@@ -7,6 +7,9 @@ import getpass
 class SendmailClient:
     """Represent a client connection to an SMTP server."""
 
+    # This class is pretty simple.  We don't need more than one public method.
+    # pylint: disable=too-few-public-methods
+
     def __init__(self, config_filename, dry_run=False):
         """Read configuration from config_filename."""
         config = configparser.RawConfigParser()
@@ -15,12 +18,8 @@ class SendmailClient:
         self.host = config.get("smtp_server", "host")
         self.port = config.getint("smtp_server", "port")
         self.security = config.get("smtp_server", "security")
-
-        if self.security != "Never":
-            self.username = config.get("smtp_server", "username")
-            prompt = ">>> password for {} on {}: ".format(
-                self.username, self.host)
-            self.password = getpass.getpass(prompt)
+        self.username = config.get("smtp_server", "username", fallback=None)
+        self.password = None
 
     def sendmail(self, sender, recipients, message):
         """Send email message."""
@@ -40,6 +39,12 @@ class SendmailClient:
         else:
             raise configparser.Error("Unrecognized security type: {}".format(
                 self.security))
+
+        # Ask for password if necessary
+        if self.security != "Never" and self.password is None:
+            prompt = ">>> password for {} on {}: ".format(
+                self.username, self.host)
+            self.password = getpass.getpass(prompt)
 
         # Authenticate
         if self.security != "Never":
