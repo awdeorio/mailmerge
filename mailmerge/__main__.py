@@ -89,6 +89,7 @@ def cli(sample, dry_run, limit, no_limit,
 
 
 if __name__ == "__main__":
+    # No value for parameter, that's how click works
     # pylint: disable=no-value-for-parameter
     cli()
 
