@@ -1,10 +1,17 @@
 """Tests for MessageTemplate."""
 import os
+import io
 import jinja2
 import pytest
 import markdown
 import mailmerge.message_template
 import utils
+
+# Python 2.x UTF8 support requires csv backport
+try:
+    from backports import csv
+except ImportError:
+    import csv
 
 
 def test_bad_jinja():
@@ -133,8 +140,6 @@ def test_utf8_template():
     )
     sender, recipients, message = message_template.render({
         "email": "myself@mydomain.com",
-        "name": "Myself",
-        "number": 17,
     })
 
     # Verify encoding
@@ -151,3 +156,32 @@ def test_utf8_template():
     # print((str(base64.b64decode(payload), "utf-8")))
     payload = message.get_payload().replace("\n", "")
     assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2ggR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVyIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vsw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndlbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXouCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2VudCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv'  # noqa: E501 pylint: disable=line-too-long
+
+
+def test_utf8_database():
+    """Verify UTF8 support when template is rendered with UTF-8 value."""
+    message_template = mailmerge.message_template.MessageTemplate(
+        template_path=os.path.join(utils.TESTDATA, "simple_template.txt"),
+    )
+    database_path = os.path.join(utils.TESTDATA, "utf8_database.csv")
+    with io.open(database_path, "r") as database_file:
+        reader = csv.DictReader(database_file)
+        context = next(reader)
+    sender, recipients, message = message_template.render(context)
+
+    # Verify sender and recipients
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+
+    # Verify message encoding.  The template was ASCII, but when the template
+    # is rendered with UTF-8 data, the result is UTF-8 encoding.
+    assert message.get_content_maintype() == "text"
+    assert message.get_content_subtype() == "plain"
+    assert message.get_content_charset() == "utf-8"
+
+    # Verify content
+    # NOTE: to decode a base46-encoded string:
+    # print((str(base64.b64decode(payload), "utf-8")))
+    payload = message.get_payload()
+    payload = message.get_payload().replace("\n", "")
+    assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'

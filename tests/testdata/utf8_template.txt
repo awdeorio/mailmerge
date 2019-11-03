@@ -1,6 +1,6 @@
 To: {{email}}
 Subject: Test subject
-From: me@example.com
+From: My Self <myself@mydomain.com>
 
 From the Tagelied of Wolfram von Eschenbach (Middle High German):
 

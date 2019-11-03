@@ -10,8 +10,7 @@ import io
 from .message_template import MessageTemplate
 from .sendmail_client import SendmailClient
 
-
-# NOTE: Python 2.x UTF8 support requires csv and email backports
+# Python 2.x UTF8 support requires csv backport
 try:
     from backports import csv
 except ImportError:
