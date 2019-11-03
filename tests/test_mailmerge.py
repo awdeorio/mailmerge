@@ -1,12 +1,9 @@
-"""Mailmerge unit tests."""
+"""Mailmerge system tests."""
 import os
 import email
-import cd
-import jinja2
-import pytest
-import markdown
-import mailmerge
-from .utils import TESTDATA
+import sh
+import utils
+import mailmerge.api
 
 
 # NOTE: Python 2.x mock lives in a different place
@@ -20,22 +17,24 @@ except ImportError:
 # pylint: disable=invalid-name
 
 
-def test_stdout(capsys):
+def test_stdout():
     """Verify stdout and stderr.
 
     pytest docs on capturing stdout and stderr
     https://pytest.readthedocs.io/en/2.7.3/capture.html
     """
-    mailmerge.api.sendall(
-        database_path=os.path.join(TESTDATA, "simple_database.csv"),
-        template_path=os.path.join(TESTDATA, "simple_template.txt"),
-        config_path=os.path.join(TESTDATA, "server_open.conf"),
-        limit=-1,
-        dry_run=True,
+    mailmerge_cmd = sh.Command("mailmerge")
+    output = mailmerge_cmd(
+        "--template", os.path.join(utils.TESTDATA, "simple_template.txt"),
+        "--database", os.path.join(utils.TESTDATA, "simple_database.csv"),
+        "--config", os.path.join(utils.TESTDATA, "server_open.conf"),
+        "--no-limit",
+        "--dry-run",
     )
 
     # Verify mailmerge output
-    stdout, stderr = capsys.readouterr()
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
     assert stderr == ""
     assert ">>> message 0" in stdout
     assert ">>> sent message 0" in stdout
@@ -46,12 +45,13 @@ def test_stdout(capsys):
 @mock.patch('smtplib.SMTP')
 def test_smtp(mock_SMTP):
     """Verify SMTP library calls."""
-    mailmerge.api.sendall(
-        database_path=os.path.join(TESTDATA, "simple_database.csv"),
-        template_path=os.path.join(TESTDATA, "simple_template.txt"),
-        config_path=os.path.join(TESTDATA, "server_open.conf"),
-        limit=1,
-        dry_run=False,
+    mailmerge_cmd = sh.Command("mailmerge")
+    output = mailmerge_cmd(
+        "--template", os.path.join(utils.TESTDATA, "simple_template.txt"),
+        "--database", os.path.join(utils.TESTDATA, "simple_database.csv"),
+        "--config", os.path.join(utils.TESTDATA, "server_open.conf"),
+        "--no-limit",
+        "--no-dry-run",
     )
 
     # Mock smtp object with function calls recorded
@@ -63,9 +63,9 @@ def test_smtp(mock_SMTP):
 def test_utf8_database(mock_SMTP):
     """Verify UTF8 support when template is rendered with UTF-8 value."""
     mailmerge.api.sendall(
-        database_path=os.path.join(TESTDATA, "utf8_database.csv"),
-        template_path=os.path.join(TESTDATA, "simple_template.txt"),
-        config_path=os.path.join(TESTDATA, "server_open.conf"),
+        database_path=os.path.join(utils.TESTDATA, "utf8_database.csv"),
+        template_path=os.path.join(utils.TESTDATA, "simple_template.txt"),
+        config_path=os.path.join(utils.TESTDATA, "server_open.conf"),
         limit=1,
         dry_run=False,
     )
@@ -99,24 +99,29 @@ def test_utf8_database(mock_SMTP):
 def test_enumerate_limit_no_limit():
     """Verify limit=-1 results in no early termination."""
     iterations = 0
-    for i, a in mailmerge.api.enumerate_limit(["a", "b", "c"], -1):
+    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], -1):
         iterations += 1
     assert iterations == 3
+
+
+def test_enumerate_limit_values():
+    """Verify limit=-1 results in no early termination."""
+    values = ["a", "b", "c"]
+    for i, a in mailmerge.api.enumerate_limit(values, -1):
+        assert a == values[i]
 
 
 def test_enumerate_limit_stop_early():
     """Verify limit results in early termination."""
     iterations = 0
-    for i, a in mailmerge.api.enumerate_limit(["a", "b", "c"], 2):
+    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], 2):
         iterations += 1
     assert iterations == 2
-    assert i == 1
-    assert a == "b"
 
 
 def test_enumerate_limit_zero():
     """Verify limit results in early termination."""
     iterations = 0
-    for i, a in mailmerge.api.enumerate_limit(["a", "b", "c"], 0):
+    for _, _ in mailmerge.api.enumerate_limit(["a", "b", "c"], 0):
         iterations += 1
     assert iterations == 0
