@@ -9,6 +9,7 @@ import os
 import io
 import sys
 import csv
+import socket
 import configparser
 import smtplib
 import jinja2
@@ -87,6 +88,10 @@ def cli(sample, dry_run, limit, no_limit,
         sys.exit(1)
     except smtplib.SMTPException as err:
         print(">>> Error sending message", err, sep=' ', file=sys.stderr)
+        sys.exit(1)
+    except socket.error:
+        print(">>> Error connecting to server")
+        sys.exit(1)
 
     # Hints for user
     if not no_limit:
