@@ -1,7 +1,7 @@
 """Tests for SendmailClient."""
 import os
 import future.backports.email as email
-import future.backports.email.parser
+import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
 from . import utils
 

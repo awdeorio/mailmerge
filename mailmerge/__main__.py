@@ -39,8 +39,7 @@ from . utils import sendall
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """Command line interface."""
-    # pylint: disable=too-many-arguments
-    # Create a sample email template and database if there isn't one already
+    # pylint: disable=too-many-arguments, too-many-branches
     if sample:
         create_sample_input_files(
             template_path,

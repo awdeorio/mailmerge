@@ -24,7 +24,7 @@ def enumerate_limit(iterable, limit):
     When limit == -1, enumerate entire iterable.
     """
     for i, value in enumerate(iterable):
-        if limit >= 0 and i >= limit:
+        if limit != -1 and i >= limit:
             return
         yield i, value
 
