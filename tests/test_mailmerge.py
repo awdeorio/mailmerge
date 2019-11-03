@@ -6,6 +6,7 @@ import jinja2
 import pytest
 import markdown
 import mailmerge
+from .utils import TESTDATA
 
 
 # NOTE: Python 2.x mock lives in a different place
@@ -17,11 +18,6 @@ except ImportError:
 
 # We're going to use mock_SMTP because it mimics the real SMTP library
 # pylint: disable=invalid-name
-
-
-# Directories containing test input files
-TESTDIR = os.path.dirname(__file__)
-TESTDATA = os.path.join(TESTDIR, "testdata")
 
 
 def test_stdout(capsys):

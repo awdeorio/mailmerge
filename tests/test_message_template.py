@@ -4,18 +4,13 @@ import jinja2
 import pytest
 import markdown
 import mailmerge.message_template
-
-
-# Directories containing test input files
-# FIXME duplicate
-TESTDIR = os.path.dirname(__file__)
-TESTDATA = os.path.join(TESTDIR, "testdata")
+import utils
 
 
 def test_bad_jinja():
     """Bad jinja template should produce an error."""
     message_template = mailmerge.message_template.MessageTemplate(
-        os.path.join(TESTDATA, "bad_template.txt"),
+        os.path.join(utils.TESTDATA, "bad_template.txt"),
     )
     with pytest.raises(jinja2.exceptions.UndefinedError):
         message_template.render({"name": "Bob", "number": 17})
@@ -24,7 +19,7 @@ def test_bad_jinja():
 def test_cc_bcc():
     """CC recipients should receive a copy."""
     message_template = mailmerge.message_template.MessageTemplate(
-        template_path=os.path.join(TESTDATA, "cc_bcc_template.txt"),
+        template_path=os.path.join(utils.TESTDATA, "cc_bcc_template.txt"),
     )
     sender, recipients, message = message_template.render({
         "email": "myself@mydomain.com",
@@ -49,14 +44,14 @@ def test_cc_bcc():
 def test_markdown():
     """Markdown messages should be converted to HTML."""
     message_template = mailmerge.message_template.MessageTemplate(
-        template_path=os.path.join(TESTDATA, "markdown_template.txt"),
+        template_path=os.path.join(utils.TESTDATA, "markdown_template.txt"),
     )
     sender, recipients, message = message_template.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
     })
-    
+
     # Verify sender and recipients
     assert sender == "Bob <bob@bobdomain.com>"
     assert recipients == ["myself@mydomain.com"]
@@ -86,7 +81,7 @@ def test_markdown():
 def test_attachment():
     """Attachments should be sent as part of the email."""
     message_template = mailmerge.message_template.MessageTemplate(
-        template_path=os.path.join(TESTDATA, "attachment_template.txt"),
+        template_path=os.path.join(utils.TESTDATA, "attachment_template.txt"),
     )
     sender, recipients, message = message_template.render({
         "email": "myself@mydomain.com",
@@ -122,7 +117,7 @@ def test_attachment():
             file_contents = part.get_payload(decode=True)
             assert filename in expected_attachments
             assert not expected_attachments[filename]
-            filename_testdata = os.path.join(TESTDATA, filename)
+            filename_testdata = os.path.join(utils.TESTDATA, filename)
             with open(filename_testdata, 'rb') as expected_attachment:
                 correct_file_contents = expected_attachment.read()
             assert file_contents == correct_file_contents
@@ -134,7 +129,7 @@ def test_attachment():
 def test_utf8_template():
     """Verify UTF8 support in email template."""
     message_template = mailmerge.message_template.MessageTemplate(
-        template_path=os.path.join(TESTDATA, "utf8_template.txt"),
+        template_path=os.path.join(utils.TESTDATA, "utf8_template.txt"),
     )
     sender, recipients, message = message_template.render({
         "email": "myself@mydomain.com",
@@ -146,6 +141,10 @@ def test_utf8_template():
     assert message.get_content_maintype() == "text"
     assert message.get_content_subtype() == "plain"
     assert message.get_content_charset() == "utf-8"
+
+    # Verify sender and recipients
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
 
     # Verify content
     # NOTE: to decode a base46-encoded string:
