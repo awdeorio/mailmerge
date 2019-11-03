@@ -2,8 +2,8 @@
 import os
 import jinja2
 import pytest
-import mailmerge
 import markdown
+import mailmerge.message_template
 
 
 # Directories containing test input files
@@ -14,7 +14,7 @@ TESTDATA = os.path.join(TESTDIR, "testdata")
 
 def test_bad_jinja():
     """Bad jinja template should produce an error."""
-    message_template = mailmerge.MessageTemplate(
+    message_template = mailmerge.message_template.MessageTemplate(
         os.path.join(TESTDATA, "bad_template.txt"),
     )
     with pytest.raises(jinja2.exceptions.UndefinedError):
@@ -23,7 +23,7 @@ def test_bad_jinja():
 
 def test_cc_bcc():
     """CC recipients should receive a copy."""
-    message_template = mailmerge.MessageTemplate(
+    message_template = mailmerge.message_template.MessageTemplate(
         template_path=os.path.join(TESTDATA, "cc_bcc_template.txt"),
     )
     sender, recipients, message = message_template.render({
@@ -48,7 +48,7 @@ def test_cc_bcc():
 
 def test_markdown():
     """Markdown messages should be converted to HTML."""
-    message_template = mailmerge.MessageTemplate(
+    message_template = mailmerge.message_template.MessageTemplate(
         template_path=os.path.join(TESTDATA, "markdown_template.txt"),
     )
     sender, recipients, message = message_template.render({
@@ -85,7 +85,7 @@ def test_markdown():
 
 def test_attachment():
     """Attachments should be sent as part of the email."""
-    message_template = mailmerge.MessageTemplate(
+    message_template = mailmerge.message_template.MessageTemplate(
         template_path=os.path.join(TESTDATA, "attachment_template.txt"),
     )
     sender, recipients, message = message_template.render({
@@ -133,7 +133,7 @@ def test_attachment():
 
 def test_utf8_template():
     """Verify UTF8 support in email template."""
-    message_template = mailmerge.MessageTemplate(
+    message_template = mailmerge.message_template.MessageTemplate(
         template_path=os.path.join(TESTDATA, "utf8_template.txt"),
     )
     sender, recipients, message = message_template.render({

@@ -13,7 +13,7 @@ import configparser
 import smtplib
 import jinja2
 import click
-import mailmerge.api
+from . api import sendall
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -61,7 +61,7 @@ def cli(sample, dry_run, limit, no_limit,
         limit = -1
 
     try:
-        send_messages_generator = mailmerge.api.sendall(
+        send_messages_generator = sendall(
             database_path,
             template_path,
             config_path,
