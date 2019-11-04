@@ -1,5 +1,10 @@
 Mailmerge
 =========
+
+[![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
+[![Build Status](https://travis-ci.com/awdeorio/mailmerge.svg?branch=develop)](https://travis-ci.com/awdeorio/mailmerge)
+[![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/develop/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
+
 A simple, command line mail merge tool.
 
 `mailmerge` uses plain text files and the [jinja2 template engine](http://jinja.pocoo.org/docs/latest/templates/).
@@ -10,6 +15,7 @@ A simple, command line mail merge tool.
 - [Example](#example)
 - [Advanced template example](#advanced-template-example)
 - [HTML formatting](#html-formatting)
+- [Markdown formatting](#markdown-formatting)
 - [Attachments](#attachments)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
@@ -23,14 +29,19 @@ $ mailmerge
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
 
 ## Install
-System-wide install
+System-wide install.
 ```console
 $ pip install mailmerge
 ```
 
-If you get a `Permission denied` error, use administrator privileges.  Alternatively, see the development install instructions.
+System-wide install requiring administrator privileges.  Use this if you get a `Permission denied` error.
 ```console
 $ sudo pip install mailmerge
+```
+
+Fedora package install.
+```console
+$ sudo dnf install python3-mailmerge
 ```
 
 ## Example
@@ -234,7 +245,7 @@ At this time, your estimated letter grade is A+.
 ```
 
 ## HTML formatting
-Mailmerge support HTML formatting.
+Mailmerge supports HTML formatting.
 
 ### HTML only
 This example will use HTML to format an email.  Add `Content-Type: text/html` just under the email headers, then begin your message with `<html>`.
@@ -304,6 +315,36 @@ Content-ID: <body@here>
 
 </body>
 </html>
+```
+
+
+## Markdown formatting
+Mailmerge supports [Markdown](https://daringfireball.net/projects/markdown/syntax) formatting by including the custom custom header `Content-Type: text/markdown` in the message. Mailmerge will render the markdown to HTML, then include both HTML and plain text versions in a multiplart message. A recipient's mail reader can then select either format.
+
+### Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+CONTENT-TYPE: text/markdown
+
+You can add:
+
+- Emphasis, aka italics, with *asterisks*.
+- Strong emphasis, aka bold, with **asterisks**.
+- Combined emphasis with **asterisks and _underscores_**.
+- Unordered lists like this one.
+- Ordered lists with numbers:
+    1. Item 1
+    2. Item 2
+- Preformatted text with `backticks`.
+- How about some [hyperlinks](http://bit.ly/eecs485-wn19-p6)?
+
+# This is a heading.
+## And another heading.
+
+Here's an image not attached with the email:
+![python logo not attached](http://pluspng.com/img-png/python-logo-png-open-2000.png)
 ```
 
 ## Attachments

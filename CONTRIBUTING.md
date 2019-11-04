@@ -29,14 +29,21 @@ Run unit tests
 $ pytest
 ```
 
+Measure unit test case coverage
+```console
+$ pytest --cov ./mailmerge
+```
+
 Test code style
 ```console
 $ pycodestyle mailmerge tests setup.py
 $ pydocstyle mailmerge tests setup.py
-$ pylint --reports=n  mailmerge tests setup.py
+$ pylint mailmerge tests/*.py setup.py
+$ check-manifest
 ```
 
-Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.
+Test python2/python3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.  Use `pyenv` to provide different versions of Python.
 ```console
+$ eval "$(pyenv init -)"
 $ tox
 ```

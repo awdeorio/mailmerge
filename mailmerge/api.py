@@ -13,18 +13,24 @@ import smtplib
 import configparser
 import getpass
 import datetime
+
 # NOTE: Python 2.x UTF8 support requires csv and email backports
-from backports import csv
-import future.backports.email as email  # pylint: disable=useless-import-alias
+try:
+    from backports import csv
+except ImportError:
+    import csv
+
+import future.backports.email as email
 import future.backports.email.mime  # pylint: disable=unused-import
 import future.backports.email.mime.application  # pylint: disable=unused-import
 import future.backports.email.mime.multipart  # pylint: disable=unused-import
 import future.backports.email.mime.text  # pylint: disable=unused-import
 import future.backports.email.parser  # pylint: disable=unused-import
 import future.backports.email.utils  # pylint: disable=unused-import
+import future.backports.email.generator
+import markdown
 import jinja2
 import chardet
-from . import smtp_dummy
 
 
 # Configuration
@@ -71,21 +77,17 @@ def _create_boundary(message):
     # called from `Message.as_string`.)
     # Hence, to prevent `Message.set_boundary` from being called, add a
     # boundary header manually.
-    from future.backports.email.generator import Generator
+
     # pylint: disable=protected-access
-    boundary = Generator._make_boundary(message.policy.linesep)
+    boundary = email.generator.Generator._make_boundary(message.policy.linesep)
     message.set_param('boundary', boundary)
     return message
 
 
-def addattachments(message, template_path):
-    """Add the attachments from the message from the commandline options."""
-    if 'attachment' not in message:
-        return message, 0
-
-    # If the message is not already a multipart message, then make it so
+def make_message_multipart(message):
+    """Convert a message into a multipart message."""
     if not message.is_multipart():
-        multipart_message = email.mime.multipart.MIMEMultipart()
+        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
         for header_key in set(message.keys()):
             # Preserve duplicate headers
             values = message.get_all(header_key, failobj=[])
@@ -94,6 +96,38 @@ def addattachments(message, template_path):
         original_text = message.get_payload()
         multipart_message.attach(email.mime.text.MIMEText(original_text))
         message = multipart_message
+    # HACK: For Python2 (see comments in `_create_boundary`)
+    message = _create_boundary(message)
+    return message
+
+
+def convert_markdown(message):
+    """Convert markdown in message text to HTML."""
+    assert message['Content-Type'].startswith("text/markdown")
+    del message['Content-Type']
+    # Convert the text from markdown and then make the message multipart
+    message = make_message_multipart(message)
+    for payload_item in set(message.get_payload()):
+        # Assume the plaintext item is formatted with markdown.
+        # Add corresponding HTML version of the item as the last part of
+        # the multipart message (as per RFC 2046)
+        if payload_item['Content-Type'].startswith('text/plain'):
+            original_text = payload_item.get_payload()
+            html_text = markdown.markdown(original_text)
+            html_payload = future.backports.email.mime.text.MIMEText(
+                "<html><body>{}</body></html>".format(html_text),
+                "html",
+            )
+            message.attach(html_payload)
+    return message
+
+
+def addattachments(message, template_path):
+    """Add the attachments from the message from the commandline options."""
+    if 'attachment' not in message:
+        return message, 0
+
+    message = make_message_multipart(message)
 
     attachment_filepaths = message.get_all('attachment', failobj=[])
     template_parent_dir = os.path.dirname(template_path)
@@ -121,7 +155,7 @@ def addattachments(message, template_path):
         message.attach(part)
         print(">>> attached {}".format(normalized_path))
 
-    del message['attachments']
+    del message['attachment']
     return message, len(attachment_filepaths)
 
 
@@ -144,7 +178,7 @@ def sendmail(message, sender, recipients, config_filename):
 
     # Prompt for password
     if not hasattr(sendmail, "password"):
-        if sendmail.security == "Dummy" or sendmail.username == "None":
+        if sendmail.username == "None":
             sendmail.password = None
         else:
             prompt = ">>> password for {} on {}: ".format(sendmail.username,
@@ -161,8 +195,6 @@ def sendmail(message, sender, recipients, config_filename):
         smtp.ehlo()
     elif sendmail.security == "Never":
         smtp = smtplib.SMTP(sendmail.host, sendmail.port)
-    elif sendmail.security == "Dummy":
-        smtp = smtp_dummy.SMTP_dummy()
     else:
         raise configparser.Error("Unrecognized security type: {}".format(
             sendmail.security))
@@ -285,10 +317,14 @@ def main(sample=False,
         sys.exit(1)
 
     try:
-        # Read template
-        with io.open(template_filename, "r") as template_file:
-            content = template_file.read() + u"\n"
-            template = jinja2.Template(content)
+        # Configure Jinja2 template engine
+        template_env = jinja2.Environment(
+            loader=jinja2.FileSystemLoader(os.path.dirname(template_filename)),
+            undefined=jinja2.StrictUndefined,
+        )
+        template = template_env.get_template(
+            os.path.basename(template_filename),
+        )
 
         # Read CSV file database
         database = []
@@ -302,19 +338,21 @@ def main(sample=False,
             if not no_limit and i >= limit:
                 break
 
-            print(">>> message {}".format(i))
-
             # Fill in template fields using fields from row of CSV file
             raw_message = template.render(**row)
-            print(raw_message)
 
             # Parse message headers and detect encoding
             (message, sender, recipients) = parsemail(raw_message)
+            # Convert message from markdown to HTML if requested
+            if message['Content-Type'].startswith("text/markdown"):
+                message = convert_markdown(message)
+
+            print(">>> message {}".format(i))
+            print(message.as_string())
+
             # Add attachments if any
             (message, num_attachments) = addattachments(message,
                                                         template_filename)
-            # HACK: For Python2 (see comments in `_create_boundary`)
-            message = _create_boundary(message)
 
             # Send message
             if dry_run:

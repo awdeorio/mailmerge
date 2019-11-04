@@ -1,4 +1,10 @@
+include CONTRIBUTING.md
 include LICENSE
+include MANIFEST.in
 include README.md
 graft tests
-graft bin
+
+# Avoid dev and and binary files
+exclude tox.ini
+global-exclude *.pyc
+global-exclude __pycache__
