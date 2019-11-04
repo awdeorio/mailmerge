@@ -4,11 +4,15 @@ import configparser
 import getpass
 
 
-class SendmailClient:
+class SendmailClient(object):
     """Represent a client connection to an SMTP server."""
 
     # This class is pretty simple.  We don't need more than one public method.
     # pylint: disable=too-few-public-methods
+    #
+    # We need to inherit from object for Python 2 compantibility
+    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
+    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, config_filename, dry_run=False):
         """Read configuration from config_filename."""

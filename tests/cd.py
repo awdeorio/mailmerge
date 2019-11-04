@@ -10,11 +10,15 @@ with cd("/tmp"):
 import os
 
 
-class cd:
+class cd(object):
     """Change directory using context manager syntax ('with')."""
 
     # The name "cd" makes more sense than "CD"
     # pylint: disable=invalid-name
+    #
+    # We need to inherit from object for Python 2 compantibility
+    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
+    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, new_pwd):
         """Save future pwd."""

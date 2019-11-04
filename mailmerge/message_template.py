@@ -16,12 +16,16 @@ import jinja2
 import chardet
 
 
-class MessageTemplate:
+class MessageTemplate(object):
     """Represent a templated email message.
 
     This object combines an email.message object with the template abilities of
     Jinja2's Template object.
     """
+
+    # We need to inherit from object for Python 2 compantibility
+    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
+    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
