@@ -19,24 +19,41 @@ from .utils import MailmergeError
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
-@click.version_option()  # Auto detect version
-@click.option("--sample", is_flag=True, default=False,
-              help="Create sample database, template email, and config")
-@click.option("--dry-run/--no-dry-run", default=True,
-              help="Don't send email, just print")
-@click.option("--limit", is_flag=False, default=1,
-              help="Limit the number of messages; default 1")
-@click.option("--no-limit", is_flag=True, default=False,
-              help="Do not limit the number of messages")
-@click.option("--database", "database_path",
-              default="mailmerge_database.csv",
-              help="database CSV file name; default mailmerge_database.csv ")
-@click.option("--template", "template_path",
-              default="mailmerge_template.txt",
-              help="template email file name; default mailmerge_template.txt")
-@click.option("--config", "config_path",
-              default="mailmerge_server.conf",
-              help="configuration file name; default mailmerge_server.conf")
+@click.version_option()  # Auto detect version from setup.py
+@click.option(
+    "--sample", is_flag=True, default=False,
+    help="Create sample database, template email, and config",
+)
+@click.option(
+    "--dry-run/--no-dry-run", default=True,
+    help="Don't send email, just print (True)",
+)
+@click.option(
+    "--limit", is_flag=False, default=1,
+    help="Limit the number of messages (1)",
+)
+@click.option(
+    "--no-limit", is_flag=True, default=False,
+    help="Do not limit the number of messages",
+)
+@click.option(
+    "--template", "template_path",
+    default="mailmerge_template.txt",
+    type=click.Path(),
+    help="template email file name (mailmerge_template.txt)"
+)
+@click.option(
+    "--database", "database_path",
+    default="mailmerge_database.csv",
+    type=click.Path(),
+    help="database CSV file name (mailmerge_database.csv)",
+)
+@click.option(
+    "--config", "config_path",
+    default="mailmerge_server.conf",
+    type=click.Path(),
+    help="configuration file name (mailmerge_server.conf)",
+)
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """Command line interface."""
