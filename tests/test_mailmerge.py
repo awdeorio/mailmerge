@@ -1,4 +1,8 @@
-"""System tests."""
+"""
+System tests.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 import os
 import sh
 from . import utils

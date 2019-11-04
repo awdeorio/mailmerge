@@ -1,4 +1,8 @@
-"""Represent a templated email message."""
+"""
+Represent a templated email message.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 
 import os
 import future.backports.email as email

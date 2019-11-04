@@ -1,4 +1,8 @@
-"""Utilities used in multiple mailmerge modules."""
+"""
+Utilities used in multiple mailmerge modules.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 
 
 class MailmergeError(Exception):

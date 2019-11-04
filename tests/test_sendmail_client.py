@@ -1,15 +1,18 @@
-"""Tests for SendmailClient."""
+"""
+Tests for SendmailClient.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 import os
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
 from . import utils
 
-# NOTE: Python 2.x mock lives in a different place
 try:
-    from unittest import mock
+    from unittest import mock  # Python 3
 except ImportError:
-    import mock
+    import mock  # Python 2
 
 
 # We're going to use mock_SMTP because it mimics the real SMTP library

@@ -1,6 +1,4 @@
 """
-Mail merge using CSV database and jinja2 template email.
-
 Command line interface implementation.
 
 Andrew DeOrio <awdeorio@umich.edu>

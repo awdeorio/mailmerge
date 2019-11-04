@@ -1,4 +1,8 @@
-"""Tests for helper functions."""
+"""
+Tests for helper functions.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 import mailmerge.__main__
 
 

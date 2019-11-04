@@ -1,4 +1,5 @@
-"""Change directory using context manager syntax ('with').
+"""
+Change directory using context manager syntax ('with').
 
 Based on https://stackoverflow.com/questions/431684/how-do-i-cd-in-python
 
@@ -6,6 +7,7 @@ EXAMPLE:
 with cd("/tmp"):
     print(os.getcwd())
 
+Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
 

@@ -1,4 +1,8 @@
-"""SMTP client reads configuration and sends message."""
+"""
+SMTP client reads configuration and sends message.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 import smtplib
 import configparser
 import getpass

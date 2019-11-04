@@ -1,4 +1,8 @@
-"""Tests for MessageTemplate."""
+"""
+Tests for MessageTemplate.
+
+Andrew DeOrio <awdeorio@umich.edu>
+"""
 import os
 import io
 import jinja2
