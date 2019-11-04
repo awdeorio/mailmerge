@@ -1,8 +1,6 @@
 """Represent a templated email message."""
 
-from __future__ import print_function
 import os
-import sys
 import future.backports.email as email
 import future.backports.email.mime
 import future.backports.email.mime.application
@@ -14,6 +12,7 @@ import future.backports.email.generator
 import markdown
 import jinja2
 import chardet
+from . import utils
 
 
 class MessageTemplate(object):
@@ -163,9 +162,9 @@ class MessageTemplate(object):
 
             # Check that the attachment exists
             if not os.path.exists(normalized_path):
-                print("Error: can't find attachment " + normalized_path)
-                sys.exit(1)
-
+                raise utils.MailmergeError(
+                    "Attachment not found: {}".format(normalized_path)
+                )
             filename = os.path.basename(normalized_path)
             with open(normalized_path, "rb") as attachment:
                 part = email.mime.application.MIMEApplication(

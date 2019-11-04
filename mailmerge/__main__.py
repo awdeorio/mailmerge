@@ -17,6 +17,7 @@ import jinja2
 import click
 from .message_template import MessageTemplate
 from .sendmail_client import SendmailClient
+from .utils import MailmergeError
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -81,6 +82,8 @@ def cli(sample, dry_run, limit, no_limit,
     except socket.error:
         print(">>> Error connecting to server")
         sys.exit(1)
+    except MailmergeError as err:
+        print(">>>> {}".format(err))
 
     # Hints for user
     if not no_limit:
