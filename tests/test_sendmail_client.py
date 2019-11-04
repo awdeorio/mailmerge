@@ -23,7 +23,7 @@ def test_smtp(mock_SMTP):
         os.path.join(utils.TESTDATA, "server_open.conf"),
         dry_run=False,
     )
-    message = email.parser.Parser().parsestr("""
+    message = email.parser.Parser().parsestr(u"""
     TO: bob@bobdomain.com
     SUBJECT: Testing mailmerge
     FROM: My Self <myself@mydomain.com>
