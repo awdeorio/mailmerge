@@ -175,6 +175,5 @@ class MessageTemplate(object):
             part.add_header('Content-Disposition',
                             'attachment; filename="{}"'.format(filename))
             self.message.attach(part)
-            print(">>> attached {}".format(normalized_path))
 
         del self.message['attachment']

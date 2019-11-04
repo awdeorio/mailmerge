@@ -60,6 +60,8 @@ def cli(sample, dry_run, limit, no_limit,
             sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(i))
             print(message.as_string())
+            for filename in get_attachment_filenames(message):
+                print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i))
     except jinja2.exceptions.TemplateError as err:
         print(">>> Error in Jinja2 template: {}".format(err))
@@ -203,3 +205,22 @@ def enumerate_limit(iterable, limit):
         if limit != -1 and i >= limit:
             return
         yield i, value
+
+
+def get_attachment_filenames(message):
+    """Return a list of attachment filenames."""
+    if message.get_content_maintype() != "multipart":
+        return []
+
+    filenames = []
+    for part in message.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        if part.get_content_maintype() == "text":
+            continue
+        if part.get("Content-Disposition") == "inline":
+            continue
+        if part.get("Content-Disposition") is None:
+            continue
+        filenames.append(part.get_filename())
+    return filenames
