@@ -25,7 +25,7 @@ setup(
         "click",
         "configparser",
         "jinja2",
-        "future",
+        "future>0.18.0",
         "backports.csv;python_version<='2.7'",
         "markdown",
         "mock;python_version<='2.7'",
