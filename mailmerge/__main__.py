@@ -81,7 +81,7 @@ def cli(sample, dry_run, limit, no_limit,
         print(">>> Error connecting to server")
         sys.exit(1)
     except MailmergeError as err:
-        print(">>>> {}".format(err))
+        print(">>> {}".format(err))
 
     # Hints for user
     if not no_limit:
