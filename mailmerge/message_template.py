@@ -23,6 +23,10 @@ class MessageTemplate(object):
     Jinja2's Template object.
     """
 
+    # The external interface to this class is pretty simple.  We don't need
+    # more than one public method.
+    # pylint: disable=too-few-public-methods
+    #
     # We need to inherit from object for Python 2 compantibility
     # https://python-future.org/compatible_idioms.html#custom-class-behaviour
     # pylint: disable=bad-option-value,useless-object-inheritance
@@ -47,31 +51,34 @@ class MessageTemplate(object):
     def render(self, context):
         """Return rendered message object."""
         raw_message = self.template.render(context)
-        self.parsemail(raw_message)
-        self.convert_markdown()
-        self.addattachments()
+        self._transform_encoding(raw_message)
+        self._transform_recipients()
+        self._transform_markdown()
+        self._transform_attachments()
+        self.message.__setitem__('Date', email.utils.formatdate())
+        assert self.sender
+        assert self.recipients
+        assert self.message
         return self.sender, self.recipients, self.message
 
-    def parsemail(self, raw_message):
-        """Parse message headers, then remove BCC header."""
+    def _transform_encoding(self, raw_message):
+        """Detect and set character encoding."""
         self.message = email.parser.Parser().parsestr(raw_message)
-
-        # Detect encoding
         detected = chardet.detect(bytearray(raw_message, "utf-8"))
         encoding = detected["encoding"]
-        print(">>> encoding {}".format(encoding))
         for part in self.message.walk():
             if part.get_content_maintype() == 'multipart':
                 continue
             part.set_charset(encoding)
 
+    def _transform_recipients(self):
+        """Extract sender and recipients from FROM, TO, CC and BCC fields."""
         # Extract recipients
         addrs = email.utils.getaddresses(self.message.get_all("TO", [])) + \
             email.utils.getaddresses(self.message.get_all("CC", [])) + \
             email.utils.getaddresses(self.message.get_all("BCC", []))
         self.recipients = [x[1] for x in addrs]
         self.message.__delitem__("bcc")
-        self.message.__setitem__('Date', email.utils.formatdate())
         self.sender = self.message["from"]
 
     def _create_boundary(self):
@@ -95,7 +102,7 @@ class MessageTemplate(object):
             self.message.policy.linesep)
         self.message.set_param('boundary', boundary)
 
-    def make_message_multipart(self):
+    def _make_message_multipart(self):
         """Convert a message into a multipart message."""
         if not self.message.is_multipart():
             multipart_message = email.mime.multipart.MIMEMultipart(
@@ -111,14 +118,14 @@ class MessageTemplate(object):
         # HACK: For Python2 (see comments in `_create_boundary`)
         self._create_boundary()
 
-    def convert_markdown(self):
+    def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
         if not self.message['Content-Type'].startswith("text/markdown"):
             return
 
         del self.message['Content-Type']
         # Convert the text from markdown and then make the message multipart
-        self.make_message_multipart()
+        self._make_message_multipart()
         for payload_item in set(self.message.get_payload()):
             # Assume the plaintext item is formatted with markdown.
             # Add corresponding HTML version of the item as the last part of
@@ -132,12 +139,12 @@ class MessageTemplate(object):
                 )
                 self.message.attach(html_payload)
 
-    def addattachments(self):
-        """Add the attachments from the message headers."""
+    def _transform_attachments(self):
+        """Parse Attachment headers and add attachments."""
         if 'attachment' not in self.message:
             return
 
-        self.make_message_multipart()
+        self._make_message_multipart()
 
         attachment_filepaths = self.message.get_all('attachment', failobj=[])
         template_parent_dir = os.path.dirname(self.template_path)
