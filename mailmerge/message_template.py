@@ -37,10 +37,9 @@ class MessageTemplate(object):
     def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
         self.template_path = template_path
-        self.message = None
-        self.sender = None
-        self.recipients = None
-        self.attachments = []
+        self._message = None
+        self._sender = None
+        self._recipients = None
 
         # Configure Jinja2 template engine
         template_env = jinja2.Environment(
@@ -58,18 +57,18 @@ class MessageTemplate(object):
         self._transform_recipients()
         self._transform_markdown()
         self._transform_attachments()
-        self.message.__setitem__('Date', email.utils.formatdate())
-        assert self.sender
-        assert self.recipients
-        assert self.message
-        return self.sender, self.recipients, self.message
+        self._message.__setitem__('Date', email.utils.formatdate())
+        assert self._sender
+        assert self._recipients
+        assert self._message
+        return self._sender, self._recipients, self._message
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
-        self.message = email.parser.Parser().parsestr(raw_message)
+        self._message = email.parser.Parser().parsestr(raw_message)
         detected = chardet.detect(bytearray(raw_message, "utf-8"))
         encoding = detected["encoding"]
-        for part in self.message.walk():
+        for part in self._message.walk():
             if part.get_content_maintype() == 'multipart':
                 continue
             part.set_charset(encoding)
@@ -77,18 +76,18 @@ class MessageTemplate(object):
     def _transform_recipients(self):
         """Extract sender and recipients from FROM, TO, CC and BCC fields."""
         # Extract recipients
-        addrs = email.utils.getaddresses(self.message.get_all("TO", [])) + \
-            email.utils.getaddresses(self.message.get_all("CC", [])) + \
-            email.utils.getaddresses(self.message.get_all("BCC", []))
-        self.recipients = [x[1] for x in addrs]
-        self.message.__delitem__("bcc")
-        self.sender = self.message["from"]
+        addrs = email.utils.getaddresses(self._message.get_all("TO", [])) + \
+            email.utils.getaddresses(self._message.get_all("CC", [])) + \
+            email.utils.getaddresses(self._message.get_all("BCC", []))
+        self._recipients = [x[1] for x in addrs]
+        self._message.__delitem__("bcc")
+        self._sender = self._message["from"]
 
     def _create_boundary(self):
         """Add boundary parameter to multipart message if not present."""
-        if not self.message.is_multipart():
+        if not self._message.is_multipart():
             return
-        if self.message.get_boundary() is not None:
+        if self._message.get_boundary() is not None:
             return
 
         # HACK: Python2 lists do not natively have a `copy`
@@ -102,34 +101,34 @@ class MessageTemplate(object):
         # being called, add a boundary header manually.
         # pylint: disable=protected-access
         boundary = email.generator.Generator._make_boundary(
-            self.message.policy.linesep)
-        self.message.set_param('boundary', boundary)
+            self._message.policy.linesep)
+        self._message.set_param('boundary', boundary)
 
     def _make_message_multipart(self):
         """Convert a message into a multipart message."""
-        if not self.message.is_multipart():
+        if not self._message.is_multipart():
             multipart_message = email.mime.multipart.MIMEMultipart(
                 'alternative')
-            for header_key in set(self.message.keys()):
+            for header_key in set(self._message.keys()):
                 # Preserve duplicate headers
-                values = self.message.get_all(header_key, failobj=[])
+                values = self._message.get_all(header_key, failobj=[])
                 for value in values:
                     multipart_message[header_key] = value
-            original_text = self.message.get_payload()
+            original_text = self._message.get_payload()
             multipart_message.attach(email.mime.text.MIMEText(original_text))
-            self.message = multipart_message
+            self._message = multipart_message
         # HACK: For Python2 (see comments in `_create_boundary`)
         self._create_boundary()
 
     def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
-        if not self.message['Content-Type'].startswith("text/markdown"):
+        if not self._message['Content-Type'].startswith("text/markdown"):
             return
 
-        del self.message['Content-Type']
+        del self._message['Content-Type']
         # Convert the text from markdown and then make the message multipart
         self._make_message_multipart()
-        for payload_item in set(self.message.get_payload()):
+        for payload_item in set(self._message.get_payload()):
             # Assume the plaintext item is formatted with markdown.
             # Add corresponding HTML version of the item as the last part of
             # the multipart message (as per RFC 2046)
@@ -140,16 +139,16 @@ class MessageTemplate(object):
                     "<html><body>{}</body></html>".format(html_text),
                     "html",
                 )
-                self.message.attach(html_payload)
+                self._message.attach(html_payload)
 
     def _transform_attachments(self):
         """Parse Attachment headers and add attachments."""
-        if 'attachment' not in self.message:
+        if 'attachment' not in self._message:
             return
 
         self._make_message_multipart()
 
-        attachment_filepaths = self.message.get_all('attachment', failobj=[])
+        attachment_filepaths = self._message.get_all('attachment', failobj=[])
         template_parent_dir = os.path.dirname(self.template_path)
 
         for attachment_filepath in attachment_filepaths:
@@ -162,7 +161,6 @@ class MessageTemplate(object):
                 attachment_filepath = os.path.join(template_parent_dir,
                                                    attachment_filepath)
             normalized_path = os.path.abspath(attachment_filepath)
-            self.attachments.append(normalized_path)
 
             # Check that the attachment exists
             if not os.path.exists(normalized_path):
@@ -177,6 +175,6 @@ class MessageTemplate(object):
                 )
             part.add_header('Content-Disposition',
                             'attachment; filename="{}"'.format(filename))
-            self.message.attach(part)
+            self._message.attach(part)
 
-        del self.message['attachment']
+        del self._message['attachment']
