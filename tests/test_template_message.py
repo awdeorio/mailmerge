@@ -1,5 +1,5 @@
 """
-Tests for MessageTemplate.
+Tests for TemplateMessage.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
@@ -8,7 +8,7 @@ import io
 import jinja2
 import pytest
 import markdown
-import mailmerge.message_template
+import mailmerge.template_message
 from . import utils
 
 # Python 2.x UTF8 support requires csv backport
@@ -20,19 +20,19 @@ except ImportError:
 
 def test_bad_jinja():
     """Bad jinja template should produce an error."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         os.path.join(utils.TESTDATA, "bad_template.txt"),
     )
     with pytest.raises(jinja2.exceptions.UndefinedError):
-        message_template.render({"name": "Bob", "number": 17})
+        template_message.render({"name": "Bob", "number": 17})
 
 
 def test_cc_bcc():
     """CC recipients should receive a copy."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         template_path=os.path.join(utils.TESTDATA, "cc_bcc_template.txt"),
     )
-    sender, recipients, message = message_template.render({
+    sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -54,10 +54,10 @@ def test_cc_bcc():
 
 def test_markdown():
     """Markdown messages should be converted to HTML."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         template_path=os.path.join(utils.TESTDATA, "markdown_template.txt"),
     )
-    sender, recipients, message = message_template.render({
+    sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -91,10 +91,10 @@ def test_markdown():
 
 def test_attachment():
     """Attachments should be sent as part of the email."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         template_path=os.path.join(utils.TESTDATA, "attachment_template.txt"),
     )
-    sender, recipients, message = message_template.render({
+    sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -139,10 +139,10 @@ def test_attachment():
 
 def test_utf8_template():
     """Verify UTF8 support in email template."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         template_path=os.path.join(utils.TESTDATA, "utf8_template.txt"),
     )
-    sender, recipients, message = message_template.render({
+    sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
     })
 
@@ -164,14 +164,14 @@ def test_utf8_template():
 
 def test_utf8_database():
     """Verify UTF8 support when template is rendered with UTF-8 value."""
-    message_template = mailmerge.message_template.MessageTemplate(
+    template_message = mailmerge.template_message.TemplateMessage(
         template_path=os.path.join(utils.TESTDATA, "simple_template.txt"),
     )
     database_path = os.path.join(utils.TESTDATA, "utf8_database.csv")
     with io.open(database_path, "r") as database_file:
         reader = csv.DictReader(database_file)
         context = next(reader)
-    sender, recipients, message = message_template.render(context)
+    sender, recipients, message = template_message.render(context)
 
     # Verify sender and recipients
     assert sender == "My Self <myself@mydomain.com>"

@@ -19,7 +19,7 @@ import chardet
 from . import utils
 
 
-class MessageTemplate(object):
+class TemplateMessage(object):
     """Represent a templated email message.
 
     This object combines an email.message object with the template abilities of

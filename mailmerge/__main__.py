@@ -13,7 +13,7 @@ import configparser
 import smtplib
 import jinja2
 import click
-from .message_template import MessageTemplate
+from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .utils import MailmergeError
 
@@ -68,11 +68,11 @@ def cli(sample, dry_run, limit, no_limit,
         limit = -1
 
     try:
-        message_template = MessageTemplate(template_path)
+        template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for i, row in enumerate_limit(csv_database, limit):
-            sender, recipients, message = message_template.render(row)
+            sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(i))
             print(message.as_string())
