@@ -4,6 +4,7 @@ System tests.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
+import re
 import sh
 from . import utils
 
@@ -23,11 +24,36 @@ def test_stdout():
         "--dry-run",
     )
 
-    # Verify mailmerge output
+    # Verify mailmerge output.  We'll filter out the Date header because it
+    # won't match exactly.
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stderr == ""
-    assert ">>> message 0" in stdout
-    assert ">>> sent message 0" in stdout
-    assert ">>> message 1" in stdout
-    assert ">>> sent message 1" in stdout
+    assert "Date:" in stdout
+    stdout = re.sub(r"Date.*\n", "", stdout)
+    assert stdout == """>>> message 0
+TO: myself@mydomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Hi, Myself,
+
+Your number is 17.
+>>> sent message 0
+>>> message 1
+TO: bob@bobdomain.com
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+
+Hi, Bob,
+
+Your number is 42.
+>>> sent message 1
+>>> This was a dry run.  To send messages, use the --no-dry-run option.
+"""
