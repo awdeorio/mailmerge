@@ -25,7 +25,11 @@ setup(
         "click",
         "configparser",
         "jinja2",
-        "future",
+
+        # The attachments feature relies on a bug fix in the future library
+        # https://github.com/awdeorio/mailmerge/pull/56
+        "future>0.18.0",
+
         "backports.csv;python_version<='2.7'",
         "markdown",
         "mock;python_version<='2.7'",
