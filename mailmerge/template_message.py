@@ -83,27 +83,6 @@ class TemplateMessage(object):
         self._message.__delitem__("bcc")
         self._sender = self._message["from"]
 
-    def _create_boundary(self):
-        """Add boundary parameter to multipart message if not present."""
-        if not self._message.is_multipart():
-            return
-        if self._message.get_boundary() is not None:
-            return
-
-        # HACK: Python2 lists do not natively have a `copy`
-        # method. Unfortunately, due to a bug in the Backport for the email
-        # module, the method `Message.set_boundary` converts the Message
-        # headers into a native list, so that other methods that rely on
-        # "copying" the Message headers fail.  `Message.set_boundary` is called
-        # from `Generator.handle_multipart` if the message does not already
-        # have a boundary present. (This method itself is called from
-        # `Message.as_string`.)  Hence, to prevent `Message.set_boundary` from
-        # being called, add a boundary header manually.
-        # pylint: disable=protected-access
-        boundary = email.generator.Generator._make_boundary(
-            self._message.policy.linesep)
-        self._message.set_param('boundary', boundary)
-
     def _make_message_multipart(self):
         """Convert a message into a multipart message."""
         if not self._message.is_multipart():
@@ -117,8 +96,6 @@ class TemplateMessage(object):
             original_text = self._message.get_payload()
             multipart_message.attach(email.mime.text.MIMEText(original_text))
             self._message = multipart_message
-        # HACK: For Python2 (see comments in `_create_boundary`)
-        self._create_boundary()
 
     def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
