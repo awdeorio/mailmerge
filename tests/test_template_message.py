@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
 import io
+import shutil
 import textwrap
 import jinja2
 import pytest
@@ -88,15 +89,21 @@ def test_bad_jinja(tmp_path):
         template_message.render({"name": "Bob", "number": 17})
 
 
-def test_cc_bcc():
+def test_cc_bcc(tmp_path):
     """CC recipients should receive a copy."""
-    template_message = TemplateMessage(
-        template_path=os.path.join(utils.TESTDATA, "cc_bcc_template.txt"),
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        CC: My Colleague <mycolleague@mydomain.com>
+        BCC: Secret <secret@mydomain.com>
+
+        Hello world
+    """))
+    template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
-        "name": "Myself",
-        "number": 17,
     })
 
     # Verify recipients include CC and BCC
@@ -113,11 +120,46 @@ def test_cc_bcc():
     assert "Secret" not in message.as_string()
 
 
-def test_markdown():
+def test_markdown(tmp_path):
     """Markdown messages should be converted to HTML."""
-    template_message = TemplateMessage(
-        template_path=os.path.join(utils.TESTDATA, "markdown_template.txt"),
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: Bob <bob@bobdomain.com>
+        CONTENT-TYPE: text/markdown
+
+        Hi, **{{name}}**,
+
+        You can add:
+
+        - Emphasis, aka italics, with *asterisks* or _underscores_.
+        - Strong emphasis, aka bold, with **asterisks** or __underscores__.
+        - Combined emphasis with **asterisks and _underscores_**.
+        - Strikethrough uses two tildes. ~~Scratch this.~~
+        - Unordered lists like this one.
+        - Ordered lists with numbers:
+            1. Item 1
+            2. Item 2
+        - Preformatted text with `backticks`.
+
+        ---
+
+        # This is a heading.
+        ## And another heading.
+        How about some [hyperlinks](http://bit.ly/eecs485-wn19-p6)?
+
+        Or code blocks?
+
+        ```
+        print("Hello world.")
+        ```
+
+        Here's an image not attached with the email:
+        ![python logo not attached](
+            http://pluspng.com/img-png/python-logo-png-open-2000.png)
+    """))
+    template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
@@ -150,11 +192,38 @@ def test_markdown():
     assert htmltext.strip() == htmltext_correct.strip()
 
 
-def test_attachment():
+def test_attachment(tmp_path):
     """Attachments should be sent as part of the email."""
-    template_message = TemplateMessage(
-        template_path=os.path.join(utils.TESTDATA, "attachment_template.txt"),
+    # Copy attachments
+    shutil.copy(
+        os.path.join(utils.TESTDATA, "attachment_1.txt"),
+        tmp_path,
     )
+    shutil.copy(
+        os.path.join(utils.TESTDATA, "attachment_2.pdf"),
+        tmp_path,
+    )
+    shutil.copy(
+        os.path.join(utils.TESTDATA, "attachment_17.txt"),
+        tmp_path,
+    )
+
+    # Create template .txt file
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        ATTACHMENT: attachment_1.txt
+        ATTACHMENT: attachment_2.pdf
+        ATTACHMENT: attachment_{{number}}.txt
+        ATTACHMENT: 
+
+        Hi, {{name}},
+
+        Your number is {{number}}.
+    """))
+    template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
