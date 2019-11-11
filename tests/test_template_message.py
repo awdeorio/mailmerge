@@ -23,7 +23,7 @@ except ImportError:
 def test_simple(tmp_path):
     """Render a simple template."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -42,7 +42,7 @@ def test_simple(tmp_path):
 def test_no_substitutions(tmp_path):
     """Render a template with an empty context."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -59,7 +59,7 @@ def test_no_substitutions(tmp_path):
 def test_multiple_substitutions(tmp_path):
     """Render a template with multiple context variables."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -92,7 +92,7 @@ def test_bad_jinja(tmp_path):
 def test_cc_bcc(tmp_path):
     """CC recipients should receive a copy."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -123,7 +123,7 @@ def test_cc_bcc(tmp_path):
 def test_markdown(tmp_path):
     """Markdown messages should be converted to HTML."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: Bob <bob@bobdomain.com>
@@ -210,14 +210,14 @@ def test_attachment(tmp_path):
 
     # Create template .txt file
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
         ATTACHMENT: attachment_1.txt
         ATTACHMENT: attachment_2.pdf
         ATTACHMENT: attachment_{{number}}.txt
-        ATTACHMENT: 
+        ATTACHMENT:
 
         Hi, {{name}},
 
