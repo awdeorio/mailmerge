@@ -25,7 +25,10 @@ setup(
         "click",
         "configparser",
         "jinja2",
+
+        # The attachments feature relies on a bug fix in the future library
         "future>0.18.0",
+
         "backports.csv;python_version<='2.7'",
         "markdown",
         "mock;python_version<='2.7'",
