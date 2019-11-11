@@ -21,7 +21,7 @@ except ImportError:
 
 def test_simple(tmp_path):
     """Render a simple template."""
-    template_path = tmp_path / "test_simple.txt"
+    template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
@@ -40,7 +40,7 @@ def test_simple(tmp_path):
 
 def test_no_substitutions(tmp_path):
     """Render a template with an empty context."""
-    template_path = tmp_path / "test_no_substitutions.txt"
+    template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
@@ -55,11 +55,35 @@ def test_no_substitutions(tmp_path):
     assert "Hello world!" in message.as_string()
 
 
-def test_bad_jinja():
+def test_multiple_substitutions(tmp_path):
+    """Render a template with multiple context variables."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+
+        Hi, {{name}},
+
+        Your number is {{number}}.
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "email": "myself@mydomain.com",
+        "name": "Myself",
+        "number": 17,
+    })
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+    assert "Hi, Myself," in message.as_string()
+    assert "Your number is 17" in message.as_string()
+
+
+def test_bad_jinja(tmp_path):
     """Bad jinja template should produce an error."""
-    template_message = TemplateMessage(
-        os.path.join(utils.TESTDATA, "bad_template.txt"),
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text("TO: {{error_not_in_database}}")
+    template_message = TemplateMessage(template_path)
     with pytest.raises(jinja2.exceptions.UndefinedError):
         template_message.render({"name": "Bob", "number": 17})
 
