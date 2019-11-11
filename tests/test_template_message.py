@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
 import io
+import textwrap
 import jinja2
 import pytest
 import markdown
@@ -16,6 +17,42 @@ try:
     from backports import csv
 except ImportError:
     import csv
+
+
+def test_simple(tmp_path):
+    """Render a simple template."""
+    template_path = tmp_path / "test_simple.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        Hello {{name}}!
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "name": "world",
+    })
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+    assert "Hello world!" in message.as_string()
+
+
+def test_no_substitutions(tmp_path):
+    """Render a template with an empty context."""
+    template_path = tmp_path / "test_no_substitutions.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        Hello world!
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({})
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+    assert "Hello world!" in message.as_string()
 
 
 def test_bad_jinja():
