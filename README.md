@@ -149,7 +149,7 @@ Your number is 17.
 >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
 ```
 
-Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
+Now, check your email. Make sure the message went through.  If everything looks OK, then it's time to send all the messages. By default you will be asked to type the password into the prompt. Optionally, you can provide the environment variable EMAIL_PASSWORD.
 
 ### Send all emails
 ```console
