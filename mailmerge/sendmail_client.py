@@ -3,6 +3,7 @@ SMTP client reads configuration and sends message.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
+import os
 import smtplib
 import configparser
 import getpass
@@ -27,7 +28,7 @@ class SendmailClient(object):
         self.port = config.getint("smtp_server", "port")
         self.security = config.get("smtp_server", "security")
         self.username = config.get("smtp_server", "username", fallback=None)
-        self.password = None
+        self.password = os.environ.get('EMAIL_PASSWORD')
 
     def sendmail(self, sender, recipients, message):
         """Send email message."""
