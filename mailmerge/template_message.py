@@ -93,8 +93,10 @@ class TemplateMessage(object):
                 values = self._message.get_all(header_key, failobj=[])
                 for value in values:
                     multipart_message[header_key] = value
-            original_text = self._message.get_payload()
-            multipart_message.attach(email.mime.text.MIMEText(original_text))
+            original_text = self._message.get_payload(decode=True)
+            original_encoding = str(self._message.get_charset())
+            multipart_message.attach(email.mime.text.MIMEText(
+                original_text, _charset=original_encoding))
             self._message = multipart_message
 
     def _transform_markdown(self):
@@ -110,11 +112,14 @@ class TemplateMessage(object):
             # Add corresponding HTML version of the item as the last part of
             # the multipart message (as per RFC 2046)
             if payload_item['Content-Type'].startswith('text/plain'):
-                original_text = payload_item.get_payload()
+                original_encoding = str(payload_item.get_charset())
+                original_text = payload_item.get_payload(decode=True) \
+                                            .decode(original_encoding)
                 html_text = markdown.markdown(original_text)
                 html_payload = future.backports.email.mime.text.MIMEText(
                     "<html><body>{}</body></html>".format(html_text),
                     "html",
+                    _charset=original_encoding,
                 )
                 self._message.attach(html_payload)
 

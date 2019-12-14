@@ -76,14 +76,19 @@ def test_markdown():
 
     # Ensure that the first part is plaintext and the last part
     # is HTML (as per RFC 2046)
-    plaintext_contenttype = payload[0]['Content-Type']
-    assert plaintext_contenttype.startswith("text/plain")
-    plaintext = payload[0].get_payload()
-    html_contenttype = payload[1]['Content-Type']
-    assert html_contenttype.startswith("text/html")
+    plaintext_part = payload[0]
+    assert plaintext_part['Content-Type'].startswith("text/plain")
+    plaintext_encoding = str(plaintext_part.get_charset())
+    plaintext = plaintext_part.get_payload(decode=True) \
+                              .decode(plaintext_encoding)
+
+    html_part = payload[1]
+    assert html_part['Content-Type'].startswith("text/html")
+    html_encoding = str(html_part.get_charset())
+    htmltext = html_part.get_payload(decode=True) \
+                        .decode(html_encoding)
 
     # Verify rendered Markdown
-    htmltext = payload[1].get_payload()
     rendered = markdown.markdown(plaintext)
     htmltext_correct = "<html><body>{}</body></html>".format(rendered)
     assert htmltext.strip() == htmltext_correct.strip()
