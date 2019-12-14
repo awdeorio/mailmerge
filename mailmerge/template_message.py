@@ -85,19 +85,29 @@ class TemplateMessage(object):
 
     def _make_message_multipart(self):
         """Convert a message into a multipart message."""
-        if not self._message.is_multipart():
-            multipart_message = email.mime.multipart.MIMEMultipart(
-                'alternative')
-            for header_key in set(self._message.keys()):
-                # Preserve duplicate headers
-                values = self._message.get_all(header_key, failobj=[])
-                for value in values:
-                    multipart_message[header_key] = value
-            original_text = self._message.get_payload(decode=True)
-            original_encoding = str(self._message.get_charset())
-            multipart_message.attach(email.mime.text.MIMEText(
-                original_text, _charset=original_encoding))
-            self._message = multipart_message
+        # Do nothing if message already multipart
+        if self._message.is_multipart():
+            return
+
+        # Create empty multipart message
+        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+
+        # Copy headers, preserving duplicate headers
+        for header_key in set(self._message.keys()):
+            values = self._message.get_all(header_key, failobj=[])
+            for value in values:
+                multipart_message[header_key] = value
+
+        # Copy text, preserving original encoding
+        original_text = self._message.get_payload(decode=True)
+        original_encoding = str(self._message.get_charset())
+        multipart_message.attach(email.mime.text.MIMEText(
+            original_text,
+            _charset=original_encoding,
+        ))
+
+        # Replace original message with multipart message
+        self._message = multipart_message
 
     def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
