@@ -3,7 +3,6 @@ Tests for TemplateMessage.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import io
 import jinja2
 import pytest
 import markdown

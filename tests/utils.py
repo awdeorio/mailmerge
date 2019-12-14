@@ -12,5 +12,5 @@ except ImportError:
 
 
 # Directories containing test input files
-TESTDIR = pathlib.Path(__file__).resolve().parent
+TESTDIR = Path(__file__).resolve().parent
 TESTDATA = TESTDIR / "testdata"
