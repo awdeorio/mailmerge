@@ -3,7 +3,12 @@ Utilies common to multiple tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import pathlib2 as pathlib
+
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
 
 
 # Directories containing test input files

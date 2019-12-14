@@ -10,11 +10,15 @@ import configparser
 import smtplib
 import jinja2
 import click
-from pathlib2 import Path
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .utils import MailmergeError
 
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
 
 # Python 2 UTF8 support requires csv backport
 try:

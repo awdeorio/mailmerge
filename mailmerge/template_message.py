@@ -15,8 +15,13 @@ import future.backports.email.generator
 import markdown
 import jinja2
 import chardet
-from pathlib2 import Path
 from . import utils
+
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
 
 
 class TemplateMessage(object):
