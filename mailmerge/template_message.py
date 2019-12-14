@@ -137,10 +137,12 @@ class TemplateMessage(object):
         #
         # Note: We need to use u"..." to ensure that unicode string
         # substitution works properly in Python 2.
+        #
+        # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text)
         payload = future.backports.email.mime.text.MIMEText(
             u"<html><body>{}</body></html>".format(html),
-            u"html",
+            _subtype="html",
             _charset=encoding,
         )
         self._message.attach(payload)
