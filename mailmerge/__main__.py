@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
-import csv
 import socket
 import configparser
 import smtplib
@@ -15,6 +14,13 @@ from pathlib2 import Path
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .utils import MailmergeError
+
+
+# Python 2 UTF8 support requires csv backport
+try:
+    from backports import csv
+except ImportError:
+    import csv
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})

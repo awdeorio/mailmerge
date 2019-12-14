@@ -10,7 +10,7 @@ import markdown
 import mailmerge.template_message
 from . import utils
 
-# Python 2.x UTF8 support requires csv backport
+# Python 2 UTF8 support requires csv backport
 try:
     from backports import csv
 except ImportError:
