@@ -134,10 +134,13 @@ class TemplateMessage(object):
 
         # Render Markdown to HTML and add the HTML as the last part of the
         # multipart message as per RFC 2046.
+        #
+        # Note: We need to use u"..." to ensure that unicode string
+        # substitution works properly in Python 2.
         html = markdown.markdown(text)
         payload = future.backports.email.mime.text.MIMEText(
-            "<html><body>{}</body></html>".format(html),
-            "html",
+            u"<html><body>{}</body></html>".format(html),
+            u"html",
             _charset=encoding,
         )
         self._message.attach(payload)
