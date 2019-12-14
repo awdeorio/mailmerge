@@ -4,8 +4,6 @@ Command line interface implementation.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
-import os
-import io
 import sys
 import csv
 import socket
@@ -13,6 +11,7 @@ import configparser
 import smtplib
 import jinja2
 import click
+from pathlib2 import Path
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .utils import MailmergeError
@@ -60,6 +59,12 @@ def cli(sample, dry_run, limit, no_limit,
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
     # pylint: disable=too-many-arguments, too-many-locals
+
+    # Convert paths from string to Path objects
+    # https://github.com/pallets/click/issues/405
+    template_path = Path(template_path)
+    database_path = Path(database_path)
+    config_path = Path(config_path)
 
     check_input_files(template_path, database_path, config_path, sample)
 
@@ -124,11 +129,11 @@ def check_input_files(template_path, database_path, config_path, sample):
             config_path,
         )
         sys.exit(0)
-    if not os.path.exists(template_path):
+    if not template_path.exists():
         print("Error: can't find template email " + template_path)
         print("Create a sample (--sample) or specify a file (--template)")
         sys.exit(1)
-    if not os.path.exists(database_path):
+    if not database_path.exists():
         print("Error: can't find database_path " + database_path)
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
@@ -139,10 +144,10 @@ def create_sample_input_files(template_path,
                               config_path):
     """Create sample template email and database."""
     print("Creating sample template email {}".format(template_path))
-    if os.path.exists(template_path):
+    if template_path.exists():
         print("Error: file exists: " + template_path)
         sys.exit(1)
-    with io.open(template_path, "w") as template_file:
+    with template_path.open("w") as template_file:
         template_file.write(
             u"TO: {{email}}\n"
             u"SUBJECT: Testing mailmerge\n"
@@ -153,20 +158,20 @@ def create_sample_input_files(template_path,
             u"Your number is {{number}}.\n"
         )
     print("Creating sample database {}".format(database_path))
-    if os.path.exists(database_path):
+    if database_path.exists():
         print("Error: file exists: " + database_path)
         sys.exit(1)
-    with io.open(database_path, "w") as database_file:
+    with database_path.open("w") as database_file:
         database_file.write(
             u'email,name,number\n'
             u'myself@mydomain.com,"Myself",17\n'
             u'bob@bobdomain.com,"Bob",42\n'
         )
     print("Creating sample config file {}".format(config_path))
-    if os.path.exists(config_path):
+    if config_path.exists():
         print("Error: file exists: " + config_path)
         sys.exit(1)
-    with io.open(config_path, "w") as config_file:
+    with config_path.open("w") as config_file:
         config_file.write(
             u"# Example: GMail\n"
             u"[smtp_server]\n"
@@ -208,7 +213,7 @@ def create_sample_input_files(template_path,
 
 def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time."""
-    with io.open(database_path, "r") as database_file:
+    with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file)
         for row in reader:
             yield row

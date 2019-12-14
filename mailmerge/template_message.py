@@ -4,7 +4,6 @@ Represent a templated email message.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 
-import os
 import future.backports.email as email
 import future.backports.email.mime
 import future.backports.email.mime.application
@@ -16,6 +15,7 @@ import future.backports.email.generator
 import markdown
 import jinja2
 import chardet
+from pathlib2 import Path
 from . import utils
 
 
@@ -36,18 +36,21 @@ class TemplateMessage(object):
 
     def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
-        self.template_path = template_path
+        self.template_path = Path(template_path)
         self._message = None
         self._sender = None
         self._recipients = None
 
-        # Configure Jinja2 template engine
+        # Configure Jinja2 template engine with the template dirname as root.
+        #
+        # Note: jinja2's FileSystemLoader does not support pathlib Path objects
+        # in Python 2. https://github.com/pallets/jinja/pull/1064
         template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(os.path.dirname(template_path)),
+            loader=jinja2.FileSystemLoader(str(template_path.parent)),
             undefined=jinja2.StrictUndefined,
         )
         self.template = template_env.get_template(
-            os.path.basename(template_path),
+            template_path.parts[-1],  # basename
         )
 
     def render(self, context):
@@ -126,32 +129,37 @@ class TemplateMessage(object):
         self._make_message_multipart()
 
         attachment_filepaths = self._message.get_all('attachment', failobj=[])
-        template_parent_dir = os.path.dirname(self.template_path)
+        template_parent_dir = self.template_path.parent
 
         for attachment_filepath in attachment_filepaths:
             attachment_filepath = attachment_filepath.strip()
-            attachment_filepath = os.path.expanduser(attachment_filepath)
+
+            if not attachment_filepath:
+                # Ignore empty paths
+                continue
+            attachment_filepath = Path(attachment_filepath)
+            attachment_filepath = attachment_filepath.expanduser()
             if not attachment_filepath:
                 continue
-            if not os.path.isabs(attachment_filepath):
+            if not attachment_filepath.is_absolute():
                 # Relative paths are relative to the template's parent dir
-                attachment_filepath = os.path.join(template_parent_dir,
-                                                   attachment_filepath)
-            normalized_path = os.path.abspath(attachment_filepath)
+                attachment_filepath = template_parent_dir/attachment_filepath
+            normalized_path = attachment_filepath.resolve()
 
             # Check that the attachment exists
-            if not os.path.exists(normalized_path):
+            if not normalized_path.exists():
                 raise utils.MailmergeError(
                     "Attachment not found: {}".format(normalized_path)
                 )
-            filename = os.path.basename(normalized_path)
-            with open(normalized_path, "rb") as attachment:
-                part = email.mime.application.MIMEApplication(
-                    attachment.read(),
-                    Name=filename,
-                )
+            with normalized_path.open("rb") as attachment:
+                attachment_content = attachment.read()
+            basename = normalized_path.parts[-1]
+            part = email.mime.application.MIMEApplication(
+                attachment_content,
+                Name=str(basename),
+            )
             part.add_header('Content-Disposition',
-                            'attachment; filename="{}"'.format(filename))
+                            'attachment; filename="{}"'.format(basename))
             self._message.attach(part)
 
         del self._message['attachment']
