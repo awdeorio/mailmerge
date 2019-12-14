@@ -93,38 +93,67 @@ class TemplateMessage(object):
 
     def _make_message_multipart(self):
         """Convert a message into a multipart message."""
-        if not self._message.is_multipart():
-            multipart_message = email.mime.multipart.MIMEMultipart(
-                'alternative')
-            for header_key in set(self._message.keys()):
-                # Preserve duplicate headers
-                values = self._message.get_all(header_key, failobj=[])
-                for value in values:
-                    multipart_message[header_key] = value
-            original_text = self._message.get_payload()
-            multipart_message.attach(email.mime.text.MIMEText(original_text))
-            self._message = multipart_message
+        # Do nothing if message already multipart
+        if self._message.is_multipart():
+            return
+
+        # Create empty multipart message
+        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+
+        # Copy headers, preserving duplicate headers
+        for header_key in set(self._message.keys()):
+            values = self._message.get_all(header_key, failobj=[])
+            for value in values:
+                multipart_message[header_key] = value
+
+        # Copy text, preserving original encoding
+        original_text = self._message.get_payload(decode=True)
+        original_encoding = str(self._message.get_charset())
+        multipart_message.attach(email.mime.text.MIMEText(
+            original_text,
+            _charset=original_encoding,
+        ))
+
+        # Replace original message with multipart message
+        self._message = multipart_message
 
     def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
+        # Do nothing if Content-Type is not text/markdown
         if not self._message['Content-Type'].startswith("text/markdown"):
             return
 
+        # Remove the markdown Content-Type header, it's non-standard for email
         del self._message['Content-Type']
-        # Convert the text from markdown and then make the message multipart
+
+        # Make sure the message is multipart.  We need a multipart message so
+        # that we can add an HTML part containing rendered Markdown.
         self._make_message_multipart()
-        for payload_item in set(self._message.get_payload()):
-            # Assume the plaintext item is formatted with markdown.
-            # Add corresponding HTML version of the item as the last part of
-            # the multipart message (as per RFC 2046)
-            if payload_item['Content-Type'].startswith('text/plain'):
-                original_text = payload_item.get_payload()
-                html_text = markdown.markdown(original_text)
-                html_payload = future.backports.email.mime.text.MIMEText(
-                    "<html><body>{}</body></html>".format(html_text),
-                    "html",
-                )
-                self._message.attach(html_payload)
+
+        # Extract unrendered text and encoding.  We assume that the first
+        # plaintext payload is formatted with Markdown.
+        for mimetext in self._message.get_payload():
+            if mimetext['Content-Type'].startswith('text/plain'):
+                encoding = str(mimetext.get_charset())
+                text = mimetext.get_payload(decode=True).decode(encoding)
+                break
+        assert encoding
+        assert text
+
+        # Render Markdown to HTML and add the HTML as the last part of the
+        # multipart message as per RFC 2046.
+        #
+        # Note: We need to use u"..." to ensure that unicode string
+        # substitution works properly in Python 2.
+        #
+        # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
+        html = markdown.markdown(text)
+        payload = future.backports.email.mime.text.MIMEText(
+            u"<html><body>{}</body></html>".format(html),
+            _subtype="html",
+            _charset=encoding,
+        )
+        self._message.attach(payload)
 
     def _transform_attachments(self):
         """Parse Attachment headers and add attachments."""
