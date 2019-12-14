@@ -111,16 +111,21 @@ class TemplateMessage(object):
 
     def _transform_markdown(self):
         """Convert markdown in message text to HTML."""
+        # Do nothing if Content-Type is not text/markdown
         if not self._message['Content-Type'].startswith("text/markdown"):
             return
 
+        # Remove the Content-Type header.  We're about to replace it with HTML.
         del self._message['Content-Type']
-        # Convert the text from markdown and then make the message multipart
+
+        # Make sure the message is multipart.  We need a multipart message so
+        # that we can add an HTML part containing rendered Markdown.
         self._make_message_multipart()
+
+        # Render Markdown.  We assume that the plaintext payload item is
+        # formatted with Markdown.  Render Markdown to HTML and add the HTML as
+        # the last part of the multipart message (as per RFC 2046).
         for payload_item in set(self._message.get_payload()):
-            # Assume the plaintext item is formatted with markdown.
-            # Add corresponding HTML version of the item as the last part of
-            # the multipart message (as per RFC 2046)
             if payload_item['Content-Type'].startswith('text/plain'):
                 original_encoding = str(payload_item.get_charset())
                 original_text = payload_item.get_payload(decode=True) \
