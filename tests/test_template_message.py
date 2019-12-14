@@ -101,9 +101,12 @@ def test_markdown_encoding():
     https://github.com/awdeorio/mailmerge/issues/59
     """
     template_message = mailmerge.template_message.TemplateMessage(
-        template_path=os.path.join(utils.TESTDATA, "markdown_template_utf8.txt"),
+        template_path=os.path.join(
+            utils.TESTDATA,
+            "markdown_template_utf8.txt",
+        ),
     )
-    sender, recipients, message = template_message.render({
+    _, _, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
     })
@@ -199,7 +202,17 @@ def test_utf8_template():
     # NOTE: to decode a base46-encoded string:
     # print((str(base64.b64decode(payload), "utf-8")))
     payload = message.get_payload().replace("\n", "")
-    assert payload == 'RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAoTWlkZGxlIEhpZ2ggR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUgd29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVyIHN0w65nZXQgw7tmIG1pdCBncsO0emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vsw65jaCBhbHMgZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdAplcndlbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3JnZW4gw65uIHZlcmxpZXouCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gga2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2VudCBtaWNoeiBsZWlzdGVuIGhpZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv'  # noqa: E501 pylint: disable=line-too-long
+    assert payload == (
+        "RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAo"
+        "TWlkZGxlIEhpZ2ggR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUg"
+        "d29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVyIHN0w65nZXQgw7tmIG1pdCBncsO0"
+        "emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vsw65jaCBhbHMg"
+        "ZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdApl"
+        "cndlbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3Jn"
+        "ZW4gw65uIHZlcmxpZXouCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gg"
+        "a2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2VudCBtaWNoeiBsZWlzdGVuIGhp"
+        "ZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv"
+    )
 
 
 def test_utf8_database():
