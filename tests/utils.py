@@ -4,8 +4,9 @@ Utilies common to multiple tests.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
+import pathlib
 
 
 # Directories containing test input files
-TESTDIR = os.path.dirname(__file__)
-TESTDATA = os.path.join(TESTDIR, "testdata")
+TESTDIR = pathlib.Path(os.path.dirname(__file__))
+TESTDATA = TESTDIR / "testdata"

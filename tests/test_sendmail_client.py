@@ -3,7 +3,6 @@ Tests for SendmailClient.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import os
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
@@ -23,7 +22,7 @@ except ImportError:
 def test_smtp(mock_SMTP):
     """Verify SMTP library calls."""
     sendmail_client = SendmailClient(
-        os.path.join(utils.TESTDATA, "server_open.conf"),
+        utils.TESTDATA/"server_open.conf",
         dry_run=False,
     )
     message = email.parser.Parser().parsestr(u"""
