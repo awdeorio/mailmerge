@@ -115,28 +115,32 @@ class TemplateMessage(object):
         if not self._message['Content-Type'].startswith("text/markdown"):
             return
 
-        # Remove the Content-Type header.  We're about to replace it with HTML.
+        # Remove the markdown Content-Type header, it's non-standard for email
         del self._message['Content-Type']
 
         # Make sure the message is multipart.  We need a multipart message so
         # that we can add an HTML part containing rendered Markdown.
         self._make_message_multipart()
 
-        # Render Markdown.  We assume that the plaintext payload item is
-        # formatted with Markdown.  Render Markdown to HTML and add the HTML as
-        # the last part of the multipart message (as per RFC 2046).
-        for payload_item in set(self._message.get_payload()):
-            if payload_item['Content-Type'].startswith('text/plain'):
-                original_encoding = str(payload_item.get_charset())
-                original_text = payload_item.get_payload(decode=True) \
-                                            .decode(original_encoding)
-                html_text = markdown.markdown(original_text)
-                html_payload = future.backports.email.mime.text.MIMEText(
-                    "<html><body>{}</body></html>".format(html_text),
-                    "html",
-                    _charset=original_encoding,
-                )
-                self._message.attach(html_payload)
+        # Extract unrendered text and encoding.  We assume that the first
+        # plaintext payload is formatted with Markdown.
+        for mimetext in set(self._message.get_payload()):
+            if mimetext['Content-Type'].startswith('text/plain'):
+                encoding = str(mimetext.get_charset())
+                text = mimetext.get_payload(decode=True).decode(encoding)
+                break
+        assert encoding
+        assert text
+
+        # Render Markdown to HTML and add the HTML as the last part of the
+        # multipart message as per RFC 2046.
+        html = markdown.markdown(text)
+        payload = future.backports.email.mime.text.MIMEText(
+            "<html><body>{}</body></html>".format(html),
+            "html",
+            _charset=encoding,
+        )
+        self._message.attach(payload)
 
     def _transform_attachments(self):
         """Parse Attachment headers and add attachments."""
