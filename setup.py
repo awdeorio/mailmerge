@@ -33,7 +33,7 @@ setup(
         "jinja2",
         "markdown",
         "mock;python_version<'3.0'",
-        "pathlib;python_version<'3.0'",
+        "pathlib2;python_version<'3.0'",
         "sh",
     ],
     extras_require={
