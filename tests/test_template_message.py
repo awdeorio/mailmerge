@@ -134,6 +134,15 @@ def test_attachment():
     assert False not in expected_attachments.values()
 
 
+def test_attachment_empty():
+    """Errr on empty attachment field."""
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"attachment_template_empty.txt",
+    )
+    with pytest.raises(mailmerge.utils.MailmergeError):
+        template_message.render({})
+
+
 def test_utf8_template():
     """Verify UTF8 support in email template."""
     template_message = mailmerge.template_message.TemplateMessage(
