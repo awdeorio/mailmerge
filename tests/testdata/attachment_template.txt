@@ -4,7 +4,6 @@ FROM: My Self <myself@mydomain.com>
 ATTACHMENT: attachment_1.txt
 ATTACHMENT: attachment_2.pdf
 ATTACHMENT: attachment_{{number}}.txt
-ATTACHMENT: 
 
 Hi, {{name}},
 

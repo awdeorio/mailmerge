@@ -3,7 +3,6 @@ System tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import os
 import re
 import sh
 from . import utils
@@ -17,9 +16,9 @@ def test_stdout():
     """
     mailmerge_cmd = sh.Command("mailmerge")
     output = mailmerge_cmd(
-        "--template", os.path.join(utils.TESTDATA, "simple_template.txt"),
-        "--database", os.path.join(utils.TESTDATA, "simple_database.csv"),
-        "--config", os.path.join(utils.TESTDATA, "server_open.conf"),
+        "--template", utils.TESTDATA/"simple_template.txt",
+        "--database", utils.TESTDATA/"simple_database.csv",
+        "--config", utils.TESTDATA/"server_open.conf",
         "--no-limit",
         "--dry-run",
     )
