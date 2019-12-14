@@ -99,10 +99,7 @@ def test_markdown_encoding():
     https://github.com/awdeorio/mailmerge/issues/59
     """
     template_message = mailmerge.template_message.TemplateMessage(
-        template_path=os.path.join(
-            utils.TESTDATA,
-            "markdown_template_utf8.txt",
-        ),
+        utils.TESTDATA/"markdown_template_utf8.txt"
     )
     _, _, message = template_message.render({
         "email": "myself@mydomain.com",
