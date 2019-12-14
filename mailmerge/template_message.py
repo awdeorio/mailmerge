@@ -128,50 +128,52 @@ class TemplateMessage(object):
 
     def _transform_attachments(self):
         """Parse Attachment headers and add attachments."""
+        # Do nothing if message has no attachment header
         if 'attachment' not in self._message:
             return
 
+        # Make sure the message is multipart.  We need a multipart message in
+        # order to add an attachment.
         self._make_message_multipart()
 
-        attachment_filepaths = self._message.get_all('attachment', failobj=[])
-
-        for attachment_filepath in attachment_filepaths:
-            normalized_path = self._resolve_attachment_path(attachment_filepath)
-            with normalized_path.open("rb") as attachment:
-                attachment_content = attachment.read()
-            basename = normalized_path.parts[-1]
+        # Add each attachment to the message
+        for path in self._message.get_all('attachment', failobj=[]):
+            path = self._resolve_attachment_path(path)
+            with path.open("rb") as attachment:
+                content = attachment.read()
+            basename = path.parts[-1]
             part = email.mime.application.MIMEApplication(
-                attachment_content,
+                content,
                 Name=str(basename),
             )
-            part.add_header('Content-Disposition',
-                            'attachment; filename="{}"'.format(basename))
+            part.add_header(
+                'Content-Disposition',
+                'attachment; filename="{}"'.format(basename),
+            )
             self._message.attach(part)
 
+        # Remove the attachment header, it's non-standard for email
         del self._message['attachment']
 
     def _resolve_attachment_path(self, path):
-        """Find a file specified by an attachment header.
-
-        Raise MailmergeError on failure.
-        """
-        template_parent_dir = self.template_path.parent
-        path = path.strip()
-        if not path:
+        """Find attachment file or raise MailmergeError."""
+        # Error on empty path
+        if not path.strip():
             raise utils.MailmergeError("Empty attachment header.")
 
-        path = Path(path)
+        # Create a Path object and handle home directory (tilde ~) notation
+        path = Path(path.strip())
         path = path.expanduser()
 
+        # Relative paths are relative to the template's parent dir
         if not path.is_absolute():
-            # Relative paths are relative to the template's parent dir
-            path = template_parent_dir/path
-        normalized_path = path.resolve()
+            path = self.template_path.parent/path
+
+        # Resolve any symlinks
+        path = path.resolve()
 
         # Check that the attachment exists
-        if not normalized_path.exists():
-            raise utils.MailmergeError(
-                "Attachment not found: {}".format(normalized_path)
-            )
+        if not path.exists():
+            raise utils.MailmergeError("Attachment not found: {}".format(path))
 
-        return normalized_path
+        return path
