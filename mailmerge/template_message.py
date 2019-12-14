@@ -124,7 +124,7 @@ class TemplateMessage(object):
 
         # Extract unrendered text and encoding.  We assume that the first
         # plaintext payload is formatted with Markdown.
-        for mimetext in set(self._message.get_payload()):
+        for mimetext in self._message.get_payload():
             if mimetext['Content-Type'].startswith('text/plain'):
                 encoding = str(mimetext.get_charset())
                 text = mimetext.get_payload(decode=True).decode(encoding)
