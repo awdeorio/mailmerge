@@ -94,6 +94,41 @@ def test_markdown():
     assert htmltext.strip() == htmltext_correct.strip()
 
 
+def test_markdown_encoding():
+    """Verify encoding is preserved when rendering a Markdown template.
+
+    See Issue #59 for a detailed explanation
+    https://github.com/awdeorio/mailmerge/issues/59
+    """
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=os.path.join(utils.TESTDATA, "markdown_template_utf8.txt"),
+    )
+    sender, recipients, message = template_message.render({
+        "email": "myself@mydomain.com",
+        "name": "Myself",
+    })
+
+    # Message should contain an unrendered Markdown plaintext part and a
+    # rendered Markdown HTML part
+    plaintext_part, html_part = message.get_payload()
+
+    # Verify encodings
+    assert str(plaintext_part.get_charset()) == "utf-8"
+    assert str(html_part.get_charset()) == "utf-8"
+    assert plaintext_part["Content-Transfer-Encoding"] == "base64"
+    assert html_part["Content-Transfer-Encoding"] == "base64"
+
+    # Verify content, which is base64 encoded
+    plaintext = plaintext_part.get_payload().strip()
+    htmltext = html_part.get_payload().strip()
+    assert plaintext == "SGksIE15c2VsZiwKw6bDuMOl"
+    assert htmltext == (
+        "PGh0bWw+PGJvZHk+PHA+"
+        "SGksIE15c2VsZiwKw6bDuMOl"
+        "PC9wPjwvYm9keT48L2h0bWw+"
+    )
+
+
 def test_attachment():
     """Attachments should be sent as part of the email."""
     template_message = mailmerge.template_message.TemplateMessage(
