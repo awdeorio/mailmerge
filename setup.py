@@ -21,7 +21,7 @@ setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-        "backports.csv;python_version<='2.7'",
+        "backports.csv;python_version<'3.0'",
         "chardet",
         "click",
         "configparser",
@@ -32,7 +32,8 @@ setup(
 
         "jinja2",
         "markdown",
-        "mock;python_version<='2.7'",
+        "mock;python_version<'3.0'",
+        "pathlib;python_version<'3.0'",
         "sh",
     ],
     extras_require={
