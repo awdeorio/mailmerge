@@ -21,19 +21,19 @@ setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-        "backports.csv;python_version<='2.7'",
+        "backports.csv;python_version<'3.0'",
         "chardet",
         "click",
         "configparser",
-        "jinja2",
 
         # The attachments feature relies on a bug fix in the future library
         # https://github.com/awdeorio/mailmerge/pull/56
         "future>0.18.0",
 
-        "backports.csv;python_version<='2.7'",
+        "jinja2",
         "markdown",
-        "mock;python_version<='2.7'",
+        "mock;python_version<'3.0'",
+        "pathlib2;python_version<'3.6'",
         "sh",
     ],
     extras_require={
