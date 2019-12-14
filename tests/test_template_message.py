@@ -127,7 +127,7 @@ def test_attachment():
             file_contents = part.get_payload(decode=True)
             assert filename in expected_attachments
             assert not expected_attachments[filename]
-            with open(utils.TESTDATA/filename, 'rb') as expected_attachment:
+            with (utils.TESTDATA/filename).open('rb') as expected_attachment:
                 correct_file_contents = expected_attachment.read()
             assert file_contents == correct_file_contents
             expected_attachments[filename] = True
@@ -165,7 +165,7 @@ def test_utf8_database():
     template_message = mailmerge.template_message.TemplateMessage(
         template_path=utils.TESTDATA/"simple_template.txt",
     )
-    with io.open(utils.TESTDATA/"utf8_database.csv", "r") as database_file:
+    with (utils.TESTDATA/"utf8_database.csv").open("r") as database_file:
         reader = csv.DictReader(database_file)
         context = next(reader)
     sender, recipients, message = template_message.render(context)

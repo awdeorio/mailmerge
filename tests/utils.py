@@ -3,10 +3,9 @@ Utilies common to multiple tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import os
-import pathlib
+import pathlib2 as pathlib
 
 
 # Directories containing test input files
-TESTDIR = pathlib.Path(os.path.dirname(__file__))
+TESTDIR = pathlib.Path(__file__).resolve().parent
 TESTDATA = TESTDIR / "testdata"
