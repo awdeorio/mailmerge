@@ -134,28 +134,9 @@ class TemplateMessage(object):
         self._make_message_multipart()
 
         attachment_filepaths = self._message.get_all('attachment', failobj=[])
-        template_parent_dir = self.template_path.parent
 
         for attachment_filepath in attachment_filepaths:
-            attachment_filepath = attachment_filepath.strip()
-
-            if not attachment_filepath:
-                # Ignore empty paths
-                continue
-            attachment_filepath = Path(attachment_filepath)
-            attachment_filepath = attachment_filepath.expanduser()
-            if not attachment_filepath:
-                continue
-            if not attachment_filepath.is_absolute():
-                # Relative paths are relative to the template's parent dir
-                attachment_filepath = template_parent_dir/attachment_filepath
-            normalized_path = attachment_filepath.resolve()
-
-            # Check that the attachment exists
-            if not normalized_path.exists():
-                raise utils.MailmergeError(
-                    "Attachment not found: {}".format(normalized_path)
-                )
+            normalized_path = self._resolve_attachment_path(attachment_filepath)
             with normalized_path.open("rb") as attachment:
                 attachment_content = attachment.read()
             basename = normalized_path.parts[-1]
@@ -168,3 +149,29 @@ class TemplateMessage(object):
             self._message.attach(part)
 
         del self._message['attachment']
+
+    def _resolve_attachment_path(self, path):
+        """Find a file specified by an attachment header.
+
+        Raise MailmergeError on failure.
+        """
+        template_parent_dir = self.template_path.parent
+        path = path.strip()
+        if not path:
+            raise utils.MailmergeError("Empty attachment header.")
+
+        path = Path(path)
+        path = path.expanduser()
+
+        if not path.is_absolute():
+            # Relative paths are relative to the template's parent dir
+            path = template_parent_dir/path
+        normalized_path = path.resolve()
+
+        # Check that the attachment exists
+        if not normalized_path.exists():
+            raise utils.MailmergeError(
+                "Attachment not found: {}".format(normalized_path)
+            )
+
+        return normalized_path
