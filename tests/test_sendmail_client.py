@@ -3,10 +3,10 @@ Tests for SendmailClient.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
+import textwrap
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
-from . import utils
 
 try:
     from unittest import mock  # Python 3
@@ -19,10 +19,17 @@ except ImportError:
 
 
 @mock.patch('smtplib.SMTP')
-def test_smtp(mock_SMTP):
+def test_smtp(mock_SMTP, tmp_path):
     """Verify SMTP library calls."""
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+        security = Never
+    """))
     sendmail_client = SendmailClient(
-        utils.TESTDATA/"server_open.conf",
+        config_path,
         dry_run=False,
     )
     message = email.parser.Parser().parsestr(u"""
