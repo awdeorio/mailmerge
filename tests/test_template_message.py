@@ -312,6 +312,5 @@ def test_emoji_database():
 
     # grinning face with smiling eyes
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
-    payload = message.get_payload()
     plaintext = message.get_payload().strip()
     assert plaintext == "SGkgIPCfmIA="
