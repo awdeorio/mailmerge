@@ -260,7 +260,7 @@ def test_emoji():
     # grinning face with smiling eyes
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
     plaintext = message.get_payload().strip()
-    assert plaintext == "SGkgIPCfmIA="
+    assert plaintext == "SGkg8J+YgA=="
 
 
 def test_emoji_markdown():
@@ -303,7 +303,10 @@ def test_emoji_database():
         template_path=utils.TESTDATA/"emoji_database_template.txt",
     )
     _, _, message = template_message.render({
-        "emoji": u"\xF0\x9F\x98\x81"  # Grinning face with smiling eyes
+        # "emoji": u"\xF0\x9F\x98\x80"  # Grinning face with smiling eyes
+        # "emoji": "\N{grinning face with smiling eyes}"  # FIXME
+        # "emoji": u"😀",
+        "emoji": "\N{grinning face}"
     })
 
     # Verify encoding
@@ -313,4 +316,4 @@ def test_emoji_database():
     # grinning face with smiling eyes
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
     plaintext = message.get_payload().strip()
-    assert plaintext == "SGkgIPCfmIA="
+    assert plaintext == "SGkg8J+YgA=="
