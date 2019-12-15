@@ -21,7 +21,7 @@ class SendmailClient(object):
     def __init__(self, config_filename, dry_run=False):
         """Read configuration from config_filename."""
         config = configparser.RawConfigParser()
-        config.read(config_filename)
+        config.read(str(config_filename))  # str need for older Python versions
         self.dry_run = dry_run
         self.host = config.get("smtp_server", "host")
         self.port = config.getint("smtp_server", "port")

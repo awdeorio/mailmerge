@@ -3,9 +3,14 @@ Utilies common to multiple tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import os
+
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
 
 
 # Directories containing test input files
-TESTDIR = os.path.dirname(__file__)
-TESTDATA = os.path.join(TESTDIR, "testdata")
+TESTDIR = Path(__file__).resolve().parent
+TESTDATA = TESTDIR / "testdata"
