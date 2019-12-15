@@ -60,6 +60,7 @@ class TemplateMessage(object):
     def render(self, context):
         """Return rendered message object."""
         raw_message = self.template.render(context)
+        self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()
         self._transform_markdown()
@@ -72,8 +73,6 @@ class TemplateMessage(object):
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
-        self._message = email.parser.Parser().parsestr(raw_message)
-
         encoding = "us-ascii" if is_ascii(raw_message) else "utf-8"
         for part in self._message.walk():
             if part.get_content_maintype() == 'multipart':
