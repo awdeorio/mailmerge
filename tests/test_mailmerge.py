@@ -7,6 +7,12 @@ import re
 import sh
 from . import utils
 
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
+
 
 def test_stdout():
     """Verify stdout and stderr with dry run on simple input files."""
@@ -71,3 +77,24 @@ def test_no_options(tmpdir):
         output = mailmerge(_ok_code=1)  # expect non-zero exit
     assert "Error: can't find template email mailmerge_template.txt" in output
     assert "https://github.com/awdeorio/mailmerge" in output
+
+
+def test_sample(tmpdir):
+    """Verify --sample."""
+    mailmerge = sh.Command("mailmerge")
+
+    # Run `mailmerge --sample`
+    with tmpdir.as_cwd():
+        output = mailmerge("--sample")
+
+    # Verify file were created
+    assert Path("mailmerge_template.txt").exists()
+    assert Path("mailmerge_database.csv").exists()
+    assert Path("mailmerge_server.conf").exists()
+
+    # Run `mailmerge`, which should dry-run sending one message
+    with tmpdir.as_cwd():
+        output = mailmerge()
+    assert "sent message 0" in output
+    assert "Limit was 1 messages" in output
+    assert "This was a dry run" in output
