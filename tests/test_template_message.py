@@ -393,25 +393,40 @@ def test_utf8_database():
 
 def test_emoji(tmp_path):
     """Verify emoji are encoded."""
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"emoji_template.txt",
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: test@test.com
+        SUBJECT: Testing mailmerge
+        FROM: test@test.com
+        
+        Hi \xf0\x9f\x98\x80
+    """))  # grinning face emoji
+    template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
 
     # Verify encoding
     assert message.get_charset() == "utf-8"
     assert message["Content-Transfer-Encoding"] == "base64"
 
-    # grinning face with smiling eyes
+    # Verify content
     plaintext = message.get_payload().strip()
-    assert plaintext == "SGkg8J+YgA=="
+    assert plaintext == "SGkgw7DCn8KYwoA="
 
 
-def test_emoji_markdown():
+def test_emoji_markdown(tmp_path):
     """Verify emoji are encoded in Markdown formatted messages."""
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"emoji_markdown_template.txt",
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: test@example.com
+        SUBJECT: Testing mailmerge
+        FROM: test@example.com
+        CONTENT-TYPE: text/markdown
+        
+        ```
+        emoji_string = \xf0\x9f\x98\x80
+        ```
+            """))  # grinning face emoji
+    template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
 
     # Message should contain an unrendered Markdown plaintext part and a
@@ -427,24 +442,30 @@ def test_emoji_markdown():
     # Verify content, which is base64 encoded grinning face emoji
     plaintext = plaintext_part.get_payload().strip()
     htmltext = html_part.get_payload().strip().replace("\n", "")
-    assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9ICDwn5iACmBgYA=="
+    assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9IMOwwp/CmMKACmBgYA=="
     assert htmltext == (
         "PGh0bWw+PGJvZHk+PHA+"
-        "PGNvZGU+ZW1vamlfc3RyaW5nID0gIPCfmIA8L2NvZGU+"
+        "PGNvZGU+ZW1vamlfc3RyaW5nID0gw7DCn8KYwoA8L2NvZGU+"
         "PC9wPjwvYm9keT48L2h0bWw+"
     )
 
 
-def test_emoji_database():
+def test_emoji_database(tmp_path):
     """Verify emoji are encoded when they are substituted via template db.
 
     The template is ASCII encoded, but after rendering the template, an emoji
     character will substituted into the template.  The result should be a utf-8
     encoded message.
     """
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"emoji_database_template.txt",
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: test@test.com
+        SUBJECT: Testing mailmerge
+        FROM: test@test.com
+        
+        Hi {{emoji}}
+                    """))
+    template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "emoji": u"\xf0\x9f\x98\x80"  # grinning face
     })
