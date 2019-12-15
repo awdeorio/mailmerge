@@ -32,7 +32,7 @@ def test_smtp(mock_SMTP, tmp_path):
         config_path,
         dry_run=False,
     )
-    message = email.parser.Parser().parsestr(u"""
+    message = email.message_from_string(u"""
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -65,7 +65,7 @@ def test_dry_run(mock_SMTP, tmp_path):
         config_path,
         dry_run=True,
     )
-    message = email.parser.Parser().parsestr(u"""
+    message = email.message_from_string(u"""
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
