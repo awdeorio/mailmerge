@@ -297,7 +297,6 @@ def test_attachment(tmp_path):
 
 def test_attachment_empty(tmp_path):
     """Errr on empty attachment field."""
-    # Create template .txt file
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
@@ -307,17 +306,33 @@ def test_attachment_empty(tmp_path):
 
         Hello world
     """))
-
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
 
 
-def test_utf8_template():
+def test_utf8_template(tmp_path):
     """Verify UTF8 support in email template."""
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"utf8_template.txt",
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        From the Tagelied of Wolfram von Eschenbach (Middle High German):
+        
+        Sîne klâwen durh die wolken sint geslagen,
+        er stîget ûf mit grôzer kraft,
+        ich sih in grâwen tägelîch als er wil tagen,
+        den tac, der im geselleschaft
+        erwenden wil, dem werden man,
+        den ich mit sorgen în verliez.
+        ich bringe in hinnen, ob ich kan.
+        sîn vil manegiu tugent michz leisten hiez.
+        
+        http://www.columbia.edu/~fdc/utf8/
+    """))
+    template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
     })
@@ -328,8 +343,8 @@ def test_utf8_template():
     assert message.get_content_charset() == "utf-8"
 
     # Verify sender and recipients
-    assert sender == "My Self <myself@mydomain.com>"
-    assert recipients == ["myself@mydomain.com"]
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
 
     # Verify content
     # NOTE: to decode a base46-encoded string:
@@ -376,7 +391,7 @@ def test_utf8_database():
     assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'
 
 
-def test_emoji():
+def test_emoji(tmp_path):
     """Verify emoji are encoded."""
     template_message = TemplateMessage(
         template_path=utils.TESTDATA/"emoji_template.txt",
