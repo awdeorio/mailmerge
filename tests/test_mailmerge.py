@@ -59,6 +59,12 @@ def test_no_options(tmpdir):
 
     Run mailmerge at the CLI with no options.  Do this in an empty temporary
     directory to ensure that mailmerge doesn't find any default input files.
+
+    pytest tmpdir docs:
+    http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
+
+    sh _ok_code docs
+    https://amoffat.github.io/sh/sections/special_arguments.html#ok-code
     """
     mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
