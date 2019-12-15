@@ -244,3 +244,29 @@ def test_utf8_database():
     payload = message.get_payload()
     payload = message.get_payload().replace("\n", "")
     assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'
+
+
+def test_emoji():
+    """Verify emoji are encoded."""
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_template.txt",
+    )
+    _, _, message = template_message.render({})
+
+    # grinning face with smiling eyes
+    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
+    payload = message.get_payload()
+    assert payload == "SGkg8J+YgA"
+
+
+def test_emoji_markdown():
+    """Verify emoji are encoded in Markdown formatted messages."""
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_markdown_template.txt",
+    )
+    _, _, message = template_message.render({})
+
+    # grinning face with smiling eyes
+    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
+    payload = message.get_payload()
+    assert payload == "SGkg8J+YgA"
