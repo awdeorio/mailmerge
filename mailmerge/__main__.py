@@ -117,11 +117,16 @@ def cli(sample, dry_run, limit, no_limit,
 
     # Hints for user
     if not no_limit:
-        print(">>> Limit was {} messages.  ".format(limit) +
-              "To remove the limit, use the --no-limit option.")
+        print(
+            ">>> Limit was {} messages.  "
+            "To remove the limit, use the --no-limit option."
+            .format(limit)
+        )
     if dry_run:
-        print((">>> This was a dry run.  "
-               "To send messages, use the --no-dry-run option."))
+        print(
+            ">>> This was a dry run.  "
+            "To send messages, use the --no-dry-run option."
+        )
 
 
 if __name__ == "__main__":
@@ -140,11 +145,11 @@ def check_input_files(template_path, database_path, config_path, sample):
         )
         sys.exit(0)
     if not template_path.exists():
-        print("Error: can't find template email " + template_path)
+        print("Error: can't find template email {}".format(template_path))
         print("Create a sample (--sample) or specify a file (--template)")
         sys.exit(1)
     if not database_path.exists():
-        print("Error: can't find database_path " + database_path)
+        print("Error: can't find database_path {}".format(database_path))
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
 
@@ -155,7 +160,7 @@ def create_sample_input_files(template_path,
     """Create sample template email and database."""
     print("Creating sample template email {}".format(template_path))
     if template_path.exists():
-        print("Error: file exists: " + template_path)
+        print("Error: file exists: {}".format(template_path))
         sys.exit(1)
     with template_path.open("w") as template_file:
         template_file.write(
@@ -169,7 +174,7 @@ def create_sample_input_files(template_path,
         )
     print("Creating sample database {}".format(database_path))
     if database_path.exists():
-        print("Error: file exists: " + database_path)
+        print("Error: file exists: {}".format(database_path))
         sys.exit(1)
     with database_path.open("w") as database_file:
         database_file.write(
@@ -179,7 +184,7 @@ def create_sample_input_files(template_path,
         )
     print("Creating sample config file {}".format(config_path))
     if config_path.exists():
-        print("Error: file exists: " + config_path)
+        print("Error: file exists: {}".format(config_path))
         sys.exit(1)
     with config_path.open("w") as config_file:
         config_file.write(
