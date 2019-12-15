@@ -33,19 +33,52 @@ def test_smtp(mock_SMTP, tmp_path):
         dry_run=False,
     )
     message = email.parser.Parser().parsestr(u"""
-    TO: bob@bobdomain.com
-    SUBJECT: Testing mailmerge
-    FROM: My Self <myself@mydomain.com>
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
 
-    Hi, Bob,
+        Hello world
     """)
 
     sendmail_client.sendmail(
-        sender="myself@mydomain.com",
-        recipients=["bob@bobdomain.com"],
+        sender="from@test.com",
+        recipients=["to@test.com"],
         message=message,
     )
 
     # Mock smtp object with function calls recorded
     smtp = mock_SMTP.return_value
     assert smtp.sendmail.call_count == 1
+
+
+@mock.patch('smtplib.SMTP')
+def test_dry_run(mock_SMTP, tmp_path):
+    """Verify no sendmail() calls when dry_run=True."""
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+        security = Never
+    """))
+    sendmail_client = SendmailClient(
+        config_path,
+        dry_run=True,
+    )
+    message = email.parser.Parser().parsestr(u"""
+        TO: test@test.com
+        SUBJECT: Testing mailmerge
+        FROM: test@test.com
+
+        Hello world
+    """)
+
+    sendmail_client.sendmail(
+        sender="from@test.com",
+        recipients=["to@test.com"],
+        message=message,
+    )
+
+    # Mock smtp object with function calls recorded
+    smtp = mock_SMTP.return_value
+    assert smtp.sendmail.call_count == 0
