@@ -22,7 +22,6 @@ setup(
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
         "backports.csv;python_version<'3.0'",
-        "chardet",
         "click",
         "configparser",
 

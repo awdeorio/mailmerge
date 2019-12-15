@@ -244,3 +244,70 @@ def test_utf8_database():
     payload = message.get_payload()
     payload = message.get_payload().replace("\n", "")
     assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'
+
+
+def test_emoji():
+    """Verify emoji are encoded."""
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_template.txt",
+    )
+    _, _, message = template_message.render({})
+
+    # Verify encoding
+    assert message.get_charset() == "utf-8"
+    assert message["Content-Transfer-Encoding"] == "base64"
+
+    # grinning face with smiling eyes
+    plaintext = message.get_payload().strip()
+    assert plaintext == "SGkg8J+YgA=="
+
+
+def test_emoji_markdown():
+    """Verify emoji are encoded in Markdown formatted messages."""
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_markdown_template.txt",
+    )
+    _, _, message = template_message.render({})
+
+    # Message should contain an unrendered Markdown plaintext part and a
+    # rendered Markdown HTML part
+    plaintext_part, html_part = message.get_payload()
+
+    # Verify encodings
+    assert str(plaintext_part.get_charset()) == "utf-8"
+    assert str(html_part.get_charset()) == "utf-8"
+    assert plaintext_part["Content-Transfer-Encoding"] == "base64"
+    assert html_part["Content-Transfer-Encoding"] == "base64"
+
+    # Verify content, which is base64 encoded grinning face emoji
+    plaintext = plaintext_part.get_payload().strip()
+    htmltext = html_part.get_payload().strip().replace("\n", "")
+    assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9ICDwn5iACmBgYA=="
+    assert htmltext == (
+        "PGh0bWw+PGJvZHk+PHA+"
+        "PGNvZGU+ZW1vamlfc3RyaW5nID0gIPCfmIA8L2NvZGU+"
+        "PC9wPjwvYm9keT48L2h0bWw+"
+    )
+
+
+def test_emoji_database():
+    """Verify emoji are encoded when they are substituted via template db.
+
+    The template is ASCII encoded, but after rendering the template, an emoji
+    character will substituted into the template.  The result should be a utf-8
+    encoded message.
+    """
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_database_template.txt",
+    )
+    _, _, message = template_message.render({
+        "emoji": u"\xf0\x9f\x98\x80"  # grinning face
+    })
+
+    # Verify encoding
+    assert message.get_charset() == "utf-8"
+    assert message["Content-Transfer-Encoding"] == "base64"
+
+    # Verify content
+    plaintext = message.get_payload().strip()
+    assert plaintext == "SGkgw7DCn8KYwoA="
