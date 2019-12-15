@@ -2,4 +2,4 @@ TO: test@test.com
 SUBJECT: Testing mailmerge
 FROM: test@test.com
 
-Hi  😀
+Hi {{emoji}}

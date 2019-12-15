@@ -253,10 +253,14 @@ def test_emoji():
     )
     _, _, message = template_message.render({})
 
+    # Verify encoding
+    assert message.get_charset() == "utf-8"
+    assert message["Content-Transfer-Encoding"] == "base64"
+
     # grinning face with smiling eyes
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
     plaintext = message.get_payload().strip()
-    assert plaintext == "SGkg8J+YgA=="
+    assert plaintext == "SGkgIPCfmIA="
 
 
 def test_emoji_markdown():
@@ -286,3 +290,28 @@ def test_emoji_markdown():
         "PGNvZGU+ZW1vamlfc3RyaW5nID0gIPCfmIA8L2NvZGU+"
         "PC9wPjwvYm9keT48L2h0bWw+"
     )
+
+
+def test_emoji_database():
+    """Verify emoji are encoded when they are substituted via template db.
+
+    The template is ASCII encoded, but after rendering the template, an emoji
+    character will substituted into the template.  The result should be a utf-8
+    encoded message.
+    """
+    template_message = mailmerge.template_message.TemplateMessage(
+        template_path=utils.TESTDATA/"emoji_database_template.txt",
+    )
+    _, _, message = template_message.render({
+        "emoji": u"\xF0\x9F\x98\x81"  # Grinning face with smiling eyes
+    })
+
+    # Verify encoding
+    assert message.get_charset() == "utf-8"
+    assert message["Content-Transfer-Encoding"] == "base64"
+
+    # grinning face with smiling eyes
+    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
+    payload = message.get_payload()
+    plaintext = message.get_payload().strip()
+    assert plaintext == "SGkgIPCfmIA="
