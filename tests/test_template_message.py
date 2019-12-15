@@ -295,11 +295,20 @@ def test_attachment(tmp_path):
     assert False not in expected_attachments.values()
 
 
-def test_attachment_empty():
+def test_attachment_empty(tmp_path):
     """Errr on empty attachment field."""
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"attachment_template_empty.txt",
-    )
+    # Create template .txt file
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+        ATTACHMENT:
+
+        Hello world
+    """))
+
+    template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
 
