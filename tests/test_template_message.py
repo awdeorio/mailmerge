@@ -255,8 +255,8 @@ def test_emoji():
 
     # grinning face with smiling eyes
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
-    payload = message.get_payload()
-    assert payload == "SGkg8J+YgA"
+    plaintext = message.get_payload().strip()
+    assert plaintext == "SGkg8J+YgA=="
 
 
 def test_emoji_markdown():
@@ -266,7 +266,23 @@ def test_emoji_markdown():
     )
     _, _, message = template_message.render({})
 
-    # grinning face with smiling eyes
+    # Message should contain an unrendered Markdown plaintext part and a
+    # rendered Markdown HTML part
+    plaintext_part, html_part = message.get_payload()
+
+    # Verify encodings
+    assert str(plaintext_part.get_charset()) == "utf-8"
+    assert str(html_part.get_charset()) == "utf-8"
+    assert plaintext_part["Content-Transfer-Encoding"] == "base64"
+    assert html_part["Content-Transfer-Encoding"] == "base64"
+
+    # Verify content, which is base64 encoded. Grinning face with smiling eyes.
     # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
-    payload = message.get_payload()
-    assert payload == "SGkg8J+YgA"
+    plaintext = plaintext_part.get_payload().strip()
+    htmltext = html_part.get_payload().strip().replace("\n", "")
+    assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9ICDwn5iACmBgYA=="
+    assert htmltext == (
+        "PGh0bWw+PGJvZHk+PHA+"
+        "PGNvZGU+ZW1vamlfc3RyaW5nID0gIPCfmIA8L2NvZGU+"
+        "PC9wPjwvYm9keT48L2h0bWw+"
+    )
