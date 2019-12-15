@@ -54,15 +54,14 @@ Your number is 42.
 """
 
 
-def test_no_options():
-    """Verify help message when called with no options."""
-    # FIXME HACK this test assume we're in a folder with no mailmerge_* files
+def test_no_options(tmpdir):
+    """Verify help message when called with no options.
 
-    # Run mailmerge at the CLI with no options.  We expect exit code 1.
-    # https://amoffat.github.io/sh/sections/special_arguments.html#ok-code
+    Run mailmerge at the CLI with no options.  Do this in an empty temporary
+    directory to ensure that mailmerge doesn't find any default input files.
+    """
     mailmerge = sh.Command("mailmerge")
-    output = mailmerge(_ok_code=1)
-
-    # Verify output
+    with tmpdir.as_cwd():
+        output = mailmerge(_ok_code=1)  # expect non-zero exit
     assert "Error: can't find template email mailmerge_template.txt" in output
     assert "https://github.com/awdeorio/mailmerge" in output
