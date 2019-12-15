@@ -66,7 +66,7 @@ except ImportError:
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """
-    A simple, command line mail merge tool.
+    Mailmerge is a simple, command line mail merge tool.
 
     For examples and formatting features, see:
     https://github.com/awdeorio/mailmerge
