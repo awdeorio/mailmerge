@@ -14,7 +14,6 @@ import future.backports.email.utils
 import future.backports.email.generator
 import markdown
 import jinja2
-import chardet
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -74,8 +73,8 @@ class TemplateMessage(object):
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
         self._message = email.parser.Parser().parsestr(raw_message)
-        detected = chardet.detect(bytearray(raw_message, "utf-8"))
-        encoding = detected["encoding"]
+
+        encoding = "us-ascii" if is_ascii(raw_message) else "utf-8"
         for part in self._message.walk():
             if part.get_content_maintype() == 'multipart':
                 continue
@@ -206,3 +205,10 @@ class TemplateMessage(object):
             raise utils.MailmergeError("Attachment not found: {}".format(path))
 
         return path
+
+
+def is_ascii(string):
+    """Return True is string contains only is us-ascii encoded characters."""
+    def is_ascii_char(char):
+        return 0 <= ord(char) <= 127
+    return all(is_ascii_char(char) for char in string)
