@@ -66,10 +66,10 @@ except ImportError:
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
     """
-    Command line interface.
+    A simple, command line mail merge tool.
 
-    For guides and other features, see:
-    https://github.com/awdeorio/mailmerge#example.
+    For examples and formatting features, see:
+    https://github.com/awdeorio/mailmerge
     """
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
