@@ -3,4 +3,6 @@ SUBJECT: Testing mailmerge
 FROM: test@example.com
 CONTENT-TYPE: text/markdown
 
-Hi 😀
+```
+emoji_string =  😀
+```
