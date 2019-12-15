@@ -3,23 +3,18 @@ System tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import os
 import re
 import sh
 from . import utils
 
 
 def test_stdout():
-    """Verify stdout and stderr.
-
-    pytest docs on capturing stdout and stderr
-    https://pytest.readthedocs.io/en/2.7.3/capture.html
-    """
+    """Verify stdout and stderr with dry run on simple input files."""
     mailmerge_cmd = sh.Command("mailmerge")
     output = mailmerge_cmd(
-        "--template", os.path.join(utils.TESTDATA, "simple_template.txt"),
-        "--database", os.path.join(utils.TESTDATA, "simple_database.csv"),
-        "--config", os.path.join(utils.TESTDATA, "server_open.conf"),
+        "--template", utils.TESTDATA/"simple_template.txt",
+        "--database", utils.TESTDATA/"simple_database.csv",
+        "--config", utils.TESTDATA/"server_open.conf",
         "--no-limit",
         "--dry-run",
     )
@@ -57,3 +52,22 @@ Your number is 42.
 >>> sent message 1
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 """
+
+
+def test_no_options(tmpdir):
+    """Verify help message when called with no options.
+
+    Run mailmerge at the CLI with no options.  Do this in an empty temporary
+    directory to ensure that mailmerge doesn't find any default input files.
+
+    pytest tmpdir docs:
+    http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
+
+    sh _ok_code docs
+    https://amoffat.github.io/sh/sections/special_arguments.html#ok-code
+    """
+    mailmerge = sh.Command("mailmerge")
+    with tmpdir.as_cwd():
+        output = mailmerge(_ok_code=1)  # expect non-zero exit
+    assert "Error: can't find template email mailmerge_template.txt" in output
+    assert "https://github.com/awdeorio/mailmerge" in output
