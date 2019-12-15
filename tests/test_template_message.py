@@ -258,7 +258,6 @@ def test_emoji():
     assert message["Content-Transfer-Encoding"] == "base64"
 
     # grinning face with smiling eyes
-    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
     plaintext = message.get_payload().strip()
     assert plaintext == "SGkg8J+YgA=="
 
@@ -280,8 +279,7 @@ def test_emoji_markdown():
     assert plaintext_part["Content-Transfer-Encoding"] == "base64"
     assert html_part["Content-Transfer-Encoding"] == "base64"
 
-    # Verify content, which is base64 encoded. Grinning face with smiling eyes.
-    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
+    # Verify content, which is base64 encoded grinning face emoji
     plaintext = plaintext_part.get_payload().strip()
     htmltext = html_part.get_payload().strip().replace("\n", "")
     assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9ICDwn5iACmBgYA=="
@@ -303,17 +301,13 @@ def test_emoji_database():
         template_path=utils.TESTDATA/"emoji_database_template.txt",
     )
     _, _, message = template_message.render({
-        # "emoji": u"\xF0\x9F\x98\x80"  # Grinning face with smiling eyes
-        # "emoji": "\N{grinning face with smiling eyes}"  # FIXME
-        # "emoji": u"😀",
-        "emoji": "\N{grinning face}"
+        "emoji": u"\xf0\x9f\x98\x80"  # grinning face
     })
 
     # Verify encoding
     assert message.get_charset() == "utf-8"
     assert message["Content-Transfer-Encoding"] == "base64"
 
-    # grinning face with smiling eyes
-    # https://apps.timwhitlock.info/unicode/inspect/hex/1F601
+    # Verify content
     plaintext = message.get_payload().strip()
-    assert plaintext == "SGkg8J+YgA=="
+    assert plaintext == "SGkgw7DCn8KYwoA="
