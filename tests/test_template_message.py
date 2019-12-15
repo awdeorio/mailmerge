@@ -196,15 +196,23 @@ def test_markdown(tmp_path):
     assert htmltext.strip() == htmltext_correct.strip()
 
 
-def test_markdown_encoding():
+def test_markdown_encoding(tmp_path):
     """Verify encoding is preserved when rendering a Markdown template.
 
     See Issue #59 for a detailed explanation
     https://github.com/awdeorio/mailmerge/issues/59
     """
-    template_message = TemplateMessage(
-        utils.TESTDATA/"markdown_template_utf8.txt"
-    )
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: test@example.com
+        CONTENT-TYPE: text/markdown
+        
+        Hi, {{name}},
+        æøå
+    """))
+    template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
