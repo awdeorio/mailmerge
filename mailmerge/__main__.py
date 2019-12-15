@@ -65,7 +65,12 @@ except ImportError:
 )
 def cli(sample, dry_run, limit, no_limit,
         database_path, template_path, config_path):
-    """Command line interface."""
+    """
+    Mailmerge is a simple, command line mail merge tool.
+
+    For examples and formatting features, see:
+    https://github.com/awdeorio/mailmerge
+    """
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
     # pylint: disable=too-many-arguments, too-many-locals
@@ -140,11 +145,13 @@ def check_input_files(template_path, database_path, config_path, sample):
         )
         sys.exit(0)
     if not template_path.exists():
-        print("Error: can't find template email " + template_path)
+        print("Error: can't find template email {}".format(template_path))
         print("Create a sample (--sample) or specify a file (--template)")
+        print("")
+        print("See https://github.com/awdeorio/mailmerge for examples.")
         sys.exit(1)
     if not database_path.exists():
-        print("Error: can't find database_path " + database_path)
+        print("Error: can't find database_path {}".format(database_path))
         print("Create a sample (--sample) or specify a file (--database)")
         sys.exit(1)
 
