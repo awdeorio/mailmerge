@@ -76,14 +76,19 @@ def test_no_options(tmpdir):
     """
     with tmpdir.as_cwd():
         output = sh.mailmerge(_ok_code=1)  # expect non-zero exit
-    assert "Error: can't find template email mailmerge_template.txt" in output
+    assert output.stderr.decode("utf-8") == ""
+    assert "Error: can't find template mailmerge_template.txt" in output
     assert "https://github.com/awdeorio/mailmerge" in output
 
 
 def test_sample(tmpdir):
     """Verify --sample creates sample input files."""
     with tmpdir.as_cwd():
-        sh.mailmerge("--sample")
+        output = sh.mailmerge("--sample")
+    assert output.stderr.decode("utf-8") == ""
+    assert "Creating sample template" in output
+    assert "Creating sample database" in output
+    assert "Creating sample config" in output
     assert Path("mailmerge_template.txt").exists()
     assert Path("mailmerge_database.csv").exists()
     assert Path("mailmerge_server.conf").exists()
@@ -95,6 +100,7 @@ def test_sample_clobber_template(tmpdir):
         Path("mailmerge_template.txt").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: file exists" in output
 
 
 def test_sample_clobber_database(tmpdir):
@@ -103,6 +109,7 @@ def test_sample_clobber_database(tmpdir):
         Path("mailmerge_database.csv").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: file exists" in output
 
 
 def test_sample_clobber_config(tmpdir):
@@ -111,6 +118,7 @@ def test_sample_clobber_config(tmpdir):
         Path("mailmerge_server.conf").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: file exists" in output
 
 
 def test_defaults(tmpdir):
@@ -118,6 +126,7 @@ def test_defaults(tmpdir):
     with tmpdir.as_cwd():
         sh.mailmerge("--sample")
         output = sh.mailmerge()
+    assert output.stderr.decode("utf-8") == ""
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
@@ -131,6 +140,7 @@ def test_dry_run():
         "--config", utils.TESTDATA/"server_ssl.conf",
         "--dry-run",
     )
+    assert output.stderr.decode("utf-8") == ""
     assert "Your number is 17." in output
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
@@ -148,6 +158,7 @@ def test_bad_limit():
         _ok_code=1,
     )
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: limit must be greater than zero" in output
 
 
 def test_limit_combo():
@@ -160,36 +171,54 @@ def test_limit_combo():
         "--no-limit",
         "--limit", "1",
     )
+    assert output.stderr.decode("utf-8") == ""
     assert "sent message 0" in output
     assert "sent message 1" in output
     assert "Limit was 1" not in output
 
 
-def test_file_not_found(tmpdir):
-    """Verify error when input file not found."""
+def test_template_not_found(tmpdir):
+    """Verify error when template input file not found."""
     with tmpdir.as_cwd():
         output = sh.mailmerge("--template", "notfound.txt", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: can't find template" in output
+
+
+def test_database_not_found(tmpdir):
+    """Verify error when database input file not found."""
     with tmpdir.as_cwd():
+        Path("mailmerge_template.txt").touch()
         output = sh.mailmerge("--database", "notfound.csv", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: can't find database" in output
+
+
+def test_config_not_found(tmpdir):
+    """Verify error when config input file not found."""
     with tmpdir.as_cwd():
+        Path("mailmerge_template.txt").touch()
+        Path("mailmerge_database.csv").touch()
         output = sh.mailmerge("--config", "notfound.conf", _ok_code=1)
     assert output.stderr.decode("utf-8") == ""
+    assert "Error: can't find config" in output
 
 
 def test_help():
     """Verify -h or --help produces a help message."""
     output = sh.mailmerge("--help")
+    assert output.stderr.decode("utf-8") == ""
     assert "Usage:" in output
     assert "Options:" in output
     output2 = sh.mailmerge("-h")  # Short option is an alias
+    assert output2.stderr.decode("utf-8") == ""
     assert output == output2
 
 
 def test_version():
     """Verify --version produces a version."""
     output = sh.mailmerge("--version")
+    assert output.stderr.decode("utf-8") == ""
     assert "mailmerge, version" in output
 
 
@@ -198,7 +227,5 @@ def test_bad_template(tmp_path):
     template_path = tmp_path / "template.txt"
     template_path.write_text("TO: {{error_not_in_database}}")
     output = sh.mailmerge("--template", template_path, _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
-    assert stderr == ""
-    assert "Error in Jinja2 template" in stdout
+    assert output.stderr.decode("utf-8") == ""
+    assert "Error in Jinja2 template" in output
