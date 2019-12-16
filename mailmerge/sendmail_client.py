@@ -26,12 +26,15 @@ class SendmailClient(object):
         self.host = config.get("smtp_server", "host")
         self.port = config.getint("smtp_server", "port")
         self.security = config.get("smtp_server", "security", fallback=None)
-        self.username = config.get("smtp_server", "username", fallback=None)
         self.password = None
 
         # Coerce legacy option "security = Never"
         if self.security == "Never":
             self.security = None
+
+        # Read username only if needed
+        if self.security is not None:
+            self.username = config.get("smtp_server", "username")
 
     def sendmail(self, sender, recipients, message):
         """Send email message."""

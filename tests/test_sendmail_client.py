@@ -172,7 +172,7 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 @mock.patch('smtplib.SMTP')
 def test_security_open_legacy(mock_SMTP, tmp_path):
     """Verify legacy "security = Never" configuration."""
-    # Config for no security SMTP server
+    # Config SMTP server with "security = Never" legacy option
     config_path = tmp_path/"config.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -202,7 +202,7 @@ def test_security_open_legacy(mock_SMTP, tmp_path):
 @mock.patch('getpass.getpass')
 def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     """Verify open (Never) security configuration."""
-    # Config for no security SMTP server
+    # Config for STARTTLS SMTP server
     config_path = tmp_path/"config.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -243,7 +243,7 @@ def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 @mock.patch('getpass.getpass')
 def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     """Verify open (Never) security configuration."""
-    # Config for no security SMTP server
+    # Config for SSL SMTP server
     config_path = tmp_path/"config.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -277,3 +277,19 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
     assert smtp.close.call_count == 1
+
+
+@mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_missing_username(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+    """Verify open (Never) security configuration."""
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = smtp.mail.umich.edu
+        port = 465
+        security = SSL/TLS
+    """))
+    with pytest.raises(configparser.Error):
+        sendmail_client = SendmailClient(config_path, dry_run=False)
