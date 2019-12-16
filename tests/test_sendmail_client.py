@@ -152,10 +152,6 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
-    # Mock the password entry
-    # FIXME remove this for open security
-    mock_getpass.return_value = "password"
-
     # Send a message
     sendmail_client.sendmail(
         sender="test@test.com",
