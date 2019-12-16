@@ -4,6 +4,7 @@ System tests.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import re
+import textwrap
 import sh
 from . import utils
 
@@ -222,10 +223,36 @@ def test_version():
     assert "mailmerge, version" in output
 
 
-def test_bad_template(tmp_path):
+def test_bad_template(tmpdir):
     """Template containing jinja error should produce an error."""
-    template_path = tmp_path / "template.txt"
-    template_path.write_text("TO: {{error_not_in_database}}")
-    output = sh.mailmerge("--template", template_path, _ok_code=1)
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{error_not_in_database}}
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        Hi {{name}},
+    """))
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email,name
+        to@test.com,Bob
+    """))
+    config_path = Path(tmpdir/"config.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+        security = Never
+    """))
+
+    with tmpdir.as_cwd():
+        output = sh.mailmerge(
+            "--template", template_path,
+            "--database", database_path,
+            "--config", config_path,
+            _ok_code=1,
+        )
     assert output.stderr.decode("utf-8") == ""
     assert "Error in Jinja2 template" in output
+    assert "error_not_in_database" in output
