@@ -25,9 +25,13 @@ class SendmailClient(object):
         self.dry_run = dry_run
         self.host = config.get("smtp_server", "host")
         self.port = config.getint("smtp_server", "port")
-        self.security = config.get("smtp_server", "security")
+        self.security = config.get("smtp_server", "security", fallback=None)
         self.username = config.get("smtp_server", "username", fallback=None)
         self.password = None
+
+        # Coerce legacy option "security = Never"
+        if self.security == "Never":
+            self.security = None
 
     def sendmail(self, sender, recipients, message):
         """Send email message."""
@@ -42,20 +46,20 @@ class SendmailClient(object):
             smtp.ehlo()
             smtp.starttls()
             smtp.ehlo()
-        elif self.security == "Never":
+        elif self.security is None:
             smtp = smtplib.SMTP(self.host, self.port)
         else:
             raise configparser.Error("Unrecognized security type: {}".format(
                 self.security))
 
         # Ask for password if necessary
-        if self.security != "Never" and self.password is None:
+        if self.security is not None and self.password is None:
             prompt = ">>> password for {} on {}: ".format(
                 self.username, self.host)
             self.password = getpass.getpass(prompt)
 
         # Authenticate
-        if self.security != "Never":
+        if self.security is not None:
             assert self.username
             assert self.password
             smtp.login(self.username, self.password)
