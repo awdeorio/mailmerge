@@ -12,12 +12,6 @@ from mailmerge.template_message import TemplateMessage
 from mailmerge.utils import MailmergeError
 from . import utils
 
-# Python 2 UTF8 support requires csv backport
-try:
-    from backports import csv
-except ImportError:
-    import csv
-
 
 def test_simple(tmp_path):
     """Render a simple template."""
@@ -371,15 +365,27 @@ def test_utf8_template(tmp_path):
     )
 
 
-def test_utf8_database():
+def test_utf8_database(tmp_path):
     """Verify UTF8 support when template is rendered with UTF-8 value."""
-    template_message = TemplateMessage(
-        template_path=utils.TESTDATA/"simple_template.txt",
-    )
-    with (utils.TESTDATA/"utf8_database.csv").open("r") as database_file:
-        reader = csv.DictReader(database_file)
-        context = next(reader)
-    sender, recipients, message = template_message.render(context)
+    # Simple template
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+
+        Hi, {{name}},
+
+        Your number is {{number}}.
+    """))
+
+    # Render template with context containing unicode characters
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "email": "myself@mydomain.com",
+        "name": "Laȝamon",
+        "number": 17,
+    })
 
     # Verify sender and recipients
     assert sender == "My Self <myself@mydomain.com>"
