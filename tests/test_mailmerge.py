@@ -20,8 +20,7 @@ except ImportError:
 
 def test_stdout():
     """Verify stdout and stderr with dry run on simple input files."""
-    mailmerge_cmd = sh.Command("mailmerge")
-    output = mailmerge_cmd(
+    output = sh.mailmerge(
         "--template", utils.TESTDATA/"simple_template.txt",
         "--database", utils.TESTDATA/"simple_database.csv",
         "--config", utils.TESTDATA/"server_open.conf",
@@ -76,18 +75,16 @@ def test_no_options(tmpdir):
     sh _ok_code docs
     https://amoffat.github.io/sh/sections/special_arguments.html#ok-code
     """
-    mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
-        output = mailmerge(_ok_code=1)  # expect non-zero exit
+        output = sh.mailmerge(_ok_code=1)  # expect non-zero exit
     assert "Error: can't find template email mailmerge_template.txt" in output
     assert "https://github.com/awdeorio/mailmerge" in output
 
 
 def test_sample(tmpdir):
     """Verify --sample creates sample input files."""
-    mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
-        mailmerge("--sample")
+        sh.mailmerge("--sample")
     assert Path("mailmerge_template.txt").exists()
     assert Path("mailmerge_database.csv").exists()
     assert Path("mailmerge_server.conf").exists()
@@ -95,12 +92,9 @@ def test_sample(tmpdir):
 
 def test_defaults(tmpdir):
     """When no options are provided, use default input file names."""
-    mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
-        mailmerge("--sample")
-        output = mailmerge()
-
-    # Verify output
+        sh.mailmerge("--sample")
+        output = sh.mailmerge()
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
@@ -108,15 +102,12 @@ def test_defaults(tmpdir):
 
 def test_dry_run():
     """Verify --dry-run output."""
-    mailmerge = sh.Command("mailmerge")
-    output = mailmerge(
+    output = sh.mailmerge(
         "--template", utils.TESTDATA/"simple_template.txt",
         "--database", utils.TESTDATA/"simple_database.csv",
         "--config", utils.TESTDATA/"server_ssl.conf",
         "--dry-run",
     )
-
-    # Verify output
     assert "Your number is 17." in output
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
@@ -125,9 +116,8 @@ def test_dry_run():
 
 def test_bad_limit():
     """Verify --limit with bad value."""
-    mailmerge = sh.Command("mailmerge")
     with pytest.raises(sh.ErrorReturnCode_1):
-        mailmerge(
+        sh.mailmerge(
             "--template", utils.TESTDATA/"simple_template.txt",
             "--database", utils.TESTDATA/"simple_database.csv",
             "--config", utils.TESTDATA/"server_open.conf",
@@ -138,8 +128,7 @@ def test_bad_limit():
 
 def test_limit_combo():
     """TVerify --limit 1 --no-limit results in no limit."""
-    mailmerge = sh.Command("mailmerge")
-    output = mailmerge(
+    output = sh.mailmerge(
         "--template", utils.TESTDATA/"simple_template.txt",
         "--database", utils.TESTDATA/"simple_database.csv",
         "--config", utils.TESTDATA/"server_open.conf",
@@ -154,28 +143,25 @@ def test_limit_combo():
 
 def test_file_not_found(tmpdir):
     """Verify error when input file not found."""
-    mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
         with pytest.raises(sh.ErrorReturnCode_1):
-            mailmerge("--template", "notfound.txt")
+            sh.mailmerge("--template", "notfound.txt")
         with pytest.raises(sh.ErrorReturnCode_1):
-            mailmerge("--database", "notfound.csv")
+            sh.mailmerge("--database", "notfound.csv")
         with pytest.raises(sh.ErrorReturnCode_1):
-            mailmerge("--config", "notfound.csv")
+            sh.mailmerge("--config", "notfound.csv")
 
 
 def test_help():
     """Verify -h or --help produces a help message."""
-    mailmerge = sh.Command("mailmerge")
-    output = mailmerge("--help")
+    output = sh.mailmerge("--help")
     assert "Usage:" in output
     assert "Options:" in output
-    output2 = mailmerge("-h")  # Short option is an alias
+    output2 = sh.mailmerge("-h")  # Short option is an alias
     assert output == output2
 
 
 def test_version():
     """Verify --version produces a version."""
-    mailmerge = sh.Command("mailmerge")
-    output = mailmerge("--version")
+    output = sh.mailmerge("--version")
     assert "mailmerge, version" in output
