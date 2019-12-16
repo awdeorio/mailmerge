@@ -80,21 +80,37 @@ def test_no_options(tmpdir):
 
 
 def test_sample(tmpdir):
-    """Verify --sample."""
+    """Verify --sample creates sample input files."""
     mailmerge = sh.Command("mailmerge")
-
-    # Run `mailmerge --sample`
     with tmpdir.as_cwd():
-        output = mailmerge("--sample")
-
-    # Verify file were created
+        mailmerge("--sample")
     assert Path("mailmerge_template.txt").exists()
     assert Path("mailmerge_database.csv").exists()
     assert Path("mailmerge_server.conf").exists()
 
-    # Run `mailmerge`, which should dry-run sending one message
+
+def test_defaults(tmpdir):
+    """When no options are provided, use default input file names."""
+    mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
+        mailmerge("--sample")
         output = mailmerge()
+    assert "sent message 0" in output
+    assert "Limit was 1 messages" in output
+    assert "This was a dry run" in output
+
+
+def test_dry_run(tmpdir):
+    """Verify --dry-run."""
+    mailmerge = sh.Command("mailmerge")
+    with tmpdir.as_cwd():
+        output = mailmerge(
+            "--template", utils.TESTDATA/"simple_template.txt",
+            "--database", utils.TESTDATA/"simple_database.csv",
+            "--config", utils.TESTDATA/"server_open.conf",
+            "--dry-run",
+        )
+    assert "Your number is 17." in output
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
