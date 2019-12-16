@@ -54,7 +54,8 @@ def test_smtp(mock_SMTP, tmp_path):
 
 
 @mock.patch('smtplib.SMTP')
-def test_dry_run(mock_SMTP, tmp_path):
+@mock.patch('getpass.getpass')
+def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
     """Verify no sendmail() calls when dry_run=True."""
     config_path = tmp_path/"config.conf"
     config_path.write_text(textwrap.dedent(u"""\
@@ -81,7 +82,8 @@ def test_dry_run(mock_SMTP, tmp_path):
         message=message,
     )
 
-    # Mock smtp object with function calls recorded
+    # Verify SMTP wasn't called and password wasn't used
+    assert mock_getpass.call_count == 0
     smtp = mock_SMTP.return_value
     assert smtp.sendmail.call_count == 0
 
@@ -89,11 +91,7 @@ def test_dry_run(mock_SMTP, tmp_path):
 @mock.patch('smtplib.SMTP_SSL')
 @mock.patch('getpass.getpass')
 def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
-    """Verify --no-dry-run calls SMTP sendmail().
-
-    Typing a password with sh
-    https://amoffat.github.io/sh/tutorials/interacting_with_processes.html#entering-an-ssh-password
-    """
+    """Verify --no-dry-run calls SMTP sendmail()."""
     config_path = tmp_path/"config.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -111,8 +109,10 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
         Hello world
     """)
 
-    # Send a message, faking the password
+    # Mock the password entry
     mock_getpass.return_value = "password"
+
+    # Send a message
     sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
