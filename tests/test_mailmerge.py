@@ -14,14 +14,8 @@ try:
 except ImportError:
     from pathlib import Path
 
-# Python 2 mock library is third party
-try:
-    from unittest import mock  # Python 3
-except ImportError:
-    import mock  # Python 2
-
-# We're going to use mock_SMTP because it mimics the real SMTP library
-# pylint: disable=invalid-name
+# The sh library triggers lot of false no-member errors
+# pylint: disable=no-member
 
 
 def test_stdout():
@@ -99,8 +93,7 @@ def test_sample(tmpdir):
     assert Path("mailmerge_server.conf").exists()
 
 
-@mock.patch('smtplib.SMTP')
-def test_defaults(mock_SMTP, tmpdir):
+def test_defaults(tmpdir):
     """When no options are provided, use default input file names."""
     mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
@@ -112,19 +105,14 @@ def test_defaults(mock_SMTP, tmpdir):
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
 
-    # Verify no SMTP sendmail() calls
-    smtp = mock_SMTP.return_value
-    assert smtp.sendmail.call_count == 0
 
-
-@mock.patch('smtplib.SMTP')
-def test_dry_run(mock_SMTP):
-    """Verify --dry-run."""
+def test_dry_run():
+    """Verify --dry-run output."""
     mailmerge = sh.Command("mailmerge")
     output = mailmerge(
         "--template", utils.TESTDATA/"simple_template.txt",
         "--database", utils.TESTDATA/"simple_database.csv",
-        "--config", utils.TESTDATA/"server_open.conf",
+        "--config", utils.TESTDATA/"server_ssl.conf",
         "--dry-run",
     )
 
@@ -133,10 +121,6 @@ def test_dry_run(mock_SMTP):
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
-
-    # Verify no SMTP sendmail() calls
-    smtp = mock_SMTP.return_value
-    assert smtp.sendmail.call_count == 0
 
 
 def test_bad_limit():
@@ -186,3 +170,10 @@ def test_help():
     assert "Options:" in output
     output2 = mailmerge("-h")  # Short option is an alias
     assert output == output2
+
+
+def test_version():
+    """Verify --version produces a version."""
+    mailmerge = sh.Command("mailmerge")
+    output = mailmerge("--version")
+    assert "mailmerge, version" in output
