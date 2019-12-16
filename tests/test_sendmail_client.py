@@ -4,6 +4,8 @@ Tests for SendmailClient.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
+import configparser
+import pytest
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
@@ -82,3 +84,14 @@ def test_dry_run(mock_SMTP, tmp_path):
     # Mock smtp object with function calls recorded
     smtp = mock_SMTP.return_value
     assert smtp.sendmail.call_count == 0
+
+
+def test_bad_config(tmp_path):
+    """Verify bad config file throws an exception."""
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        badkey = open-smtp.example.com
+    """))
+    with pytest.raises(configparser.Error):
+        SendmailClient(config_path, dry_run=True)
