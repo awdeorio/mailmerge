@@ -126,13 +126,13 @@ def test_dry_run():
 def test_bad_limit():
     """Verify --limit with bad value."""
     mailmerge = sh.Command("mailmerge")
-    with pytest.raises(sh.ErrorReturnCode_2):
+    with pytest.raises(sh.ErrorReturnCode_1):
         mailmerge(
             "--template", utils.TESTDATA/"simple_template.txt",
             "--database", utils.TESTDATA/"simple_database.csv",
             "--config", utils.TESTDATA/"server_open.conf",
             "--dry-run",
-            "--limit", "-2",
+            "--limit", "-1",
         )
 
 

@@ -83,6 +83,11 @@ def cli(sample, dry_run, limit, no_limit,
 
     check_input_files(template_path, database_path, config_path, sample)
 
+    # Limit must be >= 0
+    if limit < 0:
+        print("Error: limit must be greater than zero.")
+        sys.exit(1)
+
     # No limit is an alias for limit=-1
     if no_limit:
         limit = -1
