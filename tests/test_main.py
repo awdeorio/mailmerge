@@ -156,10 +156,9 @@ def test_bad_limit():
         "--config", utils.TESTDATA/"server_open.conf",
         "--dry-run",
         "--limit", "-1",
-        _ok_code=1,
+        _ok_code=2,
     )
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: limit must be greater than zero" in output
+    assert "Error: Invalid value" in output.stderr.decode("utf-8")
 
 
 def test_limit_combo():
