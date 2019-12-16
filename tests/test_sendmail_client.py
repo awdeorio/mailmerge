@@ -86,6 +86,46 @@ def test_dry_run(mock_SMTP, tmp_path):
     assert smtp.sendmail.call_count == 0
 
 
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
+    """Verify --no-dry-run calls SMTP sendmail().
+
+    Typing a password with sh
+    https://amoffat.github.io/sh/tutorials/interacting_with_processes.html#entering-an-ssh-password
+    """
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 465
+        security = SSL/TLS
+        username = admin
+    """))
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"""
+        TO: test@test.com
+        SUBJECT: Testing mailmerge
+        FROM: test@test.com
+
+        Hello world
+    """)
+
+    # Send a message, faking the password
+    mock_getpass.return_value = "password"
+    sendmail_client.sendmail(
+        sender="from@test.com",
+        recipients=["to@test.com"],
+        message=message,
+    )
+
+    # Verify function calls for password and sendmail()
+    assert mock_getpass.call_count == 1
+    smtp = mock_SMTP_SSL.return_value
+    assert smtp.sendmail.call_count == 1
+
+
+
 def test_bad_config(tmp_path):
     """Verify bad config file throws an exception."""
     config_path = tmp_path/"config.conf"
