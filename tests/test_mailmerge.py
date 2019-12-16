@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import re
 import sh
-import pytest
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -94,24 +93,24 @@ def test_sample_clobber_template(tmpdir):
     """Verify --sample won't clobber template if it already exists."""
     with tmpdir.as_cwd():
         Path("mailmerge_template.txt").touch()
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--sample")
+        output = sh.mailmerge("--sample", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
 
 
 def test_sample_clobber_database(tmpdir):
     """Verify --sample won't clobber database if it already exists."""
     with tmpdir.as_cwd():
         Path("mailmerge_database.csv").touch()
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--sample")
+        output = sh.mailmerge("--sample", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
 
 
 def test_sample_clobber_config(tmpdir):
     """Verify --sample won't clobber config if it already exists."""
     with tmpdir.as_cwd():
         Path("mailmerge_server.conf").touch()
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--sample")
+        output = sh.mailmerge("--sample", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
 
 
 def test_defaults(tmpdir):
@@ -140,14 +139,15 @@ def test_dry_run():
 
 def test_bad_limit():
     """Verify --limit with bad value."""
-    with pytest.raises(sh.ErrorReturnCode_1):
-        sh.mailmerge(
-            "--template", utils.TESTDATA/"simple_template.txt",
-            "--database", utils.TESTDATA/"simple_database.csv",
-            "--config", utils.TESTDATA/"server_open.conf",
-            "--dry-run",
-            "--limit", "-1",
-        )
+    output = sh.mailmerge(
+        "--template", utils.TESTDATA/"simple_template.txt",
+        "--database", utils.TESTDATA/"simple_database.csv",
+        "--config", utils.TESTDATA/"server_open.conf",
+        "--dry-run",
+        "--limit", "-1",
+        _ok_code=1,
+    )
+    assert output.stderr.decode("utf-8") == ""
 
 
 def test_limit_combo():
@@ -168,12 +168,14 @@ def test_limit_combo():
 def test_file_not_found(tmpdir):
     """Verify error when input file not found."""
     with tmpdir.as_cwd():
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--template", "notfound.txt")
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--database", "notfound.csv")
-        with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--config", "notfound.conf")
+        output = sh.mailmerge("--template", "notfound.txt", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--database", "notfound.csv", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--config", "notfound.conf", _ok_code=1)
+    assert output.stderr.decode("utf-8") == ""
 
 
 def test_help():
@@ -195,5 +197,8 @@ def test_bad_template(tmp_path):
     """Template containing jinja error should produce an error."""
     template_path = tmp_path / "template.txt"
     template_path.write_text("TO: {{error_not_in_database}}")
-    with pytest.raises(sh.ErrorReturnCode_1):
-        sh.mailmerge("--template", template_path)
+    output = sh.mailmerge("--template", template_path, _ok_code=1)
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert stdout == ""
