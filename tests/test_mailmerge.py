@@ -136,18 +136,20 @@ def test_bad_limit():
         )
 
 
-def test_bad_limit_combo():
-    """Verify bad combination of limits --limit 1 --no-limit."""
+def test_limit_combo():
+    """TVerify --limit 1 --no-limit results in no limit."""
     mailmerge = sh.Command("mailmerge")
-    with pytest.raises(sh.ErrorReturnCode_2):
-        mailmerge(
-            "--template", utils.TESTDATA/"simple_template.txt",
-            "--database", utils.TESTDATA/"simple_database.csv",
-            "--config", utils.TESTDATA/"server_open.conf",
-            "--dry-run",
-            "--no-limit",
-            "--limit", "1",
-        )
+    output = mailmerge(
+        "--template", utils.TESTDATA/"simple_template.txt",
+        "--database", utils.TESTDATA/"simple_database.csv",
+        "--config", utils.TESTDATA/"server_open.conf",
+        "--dry-run",
+        "--no-limit",
+        "--limit", "1",
+    )
+    assert "sent message 0" in output
+    assert "sent message 1" in output
+    assert "Limit was 1" not in output
 
 
 def test_file_not_found(tmpdir):
