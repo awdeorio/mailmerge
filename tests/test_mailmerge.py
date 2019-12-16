@@ -150,3 +150,17 @@ def test_bad_limit():
             "--dry-run",
             "--limit", "-2",
         )
+
+
+def test_bad_limit_combo():
+    """Verify bad combination of limits --limit 1 --no-limit."""
+    mailmerge = sh.Command("mailmerge")
+    with pytest.raises(sh.ErrorReturnCode_2):
+        mailmerge(
+            "--template", utils.TESTDATA/"simple_template.txt",
+            "--database", utils.TESTDATA/"simple_database.csv",
+            "--config", utils.TESTDATA/"server_open.conf",
+            "--dry-run",
+            "--no-limit",
+            "--limit", "1",
+        )
