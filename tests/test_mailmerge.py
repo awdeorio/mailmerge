@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import re
 import sh
+import pytest
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -12,6 +13,15 @@ try:
     from pathlib2 import Path
 except ImportError:
     from pathlib import Path
+
+# Python 2 mock library is third party
+try:
+    from unittest import mock  # Python 3
+except ImportError:
+    import mock  # Python 2
+
+# We're going to use mock_SMTP because it mimics the real SMTP library
+# pylint: disable=invalid-name
 
 
 def test_stdout():
@@ -89,28 +99,54 @@ def test_sample(tmpdir):
     assert Path("mailmerge_server.conf").exists()
 
 
-def test_defaults(tmpdir):
+@mock.patch('smtplib.SMTP')
+def test_defaults(mock_SMTP, tmpdir):
     """When no options are provided, use default input file names."""
     mailmerge = sh.Command("mailmerge")
     with tmpdir.as_cwd():
         mailmerge("--sample")
         output = mailmerge()
+
+    # Verify output
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
 
+    # Verify no SMTP sendmail() calls
+    smtp = mock_SMTP.return_value
+    assert smtp.sendmail.call_count == 0
 
-def test_dry_run(tmpdir):
+
+@mock.patch('smtplib.SMTP')
+def test_dry_run(mock_SMTP):
     """Verify --dry-run."""
     mailmerge = sh.Command("mailmerge")
-    with tmpdir.as_cwd():
-        output = mailmerge(
-            "--template", utils.TESTDATA/"simple_template.txt",
-            "--database", utils.TESTDATA/"simple_database.csv",
-            "--config", utils.TESTDATA/"server_open.conf",
-            "--dry-run",
-        )
+    output = mailmerge(
+        "--template", utils.TESTDATA/"simple_template.txt",
+        "--database", utils.TESTDATA/"simple_database.csv",
+        "--config", utils.TESTDATA/"server_open.conf",
+        "--dry-run",
+    )
+
+    # Verify output
     assert "Your number is 17." in output
     assert "sent message 0" in output
     assert "Limit was 1 messages" in output
     assert "This was a dry run" in output
+
+    # Verify no SMTP sendmail() calls
+    smtp = mock_SMTP.return_value
+    assert smtp.sendmail.call_count == 0
+
+
+def test_bad_limit():
+    """Verify --limit with bad value."""
+    mailmerge = sh.Command("mailmerge")
+    with pytest.raises(sh.ErrorReturnCode_2):
+        mailmerge(
+            "--template", utils.TESTDATA/"simple_template.txt",
+            "--database", utils.TESTDATA/"simple_database.csv",
+            "--config", utils.TESTDATA/"server_open.conf",
+            "--dry-run",
+            "--limit", "-2",
+        )
