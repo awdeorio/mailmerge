@@ -201,4 +201,4 @@ def test_bad_template(tmp_path):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stderr == ""
-    assert stdout == ""
+    assert "Error in Jinja2 template" in stdout
