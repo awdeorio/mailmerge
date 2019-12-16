@@ -164,3 +164,25 @@ def test_bad_limit_combo():
             "--no-limit",
             "--limit", "1",
         )
+
+
+def test_file_not_found(tmpdir):
+    """Verify error when input file not found."""
+    mailmerge = sh.Command("mailmerge")
+    with tmpdir.as_cwd():
+        with pytest.raises(sh.ErrorReturnCode_1):
+            mailmerge("--template", "notfound.txt")
+        with pytest.raises(sh.ErrorReturnCode_1):
+            mailmerge("--database", "notfound.csv")
+        with pytest.raises(sh.ErrorReturnCode_1):
+            mailmerge("--config", "notfound.csv")
+
+
+def test_help():
+    """Verify -h or --help produces a help message."""
+    mailmerge = sh.Command("mailmerge")
+    output = mailmerge("--help")
+    assert "Usage:" in output
+    assert "Options:" in output
+    output2 = mailmerge("-h")  # Short option is an alias
+    assert output == output2
