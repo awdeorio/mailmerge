@@ -207,7 +207,6 @@ def create_sample_input_files(template_path,
             u"# host = open-smtp.example.com\n"
             u"# port = 25\n"
             u"# security = Never\n"
-            u"# username = None\n"
             u"#\n"
             u"# Example: University of Michigan\n"
             u"# [smtp_server]\n"
