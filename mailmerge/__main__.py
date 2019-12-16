@@ -155,14 +155,22 @@ def check_input_files(template_path, database_path, config_path, sample):
         )
         sys.exit(0)
     if not template_path.exists():
-        print("Error: can't find template email {}".format(template_path))
+        print("Error: can't find template {}".format(template_path))
         print("Create a sample (--sample) or specify a file (--template)")
         print("")
         print("See https://github.com/awdeorio/mailmerge for examples.")
         sys.exit(1)
     if not database_path.exists():
-        print("Error: can't find database_path {}".format(database_path))
+        print("Error: can't find database {}".format(database_path))
         print("Create a sample (--sample) or specify a file (--database)")
+        print("")
+        print("See https://github.com/awdeorio/mailmerge for examples.")
+        sys.exit(1)
+    if not config_path.exists():
+        print("Error: can't find config {}".format(config_path))
+        print("Create a sample (--sample) or specify a file (--config)")
+        print("")
+        print("See https://github.com/awdeorio/mailmerge for examples.")
         sys.exit(1)
 
 
