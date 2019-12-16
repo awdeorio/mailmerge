@@ -90,6 +90,30 @@ def test_sample(tmpdir):
     assert Path("mailmerge_server.conf").exists()
 
 
+def test_sample_clobber_template(tmpdir):
+    """Verify --sample won't clobber template if it already exists."""
+    with tmpdir.as_cwd():
+        Path("mailmerge_template.txt").touch()
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.mailmerge("--sample")
+
+
+def test_sample_clobber_database(tmpdir):
+    """Verify --sample won't clobber database if it already exists."""
+    with tmpdir.as_cwd():
+        Path("mailmerge_database.csv").touch()
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.mailmerge("--sample")
+
+
+def test_sample_clobber_config(tmpdir):
+    """Verify --sample won't clobber config if it already exists."""
+    with tmpdir.as_cwd():
+        Path("mailmerge_server.conf").touch()
+        with pytest.raises(sh.ErrorReturnCode_1):
+            sh.mailmerge("--sample")
+
+
 def test_defaults(tmpdir):
     """When no options are provided, use default input file names."""
     with tmpdir.as_cwd():
