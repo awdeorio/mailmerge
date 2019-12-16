@@ -134,3 +134,46 @@ def test_bad_config(tmp_path):
     """))
     with pytest.raises(configparser.Error):
         SendmailClient(config_path, dry_run=True)
+
+
+@mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+    """Verify open (Never) security configuration."""
+    # Config for no security SMTP server
+    config_path = tmp_path/"config.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+        security = Never
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"""
+        TO: test@test.com
+        SUBJECT: Testing mailmerge
+        FROM: test@test.com
+
+        Hello world
+    """)
+
+    # Mock the password entry
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    sendmail_client.sendmail(
+        sender="test@test.com",
+        recipients=["test@test.com"],
+        message=message,
+    )
+
+    # Verify SMTP library calls
+    assert mock_getpass.call_count == 0
+    assert mock_SMTP.call_count == 1
+    assert mock_SMTP_SSL.call_count == 0
+    smtp = mock_SMTP.return_value
+    assert smtp.sendmail.call_count == 1
+    assert smtp.login.call_count == 0
