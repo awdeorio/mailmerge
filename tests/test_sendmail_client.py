@@ -125,7 +125,6 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
     assert smtp.sendmail.call_count == 1
 
 
-
 def test_bad_config(tmp_path):
     """Verify bad config file throws an exception."""
     config_path = tmp_path/"config.conf"

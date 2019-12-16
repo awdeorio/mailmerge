@@ -202,7 +202,7 @@ def test_markdown_encoding(tmp_path):
         SUBJECT: Testing mailmerge
         FROM: test@example.com
         CONTENT-TYPE: text/markdown
-        
+
         Hi, {{name}},
         æøå
     """))
@@ -322,7 +322,7 @@ def test_utf8_template(tmp_path):
         FROM: from@test.com
 
         From the Tagelied of Wolfram von Eschenbach (Middle High German):
-        
+
         Sîne klâwen durh die wolken sint geslagen,
         er stîget ûf mit grôzer kraft,
         ich sih in grâwen tägelîch als er wil tagen,
@@ -331,7 +331,7 @@ def test_utf8_template(tmp_path):
         den ich mit sorgen în verliez.
         ich bringe in hinnen, ob ich kan.
         sîn vil manegiu tugent michz leisten hiez.
-        
+
         http://www.columbia.edu/~fdc/utf8/
     """))
     template_message = TemplateMessage(template_path)
@@ -412,7 +412,7 @@ def test_emoji(tmp_path):
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
-        
+
         Hi \xf0\x9f\x98\x80
     """))  # grinning face emoji
     template_message = TemplateMessage(template_path)
@@ -435,7 +435,7 @@ def test_emoji_markdown(tmp_path):
         SUBJECT: Testing mailmerge
         FROM: test@example.com
         CONTENT-TYPE: text/markdown
-        
+
         ```
         emoji_string = \xf0\x9f\x98\x80
         ```
@@ -476,9 +476,9 @@ def test_emoji_database(tmp_path):
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
-        
+
         Hi {{emoji}}
-                    """))
+    """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "emoji": u"\xf0\x9f\x98\x80"  # grinning face
