@@ -2,6 +2,7 @@ include CONTRIBUTING.md
 include LICENSE
 include MANIFEST.in
 include README.md
+include .pylintrc
 graft tests
 
 # Avoid dev and and binary files
