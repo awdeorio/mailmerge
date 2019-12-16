@@ -173,7 +173,7 @@ def test_file_not_found(tmpdir):
         with pytest.raises(sh.ErrorReturnCode_1):
             sh.mailmerge("--database", "notfound.csv")
         with pytest.raises(sh.ErrorReturnCode_1):
-            sh.mailmerge("--config", "notfound.csv")
+            sh.mailmerge("--config", "notfound.conf")
 
 
 def test_help():
@@ -189,3 +189,11 @@ def test_version():
     """Verify --version produces a version."""
     output = sh.mailmerge("--version")
     assert "mailmerge, version" in output
+
+
+def test_bad_template(tmp_path):
+    """Template containing jinja error should produce an error."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text("TO: {{error_not_in_database}}")
+    with pytest.raises(sh.ErrorReturnCode_1):
+        sh.mailmerge("--template", template_path)
