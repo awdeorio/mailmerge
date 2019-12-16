@@ -226,6 +226,8 @@ def test_version():
 def test_bad_template(tmpdir):
     """Template containing jinja error should produce an error."""
     template_path = Path(tmpdir/"template.txt")
+
+    # Template has a bad key
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{error_not_in_database}}
         SUBJECT: Testing mailmerge
@@ -233,11 +235,15 @@ def test_bad_template(tmpdir):
 
         Hi {{name}},
     """))
+
+    # Normal database
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email,name
         to@test.com,Bob
     """))
+
+    # Normal, unsecure server config
     config_path = Path(tmpdir/"config.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -256,3 +262,43 @@ def test_bad_template(tmpdir):
     assert output.stderr.decode("utf-8") == ""
     assert "Error in Jinja2 template" in output
     assert "error_not_in_database" in output
+
+
+def test_bad_database(tmpdir):
+    """Template containing jinja error should produce an error."""
+    # Normal template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        Hi {{name}},
+    """))
+
+    # Database is header doesn't match template
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        error_not_in_template,name
+        to1@test.com,Bob
+    """))
+
+    # Normal, unsecure server config
+    config_path = Path(tmpdir/"config.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+        security = Never
+    """))
+
+    with tmpdir.as_cwd():
+        output = sh.mailmerge(
+            "--template", template_path,
+            "--database", database_path,
+            "--config", config_path,
+            _ok_code=1,
+        )
+    assert output.stderr.decode("utf-8") == ""
+    assert "Error in Jinja2 template" in output
+    assert "email" in output  # this is the missing key in the database
