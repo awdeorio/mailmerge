@@ -1,3 +1,5 @@
+# coding=utf-8
+# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for TemplateMessage.
 
@@ -76,7 +78,7 @@ def test_multiple_substitutions(tmp_path):
 def test_bad_jinja(tmp_path):
     """Bad jinja template should produce an error."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text("TO: {{error_not_in_database}}")
+    template_path.write_text(u"TO: {{error_not_in_database}}")
     template_message = TemplateMessage(template_path)
     with pytest.raises(jinja2.exceptions.UndefinedError):
         template_message.render({"name": "Bob", "number": 17})
@@ -236,9 +238,9 @@ def test_markdown_encoding(tmp_path):
 def test_attachment(tmp_path):
     """Attachments should be sent as part of the email."""
     # Copy attachments to tmp dir
-    shutil.copy(utils.TESTDATA/"attachment_1.txt", tmp_path)
-    shutil.copy(utils.TESTDATA/"attachment_2.pdf", tmp_path)
-    shutil.copy(utils.TESTDATA/"attachment_17.txt", tmp_path)
+    shutil.copy(str(utils.TESTDATA/"attachment_1.txt"), str(tmp_path))
+    shutil.copy(str(utils.TESTDATA/"attachment_2.pdf"), str(tmp_path))
+    shutil.copy(str(utils.TESTDATA/"attachment_17.txt"), str(tmp_path))
 
     # Create template .txt file
     template_path = tmp_path / "template.txt"
@@ -382,8 +384,8 @@ def test_utf8_database(tmp_path):
     # Render template with context containing unicode characters
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
-        "email": "myself@mydomain.com",
-        "name": "Laȝamon",
+        "email": u"myself@mydomain.com",
+        "name": u"Laȝamon",
         "number": 17,
     })
 
