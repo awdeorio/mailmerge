@@ -5,6 +5,7 @@ Tests for TemplateMessage.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
+import os
 import shutil
 import textwrap
 import collections
@@ -284,9 +285,10 @@ def test_attachment_simple(tmpdir):
         Hello world
     """))
 
-    # Render
-    template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({})
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        sender, recipients, message = template_message.render({})
 
     # Verify sender and recipients
     assert sender == "from@test.com"
@@ -297,7 +299,66 @@ def test_attachment_simple(tmpdir):
     attachments = extract_attachments(message)
     assert len(attachments) == 1
 
-    # Verify attachment content
+    # Verify attachment
+    filename, content = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+
+
+def test_attachment_relative(tmpdir):
+    """Attachment with a relative file path is relative to template dir."""
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+
+        Hello world
+    """))
+
+    # Render
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+
+    # Verify directory used to render is different from template directory
+    assert os.getcwd() != tmpdir
+
+    # Verify attachment
+    attachments = extract_attachments(message)
+    filename, content = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+
+
+def test_attachment_absolute(tmpdir):
+    """Attachment with absolute file path."""
+    # Simple attachment lives in sub directory
+    attachments_dir = tmpdir.mkdir("attachments")
+    attachment_path = Path(attachments_dir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: {filename}
+
+        Hello world
+    """.format(filename=attachment_path)))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        _, _, message = template_message.render({})
+
+    # Verify attachment
+    attachments = extract_attachments(message)
     filename, content = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
