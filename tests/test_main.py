@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import re
 import textwrap
+import pytest
 import sh
 
 # Python 2 pathlib support requires backport
@@ -366,7 +367,6 @@ def test_bad_database(tmpdir):
     """))
 
     # Run mailmerge, which should exit 1
-    # FIXME pytest.raises() as err
     output = sh.mailmerge(
         "--template", template_path,
         "--database", database_path,
@@ -377,8 +377,8 @@ def test_bad_database(tmpdir):
     # Verify output
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
-    assert stderr == ""
     assert stdout == ""
+    assert "Error reading CSV file: unexpected end of data" in stderr
 
 
 def test_bad_config(tmpdir):

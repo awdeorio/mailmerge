@@ -60,10 +60,6 @@ def test_bad_csv(tmpdir):
         1,"2
     """))
 
-    # Force CSV strict mode by overwriting default 'excel' dialect
-    csv.unregister_dialect('excel')
-    csv.register_dialect('excel', strict=True)
-
     # The first line of data triggers an error
-    with pytest.raises(csv.Error) as err:
+    with pytest.raises(csv.Error):
         next(mailmerge.__main__.read_csv_database(database_path))
