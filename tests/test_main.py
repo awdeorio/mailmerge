@@ -416,12 +416,12 @@ def test_bad_config(tmpdir):
 def test_attachment(tmpdir):
     """Verify attachments feature output."""
     # First attachment
-    attachment_path = Path(tmpdir/"attachment1.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment1_path = Path(tmpdir/"attachment1.txt")
+    attachment1_path.write_text(u"Hello world\n")
 
     # Second attachment
-    attachment_path = Path(tmpdir/"attachment2.txt")
-    attachment_path.write_text(u"Hello mailmerge\n")
+    attachment2_path = Path(tmpdir/"attachment2.txt")
+    attachment2_path.write_text(u"Hello mailmerge\n")
 
     # Template with attachment header
     template_path = Path(tmpdir/"template.txt")
