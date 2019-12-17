@@ -6,6 +6,7 @@ Tests for TemplateMessage.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import os
+import re
 import shutil
 import textwrap
 import collections
@@ -121,6 +122,44 @@ def test_cc_bcc(tmp_path):
     assert "BCC" not in message.as_string()
     assert "secret@mydomain.com" not in message.as_string()
     assert "Secret" not in message.as_string()
+
+
+def test_html(tmp_path):
+    """Verify HTML template results in a simple rendered message."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+        Content-Type: text/html
+
+        <html>
+          <body>
+            <p>{{message}}</p>
+          </body>
+        </html>
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "message": "Hello world"
+    })
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # A simple HTML message is not multipart
+    assert not message.is_multipart()
+
+    # Verify encoding
+    assert message.get_charset() == "us-ascii"
+    assert message.get_content_charset() == "us-ascii"
+    assert message.get_content_type() == "text/html"
+
+    # Verify content
+    htmltext = message.get_payload()
+    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
+    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
 
 
 def test_markdown(tmp_path):
