@@ -101,25 +101,22 @@ def cli(sample, dry_run, limit, no_limit,
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i))
     except jinja2.exceptions.TemplateError as err:
-        print(">>> Error in Jinja2 template: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Error in Jinja2 template: {}".format(err))
     except csv.Error as err:
-        print(">>> Error reading CSV file: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Error reading CSV file: {}".format(err))
     except smtplib.SMTPAuthenticationError as err:
-        print(">>> Authentication error: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Authentication error: {}".format(err))
     except configparser.Error as err:
-        print(">>> Error reading config file {}: {}".format(config_path, err))
-        sys.exit(1)
+        sys.exit(
+            ">>> Error reading config file {filename}: {message}"
+            .format(filename=config_path, message=err)
+        )
     except smtplib.SMTPException as err:
-        print(">>> Error sending message", err, sep=' ', file=sys.stderr)
-        sys.exit(1)
+        sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
     except socket.error:
-        print(">>> Error connecting to server")
-        sys.exit(1)
+        sys.exit(">>> Error connecting to server")
     except MailmergeError as err:
-        print(">>> {}".format(err))
+        sys.exit(">>> {}".format(err))
 
     # Hints for user
     if not no_limit:
