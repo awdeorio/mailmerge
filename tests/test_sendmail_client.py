@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import configparser
+import smtplib
 import pytest
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
@@ -314,3 +315,42 @@ def test_missing_username(tmp_path):
     """))
     with pytest.raises(configparser.Error):
         SendmailClient(config_path, dry_run=False)
+
+
+@mock.patch('smtplib.SMTP')
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_smtp_error(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+    """Connection is closed on error."""
+    # Config for SSL SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = smtp.mail.umich.edu
+        port = 465
+        security = SSL/TLS
+        username = YOUR_USERNAME_HERE
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"Hello world")
+
+    # Mock the password entry
+    mock_getpass.return_value = "password"
+
+    # Configure SMTP_SSL to raise an exception
+    mock_SMTP_SSL.return_value.__enter__.return_value.login = mock.Mock(
+        side_effect=smtplib.SMTPAuthenticationError(
+            code=534,
+            msg="Error from mock",
+        )
+    )
+
+    # Send a message
+    with pytest.raises(smtplib.SMTPAuthenticationError):
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
