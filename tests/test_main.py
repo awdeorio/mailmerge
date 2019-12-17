@@ -465,6 +465,45 @@ def test_attachment(tmpdir):
     assert "attached attachment2.txt" in output
 
 
+def test_utf8_template(tmpdir):
+    """Message is utf-8 encoded when only the template contains utf-8 chars."""
+    # Template with UTF-8 characters and emoji
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple database without utf-8 characters
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        to@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        "--dry-run",
+    )
+
+    # Verify output
+    assert output.stderr.decode("utf-8") == ""
+    assert u"TGHInWFtb24g8J+YgCBrbMOid2Vu" in output
+
+
 def test_utf8_database(tmpdir):
     """Message is utf-8 encoded when only the databse contains utf-8 chars."""
     # Simple template without UTF-8 characters
