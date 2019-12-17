@@ -23,7 +23,7 @@ except ImportError:
 @mock.patch('smtplib.SMTP')
 def test_smtp(mock_SMTP, tmp_path):
     """Verify SMTP library calls."""
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -56,7 +56,7 @@ def test_smtp(mock_SMTP, tmp_path):
 @mock.patch('getpass.getpass')
 def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
     """Verify no sendmail() calls when dry_run=True."""
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -91,7 +91,7 @@ def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
 @mock.patch('getpass.getpass')
 def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
     """Verify --no-dry-run calls SMTP sendmail()."""
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -124,9 +124,9 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
     assert smtp.sendmail.call_count == 1
 
 
-def test_bad_config(tmp_path):
-    """Verify bad config file throws an exception."""
-    config_path = tmp_path/"config.conf"
+def test_bad_config_key(tmp_path):
+    """Verify config file with bad key throws an exception."""
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         badkey = open-smtp.example.com
@@ -135,13 +135,37 @@ def test_bad_config(tmp_path):
         SendmailClient(config_path, dry_run=True)
 
 
+def test_security_error(tmp_path):
+    """Verify config file with bad security type throws an exception."""
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = smtp.mail.umich.edu
+        port = 465
+        security = bad_value
+        username = YOUR_USERNAME_HERE
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"Hello world")
+
+    # Send a message
+    with pytest.raises(configparser.Error):
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+
 @mock.patch('smtplib.SMTP')
 @mock.patch('smtplib.SMTP_SSL')
 @mock.patch('getpass.getpass')
 def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for no security SMTP server
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -173,7 +197,7 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 def test_security_open_legacy(mock_SMTP, tmp_path):
     """Verify legacy "security = Never" configuration."""
     # Config SMTP server with "security = Never" legacy option
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -203,7 +227,7 @@ def test_security_open_legacy(mock_SMTP, tmp_path):
 def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for STARTTLS SMTP server
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = newman.eecs.umich.edu
@@ -244,7 +268,7 @@ def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for SSL SMTP server
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = smtp.mail.umich.edu
@@ -279,12 +303,9 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     assert smtp.close.call_count == 1
 
 
-@mock.patch('smtplib.SMTP')
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_missing_username(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+def test_missing_username(tmp_path):
     """Verify open (Never) security configuration."""
-    config_path = tmp_path/"config.conf"
+    config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = smtp.mail.umich.edu
@@ -292,4 +313,4 @@ def test_missing_username(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
         security = SSL/TLS
     """))
     with pytest.raises(configparser.Error):
-        sendmail_client = SendmailClient(config_path, dry_run=False)
+        SendmailClient(config_path, dry_run=False)
