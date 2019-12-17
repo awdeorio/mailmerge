@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import re
 import textwrap
-import pytest
 import sh
 
 # Python 2 pathlib support requires backport
@@ -584,11 +583,11 @@ def test_complicated(tmpdir):
         {{message}}
     """))
 
-    # Simple database
+    # Database with utf-8, emoji, quotes, and escaped commas
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email,message
-        one@test.com,"Hello \"world\""
+        one@test.com,"Hello, \\"world\\""
         Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
     """))
 
