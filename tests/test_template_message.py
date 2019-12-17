@@ -7,12 +7,19 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import shutil
 import textwrap
+import collections
 import jinja2
 import pytest
 import markdown
 from mailmerge.template_message import TemplateMessage
 from mailmerge.utils import MailmergeError
 from . import utils
+
+# Python 2 pathlib support requires backport
+try:
+    from pathlib2 import Path
+except ImportError:
+    from pathlib import Path
 
 
 def test_simple(tmp_path):
@@ -235,8 +242,69 @@ def test_markdown_encoding(tmp_path):
     )
 
 
-def test_attachment(tmp_path):
-    """Attachments should be sent as part of the email."""
+Attachment = collections.namedtuple(
+    "Attachment",
+    ["filename", "content"],
+)
+
+
+def extract_attachments(message):
+    """Return a list of attachments as (filename, content) named tuples."""
+    attachments = []
+    for part in message.walk():
+        if part.get_content_maintype() == "multipart":
+            continue
+        if part.get_content_maintype() == "text":
+            continue
+        if part.get("Content-Disposition") == "inline":
+            continue
+        if part.get("Content-Disposition") is None:
+            continue
+        if part['content-type'].startswith('application/octet-stream'):
+            attachments.append(Attachment(
+                filename=part.get_param('name'),
+                content=part.get_payload(decode=True),
+            ))
+    return attachments
+
+
+def test_attachment_simple(tmpdir):
+    """Verify a simple attachment."""
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+
+        Hello world
+    """))
+
+    # Render
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+
+    # Verify attachment content
+    filename, content = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+
+
+def test_attachment_multiple(tmp_path):
+    """Verify multiple attachments."""
     # Copy attachments to tmp dir
     shutil.copy(str(utils.TESTDATA/"attachment_1.txt"), str(tmp_path))
     shutil.copy(str(utils.TESTDATA/"attachment_2.pdf"), str(tmp_path))
