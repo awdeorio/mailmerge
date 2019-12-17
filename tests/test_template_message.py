@@ -383,6 +383,26 @@ def test_attachment_not_found(tmpdir):
             template_message.render({})
 
 
+def test_attachment_tilde_path(tmpdir):
+    """Attachment with home directory tilde notation file path."""
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: ~/attachment.txt
+
+        Hello world
+    """))
+
+    # Render will throw an error because we didn't create a file in the
+    # user's home directory.  We'll just check the filename.
+    template_message = TemplateMessage(template_path)
+    with pytest.raises(MailmergeError) as err:
+        template_message.render({})
+    correct_path = Path.home() / "attachment.txt"
+    assert str(correct_path) in str(err)
+
+
 def test_attachment_multiple(tmp_path):
     """Verify multiple attachments."""
     # Copy attachments to tmp dir
