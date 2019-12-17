@@ -463,3 +463,103 @@ def test_attachment(tmpdir):
     assert "SGVsbG8gbWFpbG1lcmdlCg" in output # attachment2
     assert "attached attachment1.txt" in output
     assert "attached attachment2.txt" in output
+
+
+def test_utf8_database(tmpdir):
+    """Message is utf-8 encoded when only the databse contains utf-8 chars."""
+    # Simple template without UTF-8 characters
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with utf-8 characters and emoji
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        "--dry-run",
+    )
+
+    # Verify output
+    assert output.stderr.decode("utf-8") == ""
+    assert u"TGHInWFtb24g8J+YgCBrbMOid2Vu" in output
+
+
+def test_complicated(tmpdir):
+    """Complicated end-to-end test.
+
+    Includes templating, TO, CC, BCC, UTF8 characters, emoji, attachments, and
+    Markdown.
+    """
+    # First attachment
+    attachment1_path = Path(tmpdir/"attachment1.txt")
+    attachment1_path.write_text(u"Hello world\n")
+
+    # Second attachment
+    attachment2_path = Path(tmpdir/"attachment2.txt")
+    attachment2_path.write_text(u"Hello mailmerge\n")
+
+    # Third attachment
+    attachment3_path = Path(tmpdir/"attachment3.tar.gz")
+    attachment3_path.write_text(u"FIXME binary\n")  # FIXME binary
+
+    # Template with attachment header
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
+        BCC: bcc1@test.com, bcc2@test.com
+        ATTACHMENT: attachment1.txt
+        ATTACHMENT: attachment2.txt
+        ATTACHMENT: attachment3.tar.gz
+
+        {{message}}
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email,message
+        one@test.com,"Hello \"world\""
+        Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        "--dry-run",  # FIXME
+    )
+
+    # Verify output
+    assert output.stderr.decode("utf-8") == ""
+    assert False
