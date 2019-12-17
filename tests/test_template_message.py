@@ -162,6 +162,65 @@ def test_html(tmp_path):
     assert htmltext == "<html><body><p>Helloworld</p></body></html>"
 
 
+def test_html_plaintext(tmp_path):
+    """Verify HTML and plaintest multipart template."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        Content-Type: text/plain; charset=us-ascii
+
+        {{message}}
+
+        --boundary
+        Content-Type: text/html; charset=us-ascii
+
+        <html>
+          <body>
+            <p>{{message}}</p>
+          </body>
+        </html>
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "message": "Hello world"
+    })
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Should be multipart: plaintext and HTML
+    assert message.is_multipart()
+    parts = message.get_payload()
+    assert len(parts) == 2
+    plaintext_part, html_part = parts
+
+    # Verify plaintext part
+    assert plaintext_part.get_charset() == "us-ascii"
+    assert plaintext_part.get_content_charset() == "us-ascii"
+    assert plaintext_part.get_content_type() == "text/plain"
+    plaintext = plaintext_part.get_payload()
+    plaintext = plaintext.strip()
+    assert plaintext == "Hello world"
+
+    # Verify html part
+    assert html_part.get_charset() == "us-ascii"
+    assert html_part.get_content_charset() == "us-ascii"
+    assert html_part.get_content_type() == "text/html"
+    htmltext = html_part.get_payload()
+    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
+    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+
+
 def test_markdown(tmp_path):
     """Markdown messages should be converted to HTML."""
     template_path = tmp_path / "template.txt"
