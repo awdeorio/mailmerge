@@ -570,7 +570,7 @@ def test_complicated(tmpdir):
     attachment3_path.write_text(u"FIXME binary\n")  # FIXME binary
 
     # Template with attachment header
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         FROM: from@test.com
@@ -586,7 +586,7 @@ def test_complicated(tmpdir):
     # Database with utf-8, emoji, quotes, and commas.  Note that quotes are
     # escaped with double quotes, not backslash.
     # https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u'''\
         email,message
         one@test.com,"Hello, ""world"""
@@ -594,20 +594,16 @@ def test_complicated(tmpdir):
     '''))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
     """))
 
-    # Run mailmerge
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        "--dry-run",  # FIXME
-    )
+    # Run mailmerge in tmpdir with defaults, which includes dry run
+    with tmpdir.as_cwd():
+        output = sh.mailmerge()
 
     # Verify output
     stdout = output.stdout.decode("utf-8")
