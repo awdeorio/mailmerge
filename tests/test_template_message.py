@@ -414,6 +414,23 @@ def test_attachment_not_found(tmpdir):
             template_message.render({})
 
 
+def test_attachment_blank(tmpdir):
+    """Attachment header without a filename is an error."""
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: 
+
+        Hello world
+    """))
+    template_message = TemplateMessage(template_path)
+    with pytest.raises(MailmergeError) as err:
+        with tmpdir.as_cwd():
+            template_message.render({})
+    assert "Empty attachment header" in str(err)
+
+
 def test_attachment_tilde_path(tmpdir):
     """Attachment with home directory tilde notation file path."""
     template_path = Path(tmpdir/"template.txt")
