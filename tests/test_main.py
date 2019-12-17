@@ -583,13 +583,15 @@ def test_complicated(tmpdir):
         {{message}}
     """))
 
-    # Database with utf-8, emoji, quotes, and escaped commas
+    # Database with utf-8, emoji, quotes, and commas.  Note that quotes are
+    # escaped with double quotes, not backslash.
+    # https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
     database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent(u'''\
         email,message
-        one@test.com,"Hello, \\"world\\""
+        one@test.com,"Hello, ""world"""
         Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
-    """))
+    '''))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"server.conf")
@@ -608,5 +610,13 @@ def test_complicated(tmpdir):
     )
 
     # Verify output
-    assert output.stderr.decode("utf-8") == ""
-    assert False
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert stdout == ""  # FIXME
+
+    # FIXME: verify sender and recipients
+    # FIXME: verify 5 parts (plaintext, html, and 3 attachments)
+    # FIXME: verify plaintext payload
+    # FIXME: verify HTML payload
+    # FIXME: verify attachment content
