@@ -296,11 +296,10 @@ def test_version():
     assert "mailmerge, version" in output
 
 
-def test_bad_template_database(tmpdir):
+def test_bad_template(tmpdir):
     """Template mismatch with database header should produce an error."""
-    template_path = Path(tmpdir/"template.txt")
-
     # Template has a bad key
+    template_path = Path(tmpdir/"template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{error_not_in_database}}
         SUBJECT: Testing mailmerge
@@ -322,7 +321,6 @@ def test_bad_template_database(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-        security = Never
     """))
 
     # Run mailmerge, which should exit 1
@@ -341,9 +339,46 @@ def test_bad_template_database(tmpdir):
     assert "error_not_in_database" in stderr
 
 
-def test_bad_database():
+def test_bad_database(tmpdir):
     """Database read error should produce a sane error."""
-    assert False, "IMPLEMENT ME"
+    # Normal template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with unmatched quote
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        "hello world
+    """))
+
+    # Normal, unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge, which should exit 1
+    # FIXME pytest.raises() as err
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        _ok_code=1,
+    )
+
+    # Verify output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert stdout == ""
 
 
 def test_bad_config(tmpdir):
@@ -370,7 +405,6 @@ def test_bad_config(tmpdir):
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         port = 25
-        security = Never
     """))
 
     # Run mailmerge, which should exit 1
