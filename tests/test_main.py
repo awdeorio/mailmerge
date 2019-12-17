@@ -288,8 +288,8 @@ def test_version():
     assert "mailmerge, version" in output
 
 
-def test_bad_template(tmpdir):
-    """Template containing jinja error should produce an error."""
+def test_bad_template_database(tmpdir):
+    """Template mismatch with database header should produce an error."""
     template_path = Path(tmpdir/"template.txt")
 
     # Template has a bad key
@@ -331,46 +331,9 @@ def test_bad_template(tmpdir):
     assert "error_not_in_database" in output
 
 
-def test_bad_database(tmpdir):
-    """Database mismatch with jinja variables should produce an error."""
-    # Normal template
-    template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
-        TO: {{email}}
-        SUBJECT: Testing mailmerge
-        FROM: from@test.com
-
-        Hi {{name}},
-    """))
-
-    # Database is header doesn't match template
-    database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
-        error_not_in_template,name
-        to1@test.com,Bob
-    """))
-
-    # Normal, unsecure server config
-    config_path = Path(tmpdir/"server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
-        [smtp_server]
-        host = open-smtp.example.com
-        port = 25
-        security = Never
-    """))
-
-    # Run mailmerge, which should exit 1
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        _ok_code=1,
-    )
-
-    # Verify output
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error in Jinja2 template" in output
-    assert "email" in output  # this is the missing key in the database
+def test_bad_database():
+    """Database read error should produce a sane error."""
+    assert False, "IMPLEMENT ME"
 
 
 def test_bad_config(tmpdir):
