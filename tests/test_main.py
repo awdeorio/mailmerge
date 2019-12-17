@@ -162,12 +162,38 @@ def test_defaults(tmpdir):
     assert "This was a dry run" in output
 
 
-def test_bad_limit():
+def test_bad_limit(tmpdir):
     """Verify --limit with bad value."""
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Hello world
+    """))
+
+    # Simple database with two entries
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        one@test.com
+        two@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
     output = sh.mailmerge(
-        "--template", utils.TESTDATA/"simple_template.txt",
-        "--database", utils.TESTDATA/"simple_database.csv",
-        "--config", utils.TESTDATA/"server_open.conf",
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
         "--dry-run",
         "--limit", "-1",
         _ok_code=2,
