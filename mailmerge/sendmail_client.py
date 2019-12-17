@@ -74,5 +74,3 @@ class SendmailClient(object):
         elif self.security is None:
             with smtplib.SMTP(self.host, self.port) as smtp:
                 smtp.sendmail(sender, recipients, message.as_string())
-        else:
-            assert False, "Bad security type {}".format(self.security)
