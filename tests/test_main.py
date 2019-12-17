@@ -18,12 +18,41 @@ except ImportError:
 # pylint: disable=no-member
 
 
-def test_stdout():
+def test_stdout(tmpdir):
     """Verify stdout and stderr with dry run on simple input files."""
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+
+        Hi, {{name}},
+
+        Your number is {{number}}.
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email,name,number
+        myself@mydomain.com,"Myself",17
+        bob@bobdomain.com,"Bob",42
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
     output = sh.mailmerge(
-        "--template", utils.TESTDATA/"simple_template.txt",
-        "--database", utils.TESTDATA/"simple_database.csv",
-        "--config", utils.TESTDATA/"server_open.conf",
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
         "--no-limit",
         "--dry-run",
     )
@@ -243,7 +272,7 @@ def test_bad_template(tmpdir):
     """))
 
     # Normal, unsecure server config
-    config_path = Path(tmpdir/"config.conf")
+    config_path = Path(tmpdir/"server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -285,7 +314,7 @@ def test_bad_database(tmpdir):
     """))
 
     # Normal, unsecure server config
-    config_path = Path(tmpdir/"config.conf")
+    config_path = Path(tmpdir/"server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -327,7 +356,7 @@ def test_bad_config(tmpdir):
     """))
 
     # Server config is missing host
-    config_path = Path(tmpdir/"config.conf")
+    config_path = Path(tmpdir/"server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         port = 25
@@ -376,7 +405,7 @@ def test_attachment(tmpdir):
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"config.conf")
+    config_path = Path(tmpdir/"server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
