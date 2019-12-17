@@ -304,10 +304,9 @@ def test_missing_username(tmp_path):
         SendmailClient(config_path, dry_run=False)
 
 
-@mock.patch('smtplib.SMTP')
 @mock.patch('smtplib.SMTP_SSL')
 @mock.patch('getpass.getpass')
-def test_smtp_error(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+def test_smtp_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     """Connection is closed on error."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
