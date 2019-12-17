@@ -364,6 +364,25 @@ def test_attachment_absolute(tmpdir):
     assert content == b"Hello world\n"
 
 
+def test_attachment_not_found(tmpdir):
+    """Attachment file not found."""
+    # Template specifying an attachment that doesn't exist
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+
+        Hello world
+    """))
+
+    # Render in tmpdir, which lacks attachment.txt
+    template_message = TemplateMessage(template_path)
+    with pytest.raises(MailmergeError):
+        with tmpdir.as_cwd():
+            template_message.render({})
+
+
 def test_attachment_multiple(tmp_path):
     """Verify multiple attachments."""
     # Copy attachments to tmp dir
