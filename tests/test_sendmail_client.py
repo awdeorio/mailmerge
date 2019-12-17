@@ -49,7 +49,7 @@ def test_smtp(mock_SMTP, tmp_path):
     )
 
     # Mock smtp object with function calls recorded
-    smtp = mock_SMTP.return_value
+    smtp = mock_SMTP.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
@@ -84,7 +84,7 @@ def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
 
     # Verify SMTP wasn't called and password wasn't used
     assert mock_getpass.call_count == 0
-    smtp = mock_SMTP.return_value
+    smtp = mock_SMTP.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 0
 
 
@@ -121,7 +121,7 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
 
     # Verify function calls for password and sendmail()
     assert mock_getpass.call_count == 1
-    smtp = mock_SMTP_SSL.return_value
+    smtp = mock_SMTP_SSL.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
@@ -146,18 +146,8 @@ def test_security_error(tmp_path):
         security = bad_value
         username = YOUR_USERNAME_HERE
     """))
-
-    # Simple template
-    sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
-
-    # Send a message
     with pytest.raises(configparser.Error):
-        sendmail_client.sendmail(
-            sender="test@test.com",
-            recipients=["test@test.com"],
-            message=message,
-        )
+        SendmailClient(config_path, dry_run=False)
 
 
 @mock.patch('smtplib.SMTP')
@@ -188,10 +178,9 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     assert mock_getpass.call_count == 0
     assert mock_SMTP.call_count == 1
     assert mock_SMTP_SSL.call_count == 0
-    smtp = mock_SMTP.return_value
+    smtp = mock_SMTP.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
     assert smtp.login.call_count == 0
-    assert smtp.close.call_count == 1
 
 
 @mock.patch('smtplib.SMTP')
@@ -218,7 +207,7 @@ def test_security_open_legacy(mock_SMTP, tmp_path):
     )
 
     # Verify SMTP library calls
-    smtp = mock_SMTP.return_value
+    smtp = mock_SMTP.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
@@ -255,12 +244,11 @@ def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     assert mock_getpass.call_count == 1
     assert mock_SMTP.call_count == 1
     assert mock_SMTP_SSL.call_count == 0
-    smtp = mock_SMTP.return_value
+    smtp = mock_SMTP.return_value.__enter__.return_value
     assert smtp.ehlo.call_count == 2
     assert smtp.starttls.call_count == 1
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
-    assert smtp.close.call_count == 1
 
 
 @mock.patch('smtplib.SMTP')
@@ -296,12 +284,11 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     assert mock_getpass.call_count == 1
     assert mock_SMTP.call_count == 0
     assert mock_SMTP_SSL.call_count == 1
-    smtp = mock_SMTP_SSL.return_value
+    smtp = mock_SMTP_SSL.return_value.__enter__.return_value
     assert smtp.ehlo.call_count == 0
     assert smtp.starttls.call_count == 0
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
-    assert smtp.close.call_count == 1
 
 
 def test_missing_username(tmp_path):

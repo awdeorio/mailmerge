@@ -36,6 +36,13 @@ class SendmailClient(object):
         if self.security is not None:
             self.username = config.get("smtp_server", "username")
 
+        # Verify security type
+        if self.security not in [None, "SSL/TLS", "STARTTLS"]:
+            raise configparser.Error(
+                "Unrecognized security type: {}".format(self.security)
+            )
+
+
     def sendmail(self, sender, recipients, message):
         """Send email message.
 
@@ -68,5 +75,4 @@ class SendmailClient(object):
             with smtplib.SMTP(self.host, self.port) as smtp:
                 smtp.sendmail(sender, recipients, message.as_string())
         else:
-            raise configparser.Error("Unrecognized security type: {}".format(
-                self.security))
+            assert False, "Bad security type {}".format(self.security)
