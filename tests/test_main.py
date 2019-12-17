@@ -162,21 +162,6 @@ def test_defaults(tmpdir):
     assert "This was a dry run" in output
 
 
-def test_dry_run():
-    """Verify --dry-run output."""
-    output = sh.mailmerge(
-        "--template", utils.TESTDATA/"simple_template.txt",
-        "--database", utils.TESTDATA/"simple_database.csv",
-        "--config", utils.TESTDATA/"server_ssl.conf",
-        "--dry-run",
-    )
-    assert output.stderr.decode("utf-8") == ""
-    assert "Your number is 17." in output
-    assert "sent message 0" in output
-    assert "Limit was 1 messages" in output
-    assert "This was a dry run" in output
-
-
 def test_bad_limit():
     """Verify --limit with bad value."""
     output = sh.mailmerge(
