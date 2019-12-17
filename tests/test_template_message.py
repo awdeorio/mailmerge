@@ -364,6 +364,37 @@ def test_attachment_absolute(tmpdir):
     assert content == b"Hello world\n"
 
 
+def test_attachment_template(tmpdir):
+    """Attachment with template as part of file path."""
+    # Simple attachment lives in sub directory
+    attachments_dir = tmpdir.mkdir("attachments")
+    attachment_path = Path(attachments_dir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: {{filename}}
+
+        Hello world
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        _, _, message = template_message.render({
+            "filename": str(attachment_path),
+        })
+
+    # Verify attachment
+    attachments = extract_attachments(message)
+    filename, content = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+
+
 def test_attachment_not_found(tmpdir):
     """Attachment file not found."""
     # Template specifying an attachment that doesn't exist
