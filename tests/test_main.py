@@ -106,9 +106,11 @@ def test_no_options(tmpdir):
     """
     with tmpdir.as_cwd():
         output = sh.mailmerge(_ok_code=1)  # expect non-zero exit
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: can't find template mailmerge_template.txt" in output
-    assert "https://github.com/awdeorio/mailmerge" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: can't find template mailmerge_template.txt" in stderr
+    assert "https://github.com/awdeorio/mailmerge" in stderr
 
 
 def test_sample(tmpdir):
@@ -247,8 +249,10 @@ def test_template_not_found(tmpdir):
     """Verify error when template input file not found."""
     with tmpdir.as_cwd():
         output = sh.mailmerge("--template", "notfound.txt", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: can't find template" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: can't find template" in stderr
 
 
 def test_database_not_found(tmpdir):
@@ -256,8 +260,10 @@ def test_database_not_found(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_template.txt").touch()
         output = sh.mailmerge("--database", "notfound.csv", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: can't find database" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: can't find database" in stderr
 
 
 def test_config_not_found(tmpdir):
@@ -266,8 +272,10 @@ def test_config_not_found(tmpdir):
         Path("mailmerge_template.txt").touch()
         Path("mailmerge_database.csv").touch()
         output = sh.mailmerge("--config", "notfound.conf", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: can't find config" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: can't find config" in stderr
 
 
 def test_help():
