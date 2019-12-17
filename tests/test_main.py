@@ -298,14 +298,14 @@ def test_bad_template_database(tmpdir):
         SUBJECT: Testing mailmerge
         FROM: from@test.com
 
-        Hi {{name}},
+        Hello world
     """))
 
     # Normal database
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
-        email,name
-        to@test.com,Bob
+        email
+        to@test.com
     """))
 
     # Normal, unsecure server config
@@ -326,9 +326,11 @@ def test_bad_template_database(tmpdir):
     )
 
     # Verify output
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error in Jinja2 template" in output
-    assert "error_not_in_database" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert  stdout == ""
+    assert "Error in Jinja2 template" in stderr
+    assert "error_not_in_database" in stderr
 
 
 def test_bad_database():
@@ -372,8 +374,10 @@ def test_bad_config(tmpdir):
     )
 
     # Verify output
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error reading config file" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error reading config file" in stderr
 
 
 def test_attachment(tmpdir):
