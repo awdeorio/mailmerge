@@ -345,3 +345,55 @@ def test_bad_config(tmpdir):
     # Verify output
     assert output.stderr.decode("utf-8") == ""
     assert "Error reading config file" in output
+
+
+def test_attachment(tmpdir):
+    """Verify attachments feature output."""
+    # First attachment
+    attachment_path = Path(tmpdir/"attachment1.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Second attachment
+    attachment_path = Path(tmpdir/"attachment2.txt")
+    attachment_path.write_text(u"Hello mailmerge\n")
+
+    # Template with attachment header
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+        ATTACHMENT: attachment1.txt
+        ATTACHMENT: attachment2.txt
+
+        Hello world
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        to@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"config.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+    )
+
+    # Verify output
+    assert output.stderr.decode("utf-8") == ""
+    assert "Hello world" in output  # message
+    assert "SGVsbG8gd29ybGQK" in output  # attachment1
+    assert "SGVsbG8gbWFpbG1lcmdlCg" in output # attachment2
+    assert "attached attachment1.txt" in output
+    assert "attached attachment2.txt" in output
