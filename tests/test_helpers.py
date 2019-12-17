@@ -70,11 +70,11 @@ def test_csv_quotes_commas(tmpdir):
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email,message
-        one@test.com,"Hello\, \\"world\\""
+        one@test.com,"Hello, world"
     """))
     row = next(mailmerge.__main__.read_csv_database(database_path))
     assert row["email"] == u"one@test.com"
-    assert row["message"] == 'Hello, "world"'
+    assert row["message"] == "Hello, world"
 
 
 def test_csv_utf8(tmpdir):
