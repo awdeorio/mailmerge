@@ -63,32 +63,33 @@ def test_stdout(tmpdir):
     assert stderr == ""
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
-    assert stdout == """>>> message 0
-TO: myself@mydomain.com
-SUBJECT: Testing mailmerge
-FROM: My Self <myself@mydomain.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+    assert stdout == textwrap.dedent(u"""\
+        >>> message 0
+        TO: myself@mydomain.com
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="us-ascii"
+        Content-Transfer-Encoding: 7bit
 
-Hi, Myself,
+        Hi, Myself,
 
-Your number is 17.
->>> sent message 0
->>> message 1
-TO: bob@bobdomain.com
-SUBJECT: Testing mailmerge
-FROM: My Self <myself@mydomain.com>
-MIME-Version: 1.0
-Content-Type: text/plain; charset="us-ascii"
-Content-Transfer-Encoding: 7bit
+        Your number is 17.
+        >>> sent message 0
+        >>> message 1
+        TO: bob@bobdomain.com
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="us-ascii"
+        Content-Transfer-Encoding: 7bit
 
-Hi, Bob,
+        Hi, Bob,
 
-Your number is 42.
->>> sent message 1
->>> This was a dry run.  To send messages, use the --no-dry-run option.
-"""
+        Your number is 42.
+        >>> sent message 1
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+        """)
 
 
 def test_no_options(tmpdir):
