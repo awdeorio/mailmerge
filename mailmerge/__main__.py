@@ -245,8 +245,14 @@ def create_sample_input_files(template_path,
 
 def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time."""
+    # Modify the default dialect to be strict.  This will trigger errors for
+    # things like unclosed quotes.
+    strictexcel = csv.excel()
+    strictexcel.strict = True
+
+    # Open file and read using strict dialect
     with database_path.open("r") as database_file:
-        reader = csv.DictReader(database_file)
+        reader = csv.DictReader(database_file, dialect=strictexcel)
         for row in reader:
             yield row
 
