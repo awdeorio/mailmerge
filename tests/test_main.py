@@ -616,12 +616,8 @@ def test_complicated(tmpdir):
     attachment1_path.write_text(u"Hello world\n")
 
     # Second attachment
-    attachment2_path = Path(tmpdir/"attachment2.txt")
-    attachment2_path.write_text(u"Hello mailmerge\n")
-
-    # Third attachment
-    attachment3_path = Path(tmpdir/"attachment3.tar.gz")
-    attachment3_path.write_text(u"FIXME binary\n")  # FIXME binary
+    attachment2_path = Path(tmpdir/"attachment2.csv")
+    attachment2_path.write_text(u"hello,mailmerge\n")
 
     # Template with attachment header
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -631,8 +627,7 @@ def test_complicated(tmpdir):
         CC: cc1@test.com, cc2@test.com
         BCC: bcc1@test.com, bcc2@test.com
         ATTACHMENT: attachment1.txt
-        ATTACHMENT: attachment2.txt
-        ATTACHMENT: attachment3.tar.gz
+        ATTACHMENT: attachment2.csv
 
         {{message}}
     """))
@@ -644,7 +639,7 @@ def test_complicated(tmpdir):
     database_path.write_text(textwrap.dedent(u'''\
         email,message
         one@test.com,"Hello, ""world"""
-        Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
+        Laȝamon <lam@test.com>,Laȝamon 😀 klâwen
     '''))
 
     # Simple unsecure server config
@@ -659,14 +654,46 @@ def test_complicated(tmpdir):
     with tmpdir.as_cwd():
         output = sh.mailmerge()
 
-    # Verify output
+    # Decode output, there should be no stderr
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stderr == ""
-    assert stdout == ""  # FIXME
 
-    # FIXME: verify sender and recipients
-    # FIXME: verify 5 parts (plaintext, html, and 3 attachments)
-    # FIXME: verify plaintext payload
-    # FIXME: verify HTML payload
-    # FIXME: verify attachment content
+    # Verify headers.  They may print in a different order, so verify them one
+    # at a time.
+    assert """Content-Type: multipart/alternative; boundary="==""" in stdout
+    assert "MIME-Version: 1.0" in stdout
+    assert "TO: one@test.com" in stdout
+    assert "CC: cc1@test.com, cc2@test.com" in stdout
+    assert "FROM: from@test.com" in stdout
+    assert "Content-Transfer-Encoding: 7bit" in stdout
+    assert "Date: " in stdout
+
+    # Verify body.  Replace randomly generated boundary IDs so that they match
+    # hardcoded expected output.
+    stdout = re.sub(r"====.+==", "====boundary==", stdout, re.MULTILINE)
+    assert textwrap.dedent(u"""\
+        --====boundary==
+        Content-Type: text/plain; charset="us-ascii"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: 7bit
+        
+        Hello, "world"
+        --====boundary==
+        Content-Type: application/octet-stream; Name="attachment1.txt"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment1.txt"
+        
+        SGVsbG8gd29ybGQK
+        
+        --====boundary==
+        Content-Type: application/octet-stream; Name="attachment2.csv"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment2.csv"
+        
+        aGVsbG8sbWFpbG1lcmdlCg==
+        
+        --====boundary==--
+    """) in stdout
