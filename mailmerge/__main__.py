@@ -144,30 +144,30 @@ def check_input_files(template_path, database_path, config_path, sample):
     if sample:
         create_sample_input_files(template_path, database_path, config_path)
         sys.exit(0)
+
     if not template_path.exists():
-        sys.exit(
-            "Error: can't find template {template_path}\n"
-            "Create a sample (--sample) or specify a file (--template)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(template_path=template_path)
-        )
+        sys.exit(textwrap.dedent(u"""
+            Error: can't find template {template_path}
+            Create a sample (--sample) or specify a file (--template)
+
+            See https://github.com/awdeorio/mailmerge for examples.
+        """.format(template_path=template_path)))
+
     if not database_path.exists():
-        sys.exit(
-            "Error: can't find database {database_path}\n"
-            "Create a sample (--sample) or specify a file (--database)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(database_path=database_path)
-        )
+        sys.exit(textwrap.dedent(u"""
+            Error: can't find database {database_path}
+            Create a sample (--sample) or specify a file (--database)
+
+            See https://github.com/awdeorio/mailmerge for examples.
+        """.format(database_path=database_path)))
+
     if not config_path.exists():
-        sys.exit(
-            "Error: can't find config {config_path}\n"
-            "Create a sample (--sample) or specify a file (--config)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(config_path=config_path)
-        )
+        sys.exit(textwrap.dedent(u"""
+            Error: can't find config {config_path}
+            Create a sample (--sample) or specify a file (--config)
+
+            See https://github.com/awdeorio/mailmerge for examples.
+        """.format(config_path=config_path)))
 
 
 def create_sample_input_files(template_path, database_path, config_path):
@@ -219,10 +219,16 @@ def create_sample_input_files(template_path, database_path, config_path):
             # host = newman.eecs.umich.edu
             # port = 25
         """))
-    print("Created sample template email {}".format(template_path))
-    print("Created sample database {}".format(database_path))
-    print("Created sample config file {}".format(config_path))
-    print("Edit these files, and then run mailmerge again")
+    print(textwrap.dedent("""\
+        Created sample template email "{template_path}"
+        Created sample database "{database_path}"
+        Created sample config file "{config_path}"
+        Edit these files, then run mailmerge again.
+    """.format(
+        template_path=template_path,
+        database_path=database_path,
+        config_path=config_path,
+    )))
 
 
 def read_csv_database(database_path):
