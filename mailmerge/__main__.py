@@ -8,6 +8,7 @@ import sys
 import socket
 import configparser
 import smtplib
+import textwrap
 import jinja2
 import click
 from .template_message import TemplateMessage
@@ -173,73 +174,65 @@ def check_input_files(template_path, database_path, config_path, sample):
         )
 
 
-def create_sample_input_files(template_path,
-                              database_path,
-                              config_path):
-    """Create sample template email and database."""
-    print("Creating sample template email {}".format(template_path))
+def create_sample_input_files(template_path, database_path, config_path):
+    """Create sample template email, database and server config."""
     if template_path.exists():
         print("Error: file exists: {}".format(template_path))
         sys.exit(1)
-    with template_path.open("w") as template_file:
-        template_file.write(
-            u"TO: {{email}}\n"
-            u"SUBJECT: Testing mailmerge\n"
-            u"FROM: My Self <myself@mydomain.com>\n"
-            u"\n"
-            u"Hi, {{name}},\n"
-            u"\n"
-            u"Your number is {{number}}.\n"
-        )
-    print("Creating sample database {}".format(database_path))
     if database_path.exists():
         print("Error: file exists: {}".format(database_path))
         sys.exit(1)
-    with database_path.open("w") as database_file:
-        database_file.write(
-            u'email,name,number\n'
-            u'myself@mydomain.com,"Myself",17\n'
-            u'bob@bobdomain.com,"Bob",42\n'
-        )
-    print("Creating sample config file {}".format(config_path))
     if config_path.exists():
         print("Error: file exists: {}".format(config_path))
         sys.exit(1)
+
+    with template_path.open("w") as template_file:
+        template_file.write(textwrap.dedent(u"""\
+            TO: {{email}}
+            SUBJECT: Testing mailmerge
+            FROM: My Self <myself@mydomain.com>
+            
+            Hi, {{name}},
+            
+            Your number is {{number}}.
+        """))
+    with database_path.open("w") as database_file:
+        database_file.write(textwrap.dedent(u"""\
+            email,name,number
+            myself@mydomain.com,"Myself",17
+            bob@bobdomain.com,"Bob",42
+        """))
     with config_path.open("w") as config_file:
-        config_file.write(
-            u"# Example: GMail\n"
-            u"[smtp_server]\n"
-            u"host = smtp.gmail.com\n"
-            u"port = 465\n"
-            u"security = SSL/TLS\n"
-            u"username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: Wide open\n"
-            u"# [smtp_server]\n"
-            u"# host = open-smtp.example.com\n"
-            u"# port = 25\n"
-            u"#\n"
-            u"# Example: University of Michigan\n"
-            u"# [smtp_server]\n"
-            u"# host = smtp.mail.umich.edu\n"
-            u"# port = 465\n"
-            u"# security = SSL/TLS\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: University of Michigan EECS Dept., with STARTTLS security\n"  # noqa: E501
-            u"# [smtp_server]\n"
-            u"# host = newman.eecs.umich.edu\n"
-            u"# port = 25\n"
-            u"# security = STARTTLS\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: University of Michigan EECS Dept., with no encryption\n"  # noqa: E501
-            u"# [smtp_server]\n"
-            u"# host = newman.eecs.umich.edu\n"
-            u"# port = 25\n"
-            u"# security = Never\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-        )
+        config_file.write(textwrap.dedent(u"""\
+            # Example: GMail, with SSL/TLS security
+            [smtp_server]
+            host = smtp.gmail.com
+            port = 465
+            security = SSL/TLS
+            username = YOUR_USERNAME_HERE
+
+            # Example: University of Michigan, with SSL/TLS security
+            # [smtp_server]
+            # host = smtp.mail.umich.edu
+            # port = 465
+            # security = SSL/TLS
+            # username = YOUR_USERNAME_HERE
+
+            # Example: University of Michigan EECS Dept., with STARTTLS security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+            # security = STARTTLS
+            # username = YOUR_USERNAME_HERE
+
+            # Example: University of Michigan EECS Dept., with no security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+        """))
+    print("Created sample template email {}".format(template_path))
+    print("Created sample database {}".format(database_path))
+    print("Created sample config file {}".format(config_path))
     print("Edit these files, and then run mailmerge again")
 
 

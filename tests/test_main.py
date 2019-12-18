@@ -176,9 +176,9 @@ def test_sample(tmpdir):
         assert Path("mailmerge_database.csv").exists()
         assert Path("mailmerge_server.conf").exists()
     assert output.stderr.decode("utf-8") == ""
-    assert "Creating sample template" in output
-    assert "Creating sample database" in output
-    assert "Creating sample config" in output
+    assert "Created sample template" in output
+    assert "Created sample database" in output
+    assert "Created sample config" in output
 
 
 def test_sample_clobber_template(tmpdir):
