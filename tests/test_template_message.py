@@ -65,8 +65,7 @@ def test_multiple_substitutions(tmp_path):
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
-        SUBJECT: Testing mailmerge
-        FROM: My Self <myself@mydomain.com>
+        FROM: from@test.com
 
         Hi, {{name}},
 
@@ -78,7 +77,7 @@ def test_multiple_substitutions(tmp_path):
         "name": "Myself",
         "number": 17,
     })
-    assert sender == "My Self <myself@mydomain.com>"
+    assert sender == "from@test.com"
     assert recipients == ["myself@mydomain.com"]
     assert "Hi, Myself," in message.as_string()
     assert "Your number is 17" in message.as_string()
@@ -682,26 +681,21 @@ def test_utf8_database(tmp_path):
     # Simple template
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
-        TO: {{email}}
-        SUBJECT: Testing mailmerge
-        FROM: My Self <myself@mydomain.com>
+        TO: to@test.com
+        FROM: from@test.com
 
-        Hi, {{name}},
-
-        Your number is {{number}}.
+        Hi {{name}}
     """))
 
     # Render template with context containing unicode characters
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
-        "email": u"myself@mydomain.com",
         "name": u"Laȝamon",
-        "number": 17,
     })
 
     # Verify sender and recipients
-    assert sender == "My Self <myself@mydomain.com>"
-    assert recipients == ["myself@mydomain.com"]
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
 
     # Verify message encoding.  The template was ASCII, but when the template
     # is rendered with UTF-8 data, the result is UTF-8 encoding.
@@ -710,13 +704,8 @@ def test_utf8_database(tmp_path):
     assert message.get_content_charset() == "utf-8"
 
     # Verify content
-    # NOTE: to decode a base46-encoded string:
-    # print((str(base64.b64decode(payload), "utf-8")))
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == textwrap.dedent(u"""\
-        Hi, Laȝamon,
-
-        Your number is 17.""")
+    assert plaintext == u"Hi Laȝamon"
 
 
 def test_emoji(tmp_path):
