@@ -96,11 +96,11 @@ def main(sample, dry_run, limit, no_limit,
         for i, row in enumerate_limit(csv_database, limit):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(i))
+            print(">>> message {}".format(i + 1))
             print(message.as_string())
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(i))
+            print(">>> sent message {}".format(i + 1))
     except jinja2.exceptions.TemplateError as err:
         sys.exit(">>> Error in Jinja2 template: {}".format(err))
     except csv.Error as err:
@@ -222,11 +222,12 @@ def create_sample_input_files(template_path, database_path, config_path):
             # host = newman.eecs.umich.edu
             # port = 25
         """))
-    print(textwrap.dedent("""\
+    print(textwrap.dedent(u"""\
         Created sample template email "{template_path}"
         Created sample database "{database_path}"
         Created sample config file "{config_path}"
-        Edit these files, then run mailmerge again.
+
+        Edit these files, then run mailmerge again.\
     """.format(
         template_path=template_path,
         database_path=database_path,
