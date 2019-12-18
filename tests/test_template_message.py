@@ -807,3 +807,55 @@ def test_emoji_database(tmp_path):
     # Verify content
     plaintext = message.get_payload().strip()
     assert plaintext == "SGkgw7DCn8KYwoA="
+
+
+def test_encoding_us_ascii(tmp_path):
+    """Render a simple template with us-ascii encoding."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        Hello world
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+    assert message.get_payload() == "Hello world"
+    assert message.get_charset() == "us-ascii"
+    assert message.get_content_charset() == "us-ascii"
+
+
+def test_encoding_utf8(tmp_path):
+    """Render a simple template with UTF-8 encoding."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        Hello Laȝamon
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+    assert message.get_payload().strip() == u"SGVsbG8gTGHInWFtb24="
+    assert message.get_charset() == "utf-8"
+    assert message.get_content_charset() == "utf-8"
+
+
+def test_encoding_mismatch(tmp_path):
+    """Render a simple template that lies about its encoding.
+
+    Header says us-ascii, but it contains utf-8.
+    """
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        Content-Type: text/plain; charset="us-ascii"
+
+        Hello Laȝamon
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+    assert message.get_payload().strip() == u"SGVsbG8gTGHInWFtb24="
+    assert message.get_charset() == "utf-8"
+    assert message.get_content_charset() == "utf-8"
