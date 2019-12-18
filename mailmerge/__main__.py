@@ -192,28 +192,28 @@ def create_sample_input_files(template_path, database_path, config_path):
         """))
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
-            # Example: GMail, with SSL/TLS security
+            # Example: GMail
             [smtp_server]
             host = smtp.gmail.com
             port = 465
             security = SSL/TLS
             username = YOUR_USERNAME_HERE
 
-            # Example: University of Michigan, with SSL/TLS security
+            # Example: SSL/TLS
             # [smtp_server]
             # host = smtp.mail.umich.edu
             # port = 465
             # security = SSL/TLS
             # username = YOUR_USERNAME_HERE
 
-            # Example: University of Michigan EECS Dept., with STARTTLS security
+            # Example: STARTTLS security
             # [smtp_server]
             # host = newman.eecs.umich.edu
             # port = 25
             # security = STARTTLS
             # username = YOUR_USERNAME_HERE
 
-            # Example: University of Michigan EECS Dept., with no security
+            # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
             # port = 25
