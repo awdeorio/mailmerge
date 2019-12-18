@@ -179,9 +179,9 @@ def create_sample_input_files(template_path, database_path, config_path):
             TO: {{email}}
             SUBJECT: Testing mailmerge
             FROM: My Self <myself@mydomain.com>
-            
+
             Hi, {{name}},
-            
+
             Your number is {{number}}.
         """))
     with database_path.open("w") as database_file:
@@ -231,16 +231,18 @@ def create_sample_input_files(template_path, database_path, config_path):
 
 
 def read_csv_database(database_path):
-    """Read database CSV file, providing one line at a time."""
-    # Modify the default dialect to be strict.  This will trigger errors for
-    # things like unclosed quotes.
-    class StrictExcel(csv.excel):
-        """Strict version of default dialect."""
+    """Read database CSV file, providing one line at a time.
 
-        # pylint: disable=too-few-public-methods
+    We'll use a class to modify the csv library's default dialect ('excel') to
+    enable strict syntax checking.  This will trigger errors for things like
+    unclosed quotes.
+    """
+    # Our helper class is really simple
+    # pylint: disable=too-few-public-methods, missing-class-docstring
+
+    class StrictExcel(csv.excel):
         strict = True
 
-    # Open file and read using strict dialect
     with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         for row in reader:
