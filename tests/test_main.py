@@ -694,8 +694,8 @@ def test_complicated(tmpdir):
         "Pgo8L2h0bWw+Cgo=",
         "Pgo8L2h0bWw+Cg==",
     )
-    stdout = stdout.replace('Hello, "world"\n\n\n', 'Hello, "world"\n')
-    stdout = stdout.replace('</html>\n\n', '</html>\n')
+    stdout = stdout.replace('Hello, "world"\n\n\n\n', 'Hello, "world"\n\n\n')
+    stdout = stdout.replace('</html>\n\n\n', '</html>\n\n')
 
     # Verify stdout and stderr after above corrections
     assert stderr == ""
@@ -717,6 +717,7 @@ def test_complicated(tmpdir):
         Content-Transfer-Encoding: 7bit
 
         Hello, "world"
+
 
         --boundary
         MIME-Version: 1.0
