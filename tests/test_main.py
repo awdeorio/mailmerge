@@ -66,7 +66,7 @@ def test_stdout(tmpdir):
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: myself@mydomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -77,8 +77,8 @@ def test_stdout(tmpdir):
         Hi, Myself,
 
         Your number is 17.
-        >>> sent message 0
-        >>> message 1
+        >>> sent message 1
+        >>> message 2
         TO: bob@bobdomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -89,7 +89,7 @@ def test_stdout(tmpdir):
         Hi, Bob,
 
         Your number is 42.
-        >>> sent message 1
+        >>> sent message 2
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
         """)
 
@@ -132,7 +132,7 @@ def test_stdout_utf8(tmpdir):
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: to@test.com
         FROM: from@test.com
         MIME-Version: 1.0
@@ -141,7 +141,7 @@ def test_stdout_utf8(tmpdir):
 
         TGHInWFtb24g8J+YgCBrbMOid2Vu
 
-        >>> sent message 0
+        >>> sent message 1
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -220,7 +220,7 @@ def test_defaults(tmpdir):
         sh.mailmerge("--sample")
         output = sh.mailmerge()
     assert output.stderr.decode("utf-8") == ""
-    assert "sent message 0" in output
+    assert "sent message 1" in output
     assert "Limit was 1 message" in output
     assert "This was a dry run" in output
 
@@ -301,8 +301,8 @@ def test_limit_combo(tmpdir):
         "--limit", "1",
     )
     assert output.stderr.decode("utf-8") == ""
-    assert "sent message 0" in output
     assert "sent message 1" in output
+    assert "sent message 2" in output
     assert "Limit was 1" not in output
 
 
@@ -706,7 +706,7 @@ def test_complicated(tmpdir):
     # Verify stdout and stderr after above corrections
     assert stderr == ""
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: one@test.com
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -755,8 +755,8 @@ def test_complicated(tmpdir):
         --boundary--
         >>> attached attachment1.txt
         >>> attached attachment2.csv
-        >>> sent message 0
-        >>> message 1
+        >>> sent message 1
+        >>> message 2
         TO: Lazamon<two@test.com>
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -801,7 +801,7 @@ def test_complicated(tmpdir):
         --boundary--
         >>> attached attachment1.txt
         >>> attached attachment2.csv
-        >>> sent message 1
+        >>> sent message 2
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
 
