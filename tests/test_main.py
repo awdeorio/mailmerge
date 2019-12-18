@@ -672,7 +672,7 @@ def test_complicated(tmpdir):
 
     # Run mailmerge in tmpdir with defaults, which includes dry run
     with tmpdir.as_cwd():
-        output = sh.mailmerge()
+        output = sh.mailmerge("--no-limit")
 
     # Verify output, replacing Date with a constant.
     stdout = output.stdout.decode("utf-8")
@@ -731,6 +731,51 @@ def test_complicated(tmpdir):
         >>> attached attachment1.txt
         >>> attached attachment2.csv
         >>> sent message 0
-        >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+        >>> message 1
+        TO: =?utf-8?b?TGHInWFtb24gPGxhbUB0ZXN0LmNvbT4=?=
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        TGHInWFtb24g8J+YgCBrbMOid2VuCg==
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/html; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5MYcidYW1vbiDwn5iAIGtsw6J3ZW48L3A+CiAgPC9ib2R5
+        Pgo8L2h0bWw+CgoKTGHInWFtb24g8J+YgCBrbMOid2Vu
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment1.txt"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment1.txt"
+
+        SGVsbG8gd29ybGQK
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment2.csv"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment2.csv"
+
+        aGVsbG8sbWFpbG1lcmdlCg==
+
+        --boundary--
+        >>> attached attachment1.txt
+        >>> attached attachment2.csv
+        >>> sent message 1
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """) in stdout
