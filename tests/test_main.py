@@ -94,6 +94,58 @@ def test_stdout(tmpdir):
         """)
 
 
+def test_stdout_utf8(tmpdir):
+    """Verify human-readable output when template contains utf-8."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        myself@mydomain.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge with defaults, which includes dry-run
+    with tmpdir.as_cwd():
+        output = sh.mailmerge()
+
+    # Verify mailmerge output.  We'll filter out the Date header because it
+    # won't match exactly.
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert "Date:" in stdout
+    stdout = re.sub(r"Date.*\n", "", stdout)
+    assert stdout == textwrap.dedent(u"""\
+        >>> message 0
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        TGHInWFtb24g8J+YgCBrbMOid2Vu
+
+        >>> sent message 0
+        >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)
+
 def test_no_options(tmpdir):
     """Verify help message when called with no options.
 
