@@ -142,11 +142,7 @@ if __name__ == "__main__":
 def check_input_files(template_path, database_path, config_path, sample):
     """Check if input files are present and hint the user."""
     if sample:
-        create_sample_input_files(
-            template_path,
-            database_path,
-            config_path,
-        )
+        create_sample_input_files(template_path, database_path, config_path)
         sys.exit(0)
     if not template_path.exists():
         sys.exit(
