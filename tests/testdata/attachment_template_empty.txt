@@ -1,6 +1,0 @@
-TO: a@test.com
-SUBJECT: Hello world
-FROM: b@test.com
-ATTACHMENT: 
-
-Hello world

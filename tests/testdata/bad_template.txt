@@ -1,7 +1,0 @@
-TO: {{error_not_in_database}}
-SUBJECT: Testing mailmerge
-FROM: My Self <myself@mydomain.com>
-
-Hi, {{name}},
-
-Your number is {{number}}.

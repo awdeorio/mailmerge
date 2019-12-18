@@ -1,7 +1,0 @@
-TO: {{email}}
-SUBJECT: Testing mailmerge
-FROM: test@example.com
-CONTENT-TYPE: text/markdown
-
-Hi, {{name}},
-æøå

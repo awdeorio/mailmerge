@@ -1,8 +1,0 @@
-TO: test@example.com
-SUBJECT: Testing mailmerge
-FROM: test@example.com
-CONTENT-TYPE: text/markdown
-
-```
-emoji_string =  😀
-```

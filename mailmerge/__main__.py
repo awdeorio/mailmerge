@@ -39,6 +39,7 @@ except ImportError:
 )
 @click.option(
     "--limit", is_flag=False, default=1,
+    type=click.IntRange(0, None),
     help="Limit the number of messages (1)",
 )
 @click.option(
@@ -100,25 +101,22 @@ def cli(sample, dry_run, limit, no_limit,
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i))
     except jinja2.exceptions.TemplateError as err:
-        print(">>> Error in Jinja2 template: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Error in Jinja2 template: {}".format(err))
     except csv.Error as err:
-        print(">>> Error reading CSV file: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Error reading CSV file: {}".format(err))
     except smtplib.SMTPAuthenticationError as err:
-        print(">>> Authentication error: {}".format(err))
-        sys.exit(1)
+        sys.exit(">>> Authentication error: {}".format(err))
     except configparser.Error as err:
-        print(">>> Error reading config file {}: {}".format(config_path, err))
-        sys.exit(1)
+        sys.exit(
+            ">>> Error reading config file {filename}: {message}"
+            .format(filename=config_path, message=err)
+        )
     except smtplib.SMTPException as err:
-        print(">>> Error sending message", err, sep=' ', file=sys.stderr)
-        sys.exit(1)
+        sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
     except socket.error:
-        print(">>> Error connecting to server")
-        sys.exit(1)
+        sys.exit(">>> Error connecting to server")
     except MailmergeError as err:
-        print(">>> {}".format(err))
+        sys.exit(">>> {}".format(err))
 
     # Hints for user
     if not no_limit:
@@ -150,15 +148,29 @@ def check_input_files(template_path, database_path, config_path, sample):
         )
         sys.exit(0)
     if not template_path.exists():
-        print("Error: can't find template email {}".format(template_path))
-        print("Create a sample (--sample) or specify a file (--template)")
-        print("")
-        print("See https://github.com/awdeorio/mailmerge for examples.")
-        sys.exit(1)
+        sys.exit(
+            "Error: can't find template {template_path}\n"
+            "Create a sample (--sample) or specify a file (--template)\n"
+            "\n"
+            "See https://github.com/awdeorio/mailmerge for examples.\n"
+            .format(template_path=template_path)
+        )
     if not database_path.exists():
-        print("Error: can't find database_path {}".format(database_path))
-        print("Create a sample (--sample) or specify a file (--database)")
-        sys.exit(1)
+        sys.exit(
+            "Error: can't find database {database_path}\n"
+            "Create a sample (--sample) or specify a file (--database)\n"
+            "\n"
+            "See https://github.com/awdeorio/mailmerge for examples.\n"
+            .format(database_path=database_path)
+        )
+    if not config_path.exists():
+        sys.exit(
+            "Error: can't find config {config_path}\n"
+            "Create a sample (--sample) or specify a file (--config)\n"
+            "\n"
+            "See https://github.com/awdeorio/mailmerge for examples.\n"
+            .format(config_path=config_path)
+        )
 
 
 def create_sample_input_files(template_path,
@@ -206,8 +218,6 @@ def create_sample_input_files(template_path,
             u"# [smtp_server]\n"
             u"# host = open-smtp.example.com\n"
             u"# port = 25\n"
-            u"# security = Never\n"
-            u"# username = None\n"
             u"#\n"
             u"# Example: University of Michigan\n"
             u"# [smtp_server]\n"
@@ -235,8 +245,17 @@ def create_sample_input_files(template_path,
 
 def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time."""
+    # Modify the default dialect to be strict.  This will trigger errors for
+    # things like unclosed quotes.
+    class StrictExcel(csv.excel):
+        """Strict version of default dialect."""
+
+        # pylint: disable=too-few-public-methods
+        strict = True
+
+    # Open file and read using strict dialect
     with database_path.open("r") as database_file:
-        reader = csv.DictReader(database_file)
+        reader = csv.DictReader(database_file, dialect=StrictExcel)
         for row in reader:
             yield row
 
