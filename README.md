@@ -280,12 +280,12 @@ TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
 MIME-Version: 1.0
-Content-Type: multipart/alternative; boundary="outer-boundary"
+Content-Type: multipart/alternative; boundary="boundary"
 
 This is a MIME-encoded message. If you are seeing this, your mail
 reader is old.
 
---outer-boundary
+--boundary
 Content-Type: text/plain; charset=us-ascii
 
 Hi, {{name}},
@@ -294,15 +294,8 @@ Your number is {{number}}.
 
 Sent by mailmerge https://github.com/awdeorio/mailmerge
 
---outer-boundary
-MIME-Version: 1.0
-Content-Type: multipart/related;
-  type="text/html"; start="<body@here>"; boundary="inner-boundary"
-
---inner-boundary
+--boundary
 Content-Type: text/html; charset=us-ascii
-Content-Disposition: inline
-Content-ID: <body@here>
 
 <html>
 <body>
