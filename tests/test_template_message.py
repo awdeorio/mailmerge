@@ -40,7 +40,8 @@ def test_simple(tmp_path):
     })
     assert sender == "from@test.com"
     assert recipients == ["to@test.com"]
-    assert "Hello world!" in message.as_string()
+    plaintext = message.get_payload()
+    assert "Hello world!" in plaintext
 
 
 def test_no_substitutions(tmp_path):
@@ -57,7 +58,8 @@ def test_no_substitutions(tmp_path):
     sender, recipients, message = template_message.render({})
     assert sender == "from@test.com"
     assert recipients == ["to@test.com"]
-    assert "Hello world!" in message.as_string()
+    plaintext = message.get_payload()
+    assert "Hello world!" in plaintext
 
 
 def test_multiple_substitutions(tmp_path):
@@ -79,8 +81,9 @@ def test_multiple_substitutions(tmp_path):
     })
     assert sender == "from@test.com"
     assert recipients == ["myself@mydomain.com"]
-    assert "Hi, Myself," in message.as_string()
-    assert "Your number is 17" in message.as_string()
+    plaintext = message.get_payload()
+    assert "Hi, Myself," in plaintext
+    assert "Your number is 17" in plaintext
 
 
 def test_bad_jinja(tmp_path):
@@ -118,9 +121,10 @@ def test_cc_bcc(tmp_path):
     ]
 
     # Make sure BCC recipients are *not* in the message
-    assert "BCC" not in message.as_string()
-    assert "secret@mydomain.com" not in message.as_string()
-    assert "Secret" not in message.as_string()
+    plaintext = message.get_payload()
+    assert "BCC" not in plaintext
+    assert "secret@mydomain.com" not in plaintext
+    assert "Secret" not in plaintext
 
 
 def test_html(tmp_path):
