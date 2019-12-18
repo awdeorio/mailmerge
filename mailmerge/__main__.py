@@ -247,13 +247,14 @@ def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time."""
     # Modify the default dialect to be strict.  This will trigger errors for
     # things like unclosed quotes.
-    class strictexcel(csv.excel):
+    class StrictExcel(csv.excel):
         """Strict version of default dialect."""
-        strict=True
+
+        strict = True
 
     # Open file and read using strict dialect
     with database_path.open("r") as database_file:
-        reader = csv.DictReader(database_file, dialect=strictexcel)
+        reader = csv.DictReader(database_file, dialect=StrictExcel)
         for row in reader:
             yield row
 
