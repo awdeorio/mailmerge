@@ -336,7 +336,7 @@ def test_bad_template(tmpdir):
     # Verify output
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
-    assert  stdout == ""
+    assert stdout == ""
     assert "Error in Jinja2 template" in stderr
     assert "error_not_in_database" in stderr
 
@@ -470,7 +470,7 @@ def test_attachment(tmpdir):
     assert output.stderr.decode("utf-8") == ""
     assert "Hello world" in output  # message
     assert "SGVsbG8gd29ybGQK" in output  # attachment1
-    assert "SGVsbG8gbWFpbG1lcmdlCg" in output # attachment2
+    assert "SGVsbG8gbWFpbG1lcmdlCg" in output  # attachment2
     assert "attached attachment1.txt" in output
     assert "attached attachment2.txt" in output
 

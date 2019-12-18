@@ -42,7 +42,6 @@ class SendmailClient(object):
                 "Unrecognized security type: {}".format(self.security)
             )
 
-
     def sendmail(self, sender, recipients, message):
         """Send email message.
 

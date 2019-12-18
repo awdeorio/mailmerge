@@ -518,7 +518,7 @@ def test_attachment_blank(tmpdir):
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
         FROM: from@test.com
-        ATTACHMENT: 
+        ATTACHMENT:
 
         Hello world
     """))
