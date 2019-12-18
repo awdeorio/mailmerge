@@ -841,6 +841,25 @@ def test_encoding_utf8(tmp_path):
     assert message.get_content_charset() == "utf-8"
 
 
+def test_encoding_is8859_1(tmp_path):
+    """Render a simple template with IS8859-1 encoding.
+
+    Mailmerge will coerce the encoding to UTF-8.
+    """
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        Hello L'Haÿ-les-Roses
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+    assert message.get_payload().strip() == "SGVsbG8gTCdIYcO/LWxlcy1Sb3Nlcw=="
+    assert message.get_charset() == "utf-8"
+    assert message.get_content_charset() == "utf-8"
+
+
 def test_encoding_mismatch(tmp_path):
     """Render a simple template that lies about its encoding.
 
