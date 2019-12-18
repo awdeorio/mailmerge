@@ -609,8 +609,9 @@ def test_utf8_database(tmpdir):
 def test_complicated(tmpdir):
     """Complicated end-to-end test.
 
-    Includes templating, TO, CC, BCC, UTF8 characters, emoji, attachments, and
-    Markdown.
+    Includes templating, TO, CC, BCC, UTF8 characters, emoji, attachments,
+    encoding mismatch (header is us-ascii, characters used are utf-8).  Also,
+    multipart message in plaintext and HTML.
     """
     # First attachment
     attachment1_path = Path(tmpdir/"attachment1.txt")
@@ -640,6 +641,7 @@ def test_complicated(tmpdir):
 
         {{message}}
 
+
         --boundary
         Content-Type: text/html; charset=us-ascii
 
@@ -650,7 +652,6 @@ def test_complicated(tmpdir):
         </html>
 
 
-        {{message}}
     """))
 
     # Database with utf-8, emoji, quotes, and commas.  Note that quotes are
@@ -680,7 +681,7 @@ def test_complicated(tmpdir):
     stderr = output.stderr.decode("utf-8")
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
     assert stderr == ""
-    assert textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent(u"""\
         >>> message 0
         TO: one@test.com
         FROM: from@test.com
@@ -699,6 +700,8 @@ def test_complicated(tmpdir):
 
         Hello, "world"
 
+
+
         --boundary
         MIME-Version: 1.0
         Content-Type: text/html; charset="us-ascii"
@@ -711,7 +714,6 @@ def test_complicated(tmpdir):
         </html>
 
 
-        Hello, "world"
         --boundary
         Content-Type: application/octet-stream; Name="attachment1.txt"
         MIME-Version: 1.0
@@ -748,7 +750,7 @@ def test_complicated(tmpdir):
         Content-Type: text/plain; charset="utf-8"
         Content-Transfer-Encoding: base64
 
-        TGHInWFtb24g8J+YgCBrbMOid2VuCg==
+        TGHInWFtb24g8J+YgCBrbMOid2VuCgoK
 
         --boundary
         MIME-Version: 1.0
@@ -756,7 +758,7 @@ def test_complicated(tmpdir):
         Content-Transfer-Encoding: base64
 
         PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5MYcidYW1vbiDwn5iAIGtsw6J3ZW48L3A+CiAgPC9ib2R5
-        Pgo8L2h0bWw+CgoKTGHInWFtb24g8J+YgCBrbMOid2Vu
+        Pgo8L2h0bWw+Cgo=
 
         --boundary
         Content-Type: application/octet-stream; Name="attachment1.txt"
@@ -779,4 +781,4 @@ def test_complicated(tmpdir):
         >>> attached attachment2.csv
         >>> sent message 1
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """) in stdout
+    """)
