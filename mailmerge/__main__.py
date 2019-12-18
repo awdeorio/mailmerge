@@ -65,8 +65,8 @@ except ImportError:
     type=click.Path(),
     help="configuration file name (mailmerge_server.conf)",
 )
-def cli(sample, dry_run, limit, no_limit,
-        database_path, template_path, config_path):
+def main(sample, dry_run, limit, no_limit,
+         database_path, template_path, config_path):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -136,7 +136,7 @@ def cli(sample, dry_run, limit, no_limit,
 if __name__ == "__main__":
     # No value for parameter, that's how click works
     # pylint: disable=no-value-for-parameter
-    cli()
+    main()
 
 
 def check_input_files(template_path, database_path, config_path, sample):
