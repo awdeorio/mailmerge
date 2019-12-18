@@ -660,7 +660,7 @@ def test_complicated(tmpdir):
     database_path.write_text(textwrap.dedent(u'''\
         email,message
         one@test.com,"Hello, ""world"""
-        Laȝamon <lam@test.com>,Laȝamon 😀 klâwen
+        Lazamon<two@test.com>,Laȝamon 😀 klâwen
     '''))
 
     # Simple unsecure server config
@@ -733,7 +733,7 @@ def test_complicated(tmpdir):
         >>> attached attachment2.csv
         >>> sent message 0
         >>> message 1
-        TO: =?utf-8?b?TGHInWFtb24gPGxhbUB0ZXN0LmNvbT4=?=
+        TO: Lazamon<two@test.com>
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
         MIME-Version: 1.0
