@@ -331,14 +331,10 @@ def test_markdown_encoding(tmp_path):
     assert html_part["Content-Transfer-Encoding"] == "base64"
 
     # Verify content, which is base64 encoded
-    plaintext = plaintext_part.get_payload().strip()
-    htmltext = html_part.get_payload().strip()
-    assert plaintext == "SGksIE15c2VsZiwKw6bDuMOl"
-    assert htmltext == (
-        "PGh0bWw+PGJvZHk+PHA+"
-        "SGksIE15c2VsZiwKw6bDuMOl"
-        "PC9wPjwvYm9keT48L2h0bWw+"
-    )
+    plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
+    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hi, Myself,\næøå"
+    assert htmltext == u"<html><body><p>Hi, Myself,\næøå</p></body></html>"
 
 
 Attachment = collections.namedtuple(
@@ -665,20 +661,20 @@ def test_utf8_template(tmp_path):
     assert recipients == ["to@test.com"]
 
     # Verify content
-    # NOTE: to decode a base46-encoded string:
-    # print((str(base64.b64decode(payload), "utf-8")))
-    payload = message.get_payload().replace("\n", "")
-    assert payload == (
-        "RnJvbSB0aGUgVGFnZWxpZWQgb2YgV29sZnJhbSB2b24gRXNjaGVuYmFjaCAo"
-        "TWlkZGxlIEhpZ2ggR2VybWFuKToKClPDrm5lIGtsw6J3ZW4gZHVyaCBkaWUg"
-        "d29sa2VuIHNpbnQgZ2VzbGFnZW4sCmVyIHN0w65nZXQgw7tmIG1pdCBncsO0"
-        "emVyIGtyYWZ0LAppY2ggc2loIGluIGdyw6J3ZW4gdMOkZ2Vsw65jaCBhbHMg"
-        "ZXIgd2lsIHRhZ2VuLApkZW4gdGFjLCBkZXIgaW0gZ2VzZWxsZXNjaGFmdApl"
-        "cndlbmRlbiB3aWwsIGRlbSB3ZXJkZW4gbWFuLApkZW4gaWNoIG1pdCBzb3Jn"
-        "ZW4gw65uIHZlcmxpZXouCmljaCBicmluZ2UgaW4gaGlubmVuLCBvYiBpY2gg"
-        "a2FuLgpzw65uIHZpbCBtYW5lZ2l1IHR1Z2VudCBtaWNoeiBsZWlzdGVuIGhp"
-        "ZXouCgpodHRwOi8vd3d3LmNvbHVtYmlhLmVkdS9+ZmRjL3V0Zjgv"
-    )
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == textwrap.dedent(u"""\
+        From the Tagelied of Wolfram von Eschenbach (Middle High German):
+
+        Sîne klâwen durh die wolken sint geslagen,
+        er stîget ûf mit grôzer kraft,
+        ich sih in grâwen tägelîch als er wil tagen,
+        den tac, der im geselleschaft
+        erwenden wil, dem werden man,
+        den ich mit sorgen în verliez.
+        ich bringe in hinnen, ob ich kan.
+        sîn vil manegiu tugent michz leisten hiez.
+
+        http://www.columbia.edu/~fdc/utf8/""")
 
 
 def test_utf8_database(tmp_path):
@@ -716,9 +712,11 @@ def test_utf8_database(tmp_path):
     # Verify content
     # NOTE: to decode a base46-encoded string:
     # print((str(base64.b64decode(payload), "utf-8")))
-    payload = message.get_payload()
-    payload = message.get_payload().replace("\n", "")
-    assert payload == 'SGksIExhyJ1hbW9uLAoKWW91ciBudW1iZXIgaXMgMTcu'
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == textwrap.dedent(u"""\
+        Hi, Laȝamon,
+
+        Your number is 17.""")
 
 
 def test_emoji(tmp_path):
@@ -729,7 +727,7 @@ def test_emoji(tmp_path):
         SUBJECT: Testing mailmerge
         FROM: test@test.com
 
-        Hi \xf0\x9f\x98\x80
+        Hi 😀
     """))  # grinning face emoji
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
@@ -739,8 +737,8 @@ def test_emoji(tmp_path):
     assert message["Content-Transfer-Encoding"] == "base64"
 
     # Verify content
-    plaintext = message.get_payload().strip()
-    assert plaintext == "SGkgw7DCn8KYwoA="
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hi 😀"
 
 
 def test_emoji_markdown(tmp_path):
@@ -753,7 +751,7 @@ def test_emoji_markdown(tmp_path):
         CONTENT-TYPE: text/markdown
 
         ```
-        emoji_string = \xf0\x9f\x98\x80
+        emoji_string = 😀
         ```
             """))  # grinning face emoji
     template_message = TemplateMessage(template_path)
@@ -770,13 +768,13 @@ def test_emoji_markdown(tmp_path):
     assert html_part["Content-Transfer-Encoding"] == "base64"
 
     # Verify content, which is base64 encoded grinning face emoji
-    plaintext = plaintext_part.get_payload().strip()
-    htmltext = html_part.get_payload().strip().replace("\n", "")
-    assert plaintext == "YGBgCmVtb2ppX3N0cmluZyA9IMOwwp/CmMKACmBgYA=="
+    plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
+    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u'```\nemoji_string = \U0001f600\n```'
     assert htmltext == (
-        "PGh0bWw+PGJvZHk+PHA+"
-        "PGNvZGU+ZW1vamlfc3RyaW5nID0gw7DCn8KYwoA8L2NvZGU+"
-        "PC9wPjwvYm9keT48L2h0bWw+"
+        u"<html><body><p><code>"
+        u"emoji_string = \U0001f600"
+        u"</code></p></body></html>"
     )
 
 
@@ -797,7 +795,7 @@ def test_emoji_database(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
-        "emoji": u"\xf0\x9f\x98\x80"  # grinning face
+        "emoji": u"😀"  # grinning face
     })
 
     # Verify encoding
@@ -805,8 +803,8 @@ def test_emoji_database(tmp_path):
     assert message["Content-Transfer-Encoding"] == "base64"
 
     # Verify content
-    plaintext = message.get_payload().strip()
-    assert plaintext == "SGkgw7DCn8KYwoA="
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hi 😀"
 
 
 def test_encoding_us_ascii(tmp_path):
@@ -820,9 +818,9 @@ def test_encoding_us_ascii(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
-    assert message.get_payload() == "Hello world"
     assert message.get_charset() == "us-ascii"
     assert message.get_content_charset() == "us-ascii"
+    assert message.get_payload() == "Hello world"
 
 
 def test_encoding_utf8(tmp_path):
@@ -836,9 +834,10 @@ def test_encoding_utf8(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
-    assert message.get_payload().strip() == u"SGVsbG8gTGHInWFtb24="
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hello Laȝamon"
 
 
 def test_encoding_is8859_1(tmp_path):
@@ -855,9 +854,10 @@ def test_encoding_is8859_1(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
-    assert message.get_payload().strip() == "SGVsbG8gTCdIYcO/LWxlcy1Sb3Nlcw=="
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hello L'Haÿ-les-Roses"
 
 
 def test_encoding_mismatch(tmp_path):
@@ -875,9 +875,10 @@ def test_encoding_mismatch(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
-    assert message.get_payload().strip() == "SGVsbG8gTGHInWFtb24="
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
+    plaintext = message.get_payload(decode=True).decode("utf-8")
+    assert plaintext == u"Hello Laȝamon"
 
 
 def test_encoding_multipart(tmp_path):
@@ -923,19 +924,17 @@ def test_encoding_multipart(tmp_path):
     assert plaintext_part.get_charset() == "utf-8"
     assert plaintext_part.get_content_charset() == "utf-8"
     assert plaintext_part.get_content_type() == "text/plain"
-    plaintext = plaintext_part.get_payload()
+    plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     plaintext = plaintext.strip()
-    assert plaintext == "SGVsbG8gTGHInWFtb24K"
+    assert plaintext == u"Hello Laȝamon"
 
     # Verify html part
     assert html_part.get_charset() == "utf-8"
     assert html_part.get_content_charset() == "utf-8"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload()
-    assert htmltext.strip() == (
-        "PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5IZWxsbyBMYcidYW1vbjwvcD4KICA8L2JvZHk+"
-        "CjwvaHRt\nbD4="
-    )
+    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
+    assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
 
 
 def test_encoding_multipart_mismatch(tmp_path):
@@ -984,16 +983,14 @@ def test_encoding_multipart_mismatch(tmp_path):
     assert plaintext_part.get_charset() == "utf-8"
     assert plaintext_part.get_content_charset() == "utf-8"
     assert plaintext_part.get_content_type() == "text/plain"
-    plaintext = plaintext_part.get_payload()
+    plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     plaintext = plaintext.strip()
-    assert plaintext == "SGVsbG8gTGHInWFtb24K"
+    assert plaintext == u"Hello Laȝamon"
 
     # Verify html part
     assert html_part.get_charset() == "utf-8"
     assert html_part.get_content_charset() == "utf-8"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload()
-    assert htmltext.strip() == (
-        "PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5IZWxsbyBMYcidYW1vbjwvcD4KICA8L2JvZHk+"
-        "CjwvaHRt\nbD4="
-    )
+    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
+    assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
