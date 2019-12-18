@@ -694,7 +694,8 @@ def test_complicated(tmpdir):
         "Pgo8L2h0bWw+Cgo=",
         "Pgo8L2h0bWw+Cg==",
     )
-    stdout = stdout.replace("\n\n\n", "\n\n")
+    stdout = stdout.replace('Hello, "world"\n\n\n', 'Hello, "world"\n')
+    stdout = stdout.replace('</html>\n\n', '</html>\n')
 
     # Verify stdout and stderr after above corrections
     assert stderr == ""
