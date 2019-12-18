@@ -144,7 +144,8 @@ def test_stdout_utf8(tmpdir):
         >>> sent message 0
         >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """)
+    """)  # noqa: E501
+
 
 def test_no_options(tmpdir):
     """Verify help message when called with no options.

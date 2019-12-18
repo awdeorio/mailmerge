@@ -249,8 +249,8 @@ def read_csv_database(database_path):
     # things like unclosed quotes.
     class StrictExcel(csv.excel):
         """Strict version of default dialect."""
-        # pylint: disable=too-few-public-methods
 
+        # pylint: disable=too-few-public-methods
         strict = True
 
     # Open file and read using strict dialect
