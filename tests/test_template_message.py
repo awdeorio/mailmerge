@@ -856,6 +856,64 @@ def test_encoding_mismatch(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({})
-    assert message.get_payload().strip() == u"SGVsbG8gTGHInWFtb24="
+    assert message.get_payload().strip() == "SGVsbG8gTGHInWFtb24="
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
+
+
+def test_encoding_multipart(tmp_path):
+    """Render a utf-8 template with multipart encoding."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        Content-Type: text/plain; charset=utf-8
+
+        Hello Laȝamon
+
+        --boundary
+        Content-Type: text/html; charset=utf-8
+
+        <html>
+          <body>
+            <p>Hello Laȝamon</p>
+          </body>
+        </html>
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Should be multipart: plaintext and HTML
+    assert message.is_multipart()
+    parts = message.get_payload()
+    assert len(parts) == 2
+    plaintext_part, html_part = parts
+
+    # Verify plaintext part
+    assert plaintext_part.get_charset() == "utf-8"
+    assert plaintext_part.get_content_charset() == "utf-8"
+    assert plaintext_part.get_content_type() == "text/plain"
+    plaintext = plaintext_part.get_payload()
+    plaintext = plaintext.strip()
+    assert plaintext == "SGVsbG8gTGHInWFtb24K"
+
+    # Verify html part
+    assert html_part.get_charset() == "utf-8"
+    assert html_part.get_content_charset() == "utf-8"
+    assert html_part.get_content_type() == "text/html"
+    htmltext = html_part.get_payload()
+    assert htmltext.strip() == (
+        "PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5IZWxsbyBMYcidYW1vbjwvcD4KICA8L2JvZHk+"
+        "CjwvaHRt\nbD4="
+    )
