@@ -122,9 +122,9 @@ def main(sample, dry_run, limit, no_limit,
     # Hints for user
     if not no_limit:
         print(
-            ">>> Limit was {} messages.  "
+            ">>> Limit was {limit} message{pluralizer}.  "
             "To remove the limit, use the --no-limit option."
-            .format(limit)
+            .format(limit=limit, pluralizer=("" if limit == 1 else "s"))
         )
     if dry_run:
         print(
