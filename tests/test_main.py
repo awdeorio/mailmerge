@@ -186,8 +186,10 @@ def test_sample_clobber_template(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_template.txt").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_template.txt" in stderr
 
 
 def test_sample_clobber_database(tmpdir):
@@ -195,8 +197,10 @@ def test_sample_clobber_database(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_database.csv").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_database.csv" in stderr
 
 
 def test_sample_clobber_config(tmpdir):
@@ -204,8 +208,10 @@ def test_sample_clobber_config(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_server.conf").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_server.conf" in stderr
 
 
 def test_defaults(tmpdir):

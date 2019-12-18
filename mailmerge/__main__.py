@@ -175,17 +175,10 @@ def check_input_files(template_path, database_path, config_path, sample):
 
 
 def create_sample_input_files(template_path, database_path, config_path):
-    """Create sample template email, database and server config."""
-    if template_path.exists():
-        print("Error: file exists: {}".format(template_path))
-        sys.exit(1)
-    if database_path.exists():
-        print("Error: file exists: {}".format(database_path))
-        sys.exit(1)
-    if config_path.exists():
-        print("Error: file exists: {}".format(config_path))
-        sys.exit(1)
-
+    """Create sample template, database and server config."""
+    for path in [template_path, database_path, config_path]:
+        if path.exists():
+            sys.exit("Error: file exists: {}".format(path))
     with template_path.open("w") as template_file:
         template_file.write(textwrap.dedent(u"""\
             TO: {{email}}
