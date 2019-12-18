@@ -628,6 +628,26 @@ def test_complicated(tmpdir):
         BCC: bcc1@test.com, bcc2@test.com
         ATTACHMENT: attachment1.txt
         ATTACHMENT: attachment2.csv
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        Content-Type: text/plain; charset=us-ascii
+
+        {{message}}
+
+        --boundary
+        Content-Type: text/html; charset=us-ascii
+
+        <html>
+          <body>
+            <p>{{message}}</p>
+          </body>
+        </html>
+
 
         {{message}}
     """))
@@ -654,46 +674,63 @@ def test_complicated(tmpdir):
     with tmpdir.as_cwd():
         output = sh.mailmerge()
 
-    # Decode output, there should be no stderr
+    # Verify output, replacing Date with a constant.
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
     assert stderr == ""
-
-    # Verify headers.  They may print in a different order, so verify them one
-    # at a time.
-    assert """Content-Type: multipart/alternative; boundary="==""" in stdout
-    assert "MIME-Version: 1.0" in stdout
-    assert "TO: one@test.com" in stdout
-    assert "CC: cc1@test.com, cc2@test.com" in stdout
-    assert "FROM: from@test.com" in stdout
-    assert "Content-Transfer-Encoding: 7bit" in stdout
-    assert "Date: " in stdout
-
-    # Verify body.  Replace randomly generated boundary IDs so that they match
-    # hardcoded expected output.
-    stdout = re.sub(r"====.+==", "====boundary==", stdout, re.MULTILINE)
     assert textwrap.dedent(u"""\
-        --====boundary==
-        Content-Type: text/plain; charset="us-ascii"
+        >>> message 0
+        TO: one@test.com
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
         MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="us-ascii"
         Content-Transfer-Encoding: 7bit
-        
+
         Hello, "world"
-        --====boundary==
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/html; charset="us-ascii"
+        Content-Transfer-Encoding: 7bit
+
+        <html>
+          <body>
+            <p>Hello, "world"</p>
+          </body>
+        </html>
+
+
+        Hello, "world"
+        --boundary
         Content-Type: application/octet-stream; Name="attachment1.txt"
         MIME-Version: 1.0
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment1.txt"
-        
+
         SGVsbG8gd29ybGQK
-        
-        --====boundary==
+
+        --boundary
         Content-Type: application/octet-stream; Name="attachment2.csv"
         MIME-Version: 1.0
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment2.csv"
-        
+
         aGVsbG8sbWFpbG1lcmdlCg==
-        
-        --====boundary==--
+
+        --boundary--
+        >>> attached attachment1.txt
+        >>> attached attachment2.csv
+        >>> sent message 0
+        >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """) in stdout
