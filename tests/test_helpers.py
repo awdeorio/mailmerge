@@ -1,3 +1,5 @@
+# coding=utf-8
+# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for helper functions.
 
