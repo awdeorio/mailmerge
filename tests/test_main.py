@@ -142,7 +142,7 @@ def test_stdout_utf8(tmpdir):
         TGHInWFtb24g8J+YgCBrbMOid2Vu
 
         >>> sent message 0
-        >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
 
@@ -221,7 +221,7 @@ def test_defaults(tmpdir):
         output = sh.mailmerge()
     assert output.stderr.decode("utf-8") == ""
     assert "sent message 0" in output
-    assert "Limit was 1 messages" in output
+    assert "Limit was 1 message" in output
     assert "This was a dry run" in output
 
 
@@ -804,3 +804,39 @@ def test_complicated(tmpdir):
         >>> sent message 1
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
+
+
+def test_english(tmpdir):
+    """Verify correct English, message vs. messages."""
+    
+    # Blank message
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+    """))
+
+    # Database with 2 entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        dummy
+        1
+        2
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge with several limits
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--limit", "0")
+        assert "Limit was 0 messages." in output
+        output = sh.mailmerge("--limit", "1")
+        assert "Limit was 1 message." in output
+        output = sh.mailmerge("--limit", "2")
+        assert "Limit was 2 messages." in output
