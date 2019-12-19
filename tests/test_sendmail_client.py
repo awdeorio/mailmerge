@@ -4,7 +4,6 @@ Tests for SendmailClient.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
-import configparser
 import smtplib
 import pytest
 import future.backports.email as email
@@ -307,16 +306,16 @@ def test_missing_username(tmp_path):
 
 @mock.patch('smtplib.SMTP_SSL')
 @mock.patch('getpass.getpass')
-def test_smtp_error(mock_getpass, mock_SMTP_SSL, tmp_path):
-    """Connection is closed on error."""
+def test_smtp_authentication_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+    """Login failure."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
-        host = smtp.mail.umich.edu
+        host = smtp.gmail.com
         port = 465
         security = SSL/TLS
-        username = YOUR_USERNAME_HERE
+        username = awdeorio
     """))
 
     # Simple template
@@ -329,15 +328,38 @@ def test_smtp_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     # Configure SMTP_SSL to raise an exception
     mock_SMTP_SSL.return_value.__enter__.return_value.login = mock.Mock(
         side_effect=smtplib.SMTPAuthenticationError(
-            code=534,
-            msg="Error from mock",
+            code=535,
+            msg=(
+                "5.7.8 Username and Password not accepted. Learn more at "
+                "5.7.8  https://support.google.com/mail/?p=BadCredentials "
+                "xyzxyz.32 - gsmtp"
+            )
         )
     )
 
     # Send a message
-    with pytest.raises(smtplib.SMTPAuthenticationError):
+    with pytest.raises(MailmergeError) as err:
         sendmail_client.sendmail(
             sender="test@test.com",
             recipients=["test@test.com"],
             message=message,
         )
+
+    assert "smtp.gmail.com:465 failed to authenticate user 'awdeorio'" in\
+        str(err.value)
+    assert "535" in str(err.value)
+    assert (
+        "5.7.8 Username and Password not accepted. Learn more at "
+        "5.7.8  https://support.google.com/mail/?p=BadCredentials "
+        "xyzxyz.32 - gsmtp"
+    ) in str(err.value)
+
+
+def test_smtp_error():
+    """Failure during SMTP protocol."""
+    assert False, "IMPLEMENT ME"
+
+
+def test_socket_error():
+    """Failed socket connection."""
+    assert False, "IMPLEMENT ME"
