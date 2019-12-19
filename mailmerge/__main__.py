@@ -244,8 +244,7 @@ def read_csv_database(database_path):
     """
     class StrictExcel(csv.excel):
         # Our helper class is really simple
-        # pylint: disable=too-few-public-methods
-        # pylint: disable=bad-option-value, missing-class-docstring
+        # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
     with database_path.open("r") as database_file:
