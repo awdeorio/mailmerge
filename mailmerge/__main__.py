@@ -5,15 +5,11 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
-import socket
-import configparser
-import smtplib
 import textwrap
-import jinja2
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
-from .utils import MailmergeError
+from .exceptions import MailmergeError
 
 # Python 2 pathlib support requires backport
 try:
@@ -101,21 +97,6 @@ def main(sample, dry_run, limit, no_limit,
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i + 1))
-    except jinja2.exceptions.TemplateError as err:
-        sys.exit(">>> Error in Jinja2 template: {}".format(err))
-    except csv.Error as err:
-        sys.exit(">>> Error reading CSV file: {}".format(err))
-    except smtplib.SMTPAuthenticationError as err:
-        sys.exit(">>> Authentication error: {}".format(err))
-    except configparser.Error as err:
-        sys.exit(
-            ">>> Error reading config file {filename}: {message}"
-            .format(filename=config_path, message=err)
-        )
-    except smtplib.SMTPException as err:
-        sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
-    except socket.error:
-        sys.exit(">>> Error connecting to server")
     except MailmergeError as err:
         sys.exit(">>> {}".format(err))
 
@@ -249,8 +230,13 @@ def read_csv_database(database_path):
 
     with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
-        for row in reader:
-            yield row
+        try:
+            for row in reader:
+                yield row
+        except csv.Error as err:
+            raise MailmergeError(
+                "{}:{}: {}".format(database_path, reader.line_num, err)
+            )
 
 
 def enumerate_limit(iterable, limit):
