@@ -445,18 +445,15 @@ def test_bad_config(tmpdir):
     # Normal template
     template_path = Path(tmpdir/"template.txt")
     template_path.write_text(textwrap.dedent(u"""\
-        TO: {{email}}
-        SUBJECT: Testing mailmerge
+        TO: to@test.com
         FROM: from@test.com
-
-        Hi {{name}},
     """))
 
     # Normal database
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
-        email,name
-        to@test.com,Bob
+        dummy
+        asdf
     """))
 
     # Server config is missing host
@@ -478,7 +475,7 @@ def test_bad_config(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error reading config file" in stderr
+    assert "server.conf: No option 'host' in section: 'smtp_server'" in stderr
 
 
 def test_attachment(tmpdir):

@@ -6,7 +6,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 from __future__ import print_function
 import sys
 import socket
-import configparser
 import smtplib
 import textwrap
 import click
@@ -102,11 +101,6 @@ def main(sample, dry_run, limit, no_limit,
             print(">>> sent message {}".format(i + 1))
     except smtplib.SMTPAuthenticationError as err:
         sys.exit(">>> Authentication error: {}".format(err))
-    except configparser.Error as err:
-        sys.exit(
-            ">>> Error reading config file {filename}: {message}"
-            .format(filename=config_path, message=err)
-        )
     except smtplib.SMTPException as err:
         sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
     except socket.error:

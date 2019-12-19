@@ -10,6 +10,7 @@ import pytest
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge.sendmail_client import SendmailClient
+from mailmerge.utils import MailmergeError
 
 try:
     from unittest import mock  # Python 3
@@ -132,7 +133,7 @@ def test_bad_config_key(tmp_path):
         [smtp_server]
         badkey = open-smtp.example.com
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=True)
 
 
@@ -146,7 +147,7 @@ def test_security_error(tmp_path):
         security = bad_value
         username = YOUR_USERNAME_HERE
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=False)
 
 
@@ -300,7 +301,7 @@ def test_missing_username(tmp_path):
         port = 465
         security = SSL/TLS
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=False)
 
 
