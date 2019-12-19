@@ -8,6 +8,7 @@ import sys
 import socket
 import configparser
 import smtplib
+import textwrap
 import jinja2
 import click
 from .template_message import TemplateMessage
@@ -64,8 +65,8 @@ except ImportError:
     type=click.Path(),
     help="configuration file name (mailmerge_server.conf)",
 )
-def cli(sample, dry_run, limit, no_limit,
-        database_path, template_path, config_path):
+def main(sample, dry_run, limit, no_limit,
+         database_path, template_path, config_path):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -95,11 +96,11 @@ def cli(sample, dry_run, limit, no_limit,
         for i, row in enumerate_limit(csv_database, limit):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(i))
+            print(">>> message {}".format(i + 1))
             print(message.as_string())
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(i))
+            print(">>> sent message {}".format(i + 1))
     except jinja2.exceptions.TemplateError as err:
         sys.exit(">>> Error in Jinja2 template: {}".format(err))
     except csv.Error as err:
@@ -121,9 +122,9 @@ def cli(sample, dry_run, limit, no_limit,
     # Hints for user
     if not no_limit:
         print(
-            ">>> Limit was {} messages.  "
+            ">>> Limit was {limit} message{pluralizer}.  "
             "To remove the limit, use the --no-limit option."
-            .format(limit)
+            .format(limit=limit, pluralizer=("" if limit == 1 else "s"))
         )
     if dry_run:
         print(
@@ -135,125 +136,117 @@ def cli(sample, dry_run, limit, no_limit,
 if __name__ == "__main__":
     # No value for parameter, that's how click works
     # pylint: disable=no-value-for-parameter
-    cli()
+    main()
 
 
 def check_input_files(template_path, database_path, config_path, sample):
     """Check if input files are present and hint the user."""
     if sample:
-        create_sample_input_files(
-            template_path,
-            database_path,
-            config_path,
-        )
+        create_sample_input_files(template_path, database_path, config_path)
         sys.exit(0)
+
     if not template_path.exists():
-        sys.exit(
-            "Error: can't find template {template_path}\n"
-            "Create a sample (--sample) or specify a file (--template)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(template_path=template_path)
-        )
+        sys.exit(textwrap.dedent(u"""\
+            Error: can't find template {template_path}
+
+            Create a sample (--sample) or specify a file (--template)
+
+            See https://github.com/awdeorio/mailmerge for examples.\
+        """.format(template_path=template_path)))
+
     if not database_path.exists():
-        sys.exit(
-            "Error: can't find database {database_path}\n"
-            "Create a sample (--sample) or specify a file (--database)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(database_path=database_path)
-        )
+        sys.exit(textwrap.dedent(u"""\
+            Error: can't find database {database_path}
+
+            Create a sample (--sample) or specify a file (--database)
+
+            See https://github.com/awdeorio/mailmerge for examples.\
+        """.format(database_path=database_path)))
+
     if not config_path.exists():
-        sys.exit(
-            "Error: can't find config {config_path}\n"
-            "Create a sample (--sample) or specify a file (--config)\n"
-            "\n"
-            "See https://github.com/awdeorio/mailmerge for examples.\n"
-            .format(config_path=config_path)
-        )
+        sys.exit(textwrap.dedent(u"""\
+            Error: can't find config {config_path}
+
+            Create a sample (--sample) or specify a file (--config)
+
+            See https://github.com/awdeorio/mailmerge for examples.\
+        """.format(config_path=config_path)))
 
 
-def create_sample_input_files(template_path,
-                              database_path,
-                              config_path):
-    """Create sample template email and database."""
-    print("Creating sample template email {}".format(template_path))
-    if template_path.exists():
-        print("Error: file exists: {}".format(template_path))
-        sys.exit(1)
+def create_sample_input_files(template_path, database_path, config_path):
+    """Create sample template, database and server config."""
+    for path in [template_path, database_path, config_path]:
+        if path.exists():
+            sys.exit("Error: file exists: {}".format(path))
     with template_path.open("w") as template_file:
-        template_file.write(
-            u"TO: {{email}}\n"
-            u"SUBJECT: Testing mailmerge\n"
-            u"FROM: My Self <myself@mydomain.com>\n"
-            u"\n"
-            u"Hi, {{name}},\n"
-            u"\n"
-            u"Your number is {{number}}.\n"
-        )
-    print("Creating sample database {}".format(database_path))
-    if database_path.exists():
-        print("Error: file exists: {}".format(database_path))
-        sys.exit(1)
+        template_file.write(textwrap.dedent(u"""\
+            TO: {{email}}
+            SUBJECT: Testing mailmerge
+            FROM: My Self <myself@mydomain.com>
+
+            Hi, {{name}},
+
+            Your number is {{number}}.
+        """))
     with database_path.open("w") as database_file:
-        database_file.write(
-            u'email,name,number\n'
-            u'myself@mydomain.com,"Myself",17\n'
-            u'bob@bobdomain.com,"Bob",42\n'
-        )
-    print("Creating sample config file {}".format(config_path))
-    if config_path.exists():
-        print("Error: file exists: {}".format(config_path))
-        sys.exit(1)
+        database_file.write(textwrap.dedent(u"""\
+            email,name,number
+            myself@mydomain.com,"Myself",17
+            bob@bobdomain.com,"Bob",42
+        """))
     with config_path.open("w") as config_file:
-        config_file.write(
-            u"# Example: GMail\n"
-            u"[smtp_server]\n"
-            u"host = smtp.gmail.com\n"
-            u"port = 465\n"
-            u"security = SSL/TLS\n"
-            u"username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: Wide open\n"
-            u"# [smtp_server]\n"
-            u"# host = open-smtp.example.com\n"
-            u"# port = 25\n"
-            u"#\n"
-            u"# Example: University of Michigan\n"
-            u"# [smtp_server]\n"
-            u"# host = smtp.mail.umich.edu\n"
-            u"# port = 465\n"
-            u"# security = SSL/TLS\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: University of Michigan EECS Dept., with STARTTLS security\n"  # noqa: E501
-            u"# [smtp_server]\n"
-            u"# host = newman.eecs.umich.edu\n"
-            u"# port = 25\n"
-            u"# security = STARTTLS\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-            u"#\n"
-            u"# Example: University of Michigan EECS Dept., with no encryption\n"  # noqa: E501
-            u"# [smtp_server]\n"
-            u"# host = newman.eecs.umich.edu\n"
-            u"# port = 25\n"
-            u"# security = Never\n"
-            u"# username = YOUR_USERNAME_HERE\n"
-        )
-    print("Edit these files, and then run mailmerge again")
+        config_file.write(textwrap.dedent(u"""\
+            # Example: GMail
+            [smtp_server]
+            host = smtp.gmail.com
+            port = 465
+            security = SSL/TLS
+            username = YOUR_USERNAME_HERE
+
+            # Example: SSL/TLS
+            # [smtp_server]
+            # host = smtp.mail.umich.edu
+            # port = 465
+            # security = SSL/TLS
+            # username = YOUR_USERNAME_HERE
+
+            # Example: STARTTLS security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+            # security = STARTTLS
+            # username = YOUR_USERNAME_HERE
+
+            # Example: No security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+        """))
+    print(textwrap.dedent(u"""\
+        Created sample template email "{template_path}"
+        Created sample database "{database_path}"
+        Created sample config file "{config_path}"
+
+        Edit these files, then run mailmerge again.\
+    """.format(
+        template_path=template_path,
+        database_path=database_path,
+        config_path=config_path,
+    )))
 
 
 def read_csv_database(database_path):
-    """Read database CSV file, providing one line at a time."""
-    # Modify the default dialect to be strict.  This will trigger errors for
-    # things like unclosed quotes.
-    class StrictExcel(csv.excel):
-        """Strict version of default dialect."""
+    """Read database CSV file, providing one line at a time.
 
-        # pylint: disable=too-few-public-methods
+    We'll use a class to modify the csv library's default dialect ('excel') to
+    enable strict syntax checking.  This will trigger errors for things like
+    unclosed quotes.
+    """
+    class StrictExcel(csv.excel):
+        # Our helper class is really simple
+        # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
-    # Open file and read using strict dialect
     with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         for row in reader:

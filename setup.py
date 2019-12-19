@@ -52,7 +52,7 @@ setup(
     # Python command line utilities will be installed in a PATH-accessible bin/
     entry_points={
         'console_scripts': [
-            'mailmerge = mailmerge.__main__:cli',
+            'mailmerge = mailmerge.__main__:main',
         ]
     },
 )

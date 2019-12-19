@@ -66,7 +66,7 @@ def test_stdout(tmpdir):
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: myself@mydomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -77,8 +77,8 @@ def test_stdout(tmpdir):
         Hi, Myself,
 
         Your number is 17.
-        >>> sent message 0
-        >>> message 1
+        >>> sent message 1
+        >>> message 2
         TO: bob@bobdomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -89,7 +89,7 @@ def test_stdout(tmpdir):
         Hi, Bob,
 
         Your number is 42.
-        >>> sent message 1
+        >>> sent message 2
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
         """)
 
@@ -132,7 +132,7 @@ def test_stdout_utf8(tmpdir):
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: to@test.com
         FROM: from@test.com
         MIME-Version: 1.0
@@ -141,8 +141,8 @@ def test_stdout_utf8(tmpdir):
 
         TGHInWFtb24g8J+YgCBrbMOid2Vu
 
-        >>> sent message 0
-        >>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+        >>> sent message 1
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
 
@@ -176,9 +176,9 @@ def test_sample(tmpdir):
         assert Path("mailmerge_database.csv").exists()
         assert Path("mailmerge_server.conf").exists()
     assert output.stderr.decode("utf-8") == ""
-    assert "Creating sample template" in output
-    assert "Creating sample database" in output
-    assert "Creating sample config" in output
+    assert "Created sample template" in output
+    assert "Created sample database" in output
+    assert "Created sample config" in output
 
 
 def test_sample_clobber_template(tmpdir):
@@ -186,8 +186,10 @@ def test_sample_clobber_template(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_template.txt").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_template.txt" in stderr
 
 
 def test_sample_clobber_database(tmpdir):
@@ -195,8 +197,10 @@ def test_sample_clobber_database(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_database.csv").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_database.csv" in stderr
 
 
 def test_sample_clobber_config(tmpdir):
@@ -204,8 +208,10 @@ def test_sample_clobber_config(tmpdir):
     with tmpdir.as_cwd():
         Path("mailmerge_server.conf").touch()
         output = sh.mailmerge("--sample", _ok_code=1)
-    assert output.stderr.decode("utf-8") == ""
-    assert "Error: file exists" in output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Error: file exists: mailmerge_server.conf" in stderr
 
 
 def test_defaults(tmpdir):
@@ -214,8 +220,8 @@ def test_defaults(tmpdir):
         sh.mailmerge("--sample")
         output = sh.mailmerge()
     assert output.stderr.decode("utf-8") == ""
-    assert "sent message 0" in output
-    assert "Limit was 1 messages" in output
+    assert "sent message 1" in output
+    assert "Limit was 1 message" in output
     assert "This was a dry run" in output
 
 
@@ -295,8 +301,8 @@ def test_limit_combo(tmpdir):
         "--limit", "1",
     )
     assert output.stderr.decode("utf-8") == ""
-    assert "sent message 0" in output
     assert "sent message 1" in output
+    assert "sent message 2" in output
     assert "Limit was 1" not in output
 
 
@@ -700,7 +706,7 @@ def test_complicated(tmpdir):
     # Verify stdout and stderr after above corrections
     assert stderr == ""
     assert stdout == textwrap.dedent(u"""\
-        >>> message 0
+        >>> message 1
         TO: one@test.com
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -749,8 +755,8 @@ def test_complicated(tmpdir):
         --boundary--
         >>> attached attachment1.txt
         >>> attached attachment2.csv
-        >>> sent message 0
-        >>> message 1
+        >>> sent message 1
+        >>> message 2
         TO: Lazamon<two@test.com>
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -795,6 +801,41 @@ def test_complicated(tmpdir):
         --boundary--
         >>> attached attachment1.txt
         >>> attached attachment2.csv
-        >>> sent message 1
+        >>> sent message 2
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
+
+
+def test_english(tmpdir):
+    """Verify correct English, message vs. messages."""
+    # Blank message
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+    """))
+
+    # Database with 2 entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        dummy
+        1
+        2
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge with several limits
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--limit", "0")
+        assert "Limit was 0 messages." in output
+        output = sh.mailmerge("--limit", "1")
+        assert "Limit was 1 message." in output
+        output = sh.mailmerge("--limit", "2")
+        assert "Limit was 2 messages." in output
