@@ -59,7 +59,12 @@ class TemplateMessage(object):
 
     def render(self, context):
         """Return rendered message object."""
-        raw_message = self.template.render(context)
+        try:
+            raw_message = self.template.render(context)
+        except jinja2.exceptions.TemplateError as err:
+            raise utils.MailmergeError(
+                "{}: {}".format(self.template_path, err)
+            )
         self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()

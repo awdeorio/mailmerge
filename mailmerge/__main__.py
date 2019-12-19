@@ -101,8 +101,6 @@ def main(sample, dry_run, limit, no_limit,
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i + 1))
-    except jinja2.exceptions.TemplateError as err:
-        sys.exit(">>> Error in Jinja2 template: {}".format(err))
     except csv.Error as err:
         sys.exit(">>> Error reading CSV file: {}".format(err))
     except smtplib.SMTPAuthenticationError as err:

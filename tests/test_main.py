@@ -396,8 +396,7 @@ def test_bad_template(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error in Jinja2 template" in stderr
-    assert "error_not_in_database" in stderr
+    assert "template.txt: 'error_not_in_database' is undefined" in stderr
 
 
 def test_bad_database(tmpdir):
