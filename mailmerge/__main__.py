@@ -9,6 +9,8 @@ import socket
 import configparser
 import smtplib
 import textwrap
+import logging
+import hashlib
 import jinja2
 import click
 from .template_message import TemplateMessage
@@ -77,12 +79,29 @@ def main(sample, dry_run, limit, no_limit,
     # of local variables.
     # pylint: disable=too-many-arguments, too-many-locals
 
+    # Configure logging
+    logging.basicConfig(
+        filename="mailmerge.log",
+        filemode='a',
+        level=logging.DEBUG,
+    )
+    logging.debug("mailmerge starts")
+    logging.debug(" ".join(sys.argv))
+    logging.debug("sample %s", sample)
+    logging.debug("dry_run %s", dry_run)
+    logging.debug("limit %s", limit)
+    logging.debug("no_limit %s", no_limit)
+    logging.debug("template_path %s", template_path)
+    logging.debug("database_path %s", database_path)
+    logging.debug("config_path %s", config_path)
+
     # Convert paths from string to Path objects
     # https://github.com/pallets/click/issues/405
     template_path = Path(template_path)
     database_path = Path(database_path)
     config_path = Path(config_path)
 
+    # Verify input files are present and give user hints about creating them
     check_input_files(template_path, database_path, config_path, sample)
 
     # No limit is an alias for limit=-1
@@ -140,7 +159,10 @@ if __name__ == "__main__":
 
 
 def check_input_files(template_path, database_path, config_path, sample):
-    """Check if input files are present and hint the user."""
+    """Check if input files are present and hint the user if one is missing.
+
+    We'll also dump the file contents to the debug log.
+    """
     if sample:
         create_sample_input_files(template_path, database_path, config_path)
         sys.exit(0)
@@ -171,6 +193,26 @@ def check_input_files(template_path, database_path, config_path, sample):
 
             See https://github.com/awdeorio/mailmerge for examples.\
         """.format(config_path=config_path)))
+
+    file_to_log(template_path)
+    file_to_log(database_path)
+    file_to_log(config_path)
+
+
+def file_to_log(path):
+    """Log a file name, content, mtime and hash."""
+    with path.open("r") as file:
+        content = file.read()
+    sha1sum = hashlib.sha1(content.encode("utf-8")).hexdigest()
+    logging.debug("%s mtime %s", path, path.stat().st_mtime)
+    logging.debug("%s sha1sum %s", path, sha1sum)
+    logging.debug(
+        "%s content\n"
+        "*** content begin ***\n"
+        "%s"
+        "*** content end ***",
+        path, content
+    )
 
 
 def create_sample_input_files(template_path, database_path, config_path):
