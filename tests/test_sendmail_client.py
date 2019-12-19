@@ -293,7 +293,7 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 
 
 def test_missing_username(tmp_path):
-    """Verify open (Never) security configuration."""
+    """Verify exception on missing username."""
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
