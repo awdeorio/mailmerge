@@ -417,7 +417,7 @@ def test_socket_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     mock_getpass.return_value = "password"
 
     # Configure SMTP_SSL constructor to raise an exception
-    mock_SMTP_SSL.return_value.__enter__.return_value = mock.Mock(
+    mock_SMTP_SSL.return_value.__enter__ = mock.Mock(
         side_effect=socket.error("Dummy error message")
     )
 
