@@ -9,8 +9,7 @@ import smtplib
 import pytest
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
-from mailmerge.sendmail_client import SendmailClient
-from mailmerge.utils import MailmergeError
+from mailmerge import SendmailClient, MailmergeError
 
 try:
     from unittest import mock  # Python 3

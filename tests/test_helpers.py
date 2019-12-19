@@ -8,7 +8,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 import textwrap
 import pytest
 import mailmerge.__main__
-from mailmerge.utils import MailmergeError
+from mailmerge import MailmergeError
 
 # Python 2 pathlib support requires backport
 try:

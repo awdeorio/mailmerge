@@ -12,8 +12,7 @@ import textwrap
 import collections
 import pytest
 import markdown
-from mailmerge.template_message import TemplateMessage
-from mailmerge.utils import MailmergeError
+from mailmerge import TemplateMessage, MailmergeError
 from . import utils
 
 # Python 2 pathlib support requires backport
