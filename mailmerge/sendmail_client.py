@@ -7,7 +7,7 @@ import socket
 import smtplib
 import configparser
 import getpass
-from .utils import MailmergeError
+from . import MailmergeError
 
 
 class SendmailClient(object):

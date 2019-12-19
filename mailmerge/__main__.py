@@ -9,7 +9,7 @@ import textwrap
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
-from .utils import MailmergeError
+from . import MailmergeError
 
 # Python 2 pathlib support requires backport
 try:
