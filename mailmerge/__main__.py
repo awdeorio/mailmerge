@@ -5,8 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
-import socket
-import smtplib
 import textwrap
 import click
 from .template_message import TemplateMessage

@@ -10,18 +10,11 @@ import pytest
 import mailmerge.__main__
 from mailmerge.utils import MailmergeError
 
-
 # Python 2 pathlib support requires backport
 try:
     from pathlib2 import Path
 except ImportError:
     from pathlib import Path
-
-# Python 2 UTF8 support requires csv backport
-try:
-    from backports import csv
-except ImportError:
-    import csv
 
 
 def test_enumerate_limit_no_limit():

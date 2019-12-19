@@ -31,7 +31,8 @@ class SendmailClient(object):
             config.read(str(config_path))
             self.host = config.get("smtp_server", "host")
             self.port = config.getint("smtp_server", "port")
-            self.security = config.get("smtp_server", "security", fallback=None)
+            self.security = config.get("smtp_server", "security",
+                                       fallback=None)
             if self.security == "Never":
                 # Coerce legacy option "security = Never"
                 self.security = None

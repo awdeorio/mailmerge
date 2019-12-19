@@ -10,7 +10,6 @@ import re
 import shutil
 import textwrap
 import collections
-import jinja2
 import pytest
 import markdown
 from mailmerge.template_message import TemplateMessage
