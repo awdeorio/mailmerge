@@ -9,7 +9,6 @@ import socket
 import configparser
 import smtplib
 import textwrap
-import jinja2
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
@@ -101,8 +100,6 @@ def main(sample, dry_run, limit, no_limit,
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i + 1))
-    except csv.Error as err:
-        sys.exit(">>> Error reading CSV file: {}".format(err))
     except smtplib.SMTPAuthenticationError as err:
         sys.exit(">>> Authentication error: {}".format(err))
     except configparser.Error as err:
@@ -247,8 +244,13 @@ def read_csv_database(database_path):
 
     with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
-        for row in reader:
-            yield row
+        try:
+            for row in reader:
+                yield row
+        except csv.Error as err:
+            raise MailmergeError(
+                "{}:{}: {}".format(database_path, reader.line_num, err)
+            )
 
 
 def enumerate_limit(iterable, limit):

@@ -8,6 +8,8 @@ Andrew DeOrio <awdeorio@umich.edu>
 import textwrap
 import pytest
 import mailmerge.__main__
+from mailmerge.utils import MailmergeError
+
 
 # Python 2 pathlib support requires backport
 try:
@@ -54,16 +56,13 @@ def test_enumerate_limit_zero():
 
 
 def test_csv_bad(tmpdir):
-    """Bad CSV includes includes filename and line number."""
-    # CSV with unmatched quote
+    """CSV with unmatched quote."""
     database_path = Path(tmpdir/"database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         a,b
         1,"2
     """))
-
-    # The first line of data triggers an error
-    with pytest.raises(csv.Error):
+    with pytest.raises(MailmergeError):
         next(mailmerge.__main__.read_csv_database(database_path))
 
 

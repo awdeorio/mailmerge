@@ -437,7 +437,7 @@ def test_bad_database(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error reading CSV file: unexpected end of data" in stderr
+    assert "database.csv:1: unexpected end of data" in stderr
 
 
 def test_bad_config(tmpdir):
