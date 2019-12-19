@@ -14,7 +14,7 @@ import future.backports.email.utils
 import future.backports.email.generator
 import markdown
 import jinja2
-from . import MailmergeError
+from .exceptions import MailmergeError
 
 # Python 2 pathlib support requires backport
 try:
