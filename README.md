@@ -384,4 +384,4 @@ Contributions from the community are welcome! Check out the [guide for contribut
 
 
 ## Acknowledgements
-Mailmerge is written by Andrew DeOrio <awdeorio@umich.edu>, [http://andrewdeorio.com](http://andrewdeorio.com).
+Mailmerge is written by Andrew DeOrio <awdeorio@umich.edu>, [http://andrewdeorio.com](http://andrewdeorio.com).  Sesh Sadasivam (@seshrs) contributed many features and bug fixes.
