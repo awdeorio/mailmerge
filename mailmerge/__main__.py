@@ -242,11 +242,10 @@ def read_csv_database(database_path):
     enable strict syntax checking.  This will trigger errors for things like
     unclosed quotes.
     """
-    # Our helper class is really simple
-    # pylint: disable=bad-option-value, missing-class-docstring
-    # pylint: disable=too-few-public-methods
-
     class StrictExcel(csv.excel):
+        # Our helper class is really simple
+        # pylint: disable=too-few-public-methods
+        # pylint: disable=bad-option-value, missing-class-docstring
         strict = True
 
     with database_path.open("r") as database_file:
