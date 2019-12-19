@@ -50,10 +50,11 @@ This example will walk you through the steps for creating a template email, data
 ### Create a sample template email, database, and config
 ```console
 $ mailmerge --sample
-Creating sample template email mailmerge_template.txt
-Creating sample database mailmerge_database.csv
-Creating sample config file mailmerge_server.conf
-Edit these files, and then run mailmerge again
+Created sample template email "mailmerge_template.txt"
+Created sample database "mailmerge_database.csv"
+Created sample config file "mailmerge_server.conf"
+
+Edit these files, then run mailmerge again.
 ```
 
 ### Edit the SMTP server config `mailmerge_server.conf`
@@ -89,64 +90,76 @@ bob@bobdomain.com,"Bob",42
 ```
 
 ### Dry run
-First, dry run one email message.  This will fill in the template fields of the first email message and print it to the terminal.
+First, dry run one email message (`mailmerge`).  This will fill in the template fields of the first email message and print it to the terminal.
 ```console
-$ mailmerge --dry-run --limit 1
->>> message 0
+$ mailmerge
+>>> message 1
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:49:11 -0000
 
 Hi, Myself,
 
 Your number is 17.
-
->>> sent message 0 DRY RUN
->>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+>>> sent message 1
+>>> Limit was 1 message.  To remove the limit, use the --no-limit option.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 If this looks correct, try a second dry run, this time with all recipients using the `--no-limit` option.
 ```console
-$ mailmerge --dry-run --no-limit
->>> message 0
+$ mailmerge --no-limit
+>>> message 1
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:49:33 -0000
 
 Hi, Myself,
 
 Your number is 17.
-
->>> sent message 0 DRY RUN
->>> message 1
+>>> sent message 1
+>>> message 2
 TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:49:33 -0000
 
 Hi, Bob,
 
 Your number is 42.
-
->>> sent message 1 DRY RUN
+>>> sent message 2
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 ### Send first email
-We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email*.  Recall that you added yourself as the first email recipient.
+We're being extra careful in this example to avoid sending spam, so next we'll send *only one real email* (`mailmerge` default).  Recall that you added yourself as the first email recipient.
 ```console
-$ mailmerge --no-dry-run --limit 1
->>> message 0
+$ mailmerge --no-dry-run
+>>> message 1
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:50:24 -0000
 
 Hi, Myself,
 
 Your number is 17.
-
->>> sent message 0
->>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
+>>> sent message 1
+>>> Limit was 1 message.  To remove the limit, use the --no-limit option.
 ```
 
 Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
@@ -154,32 +167,38 @@ Now, check your email make sure the message went through.  If everything looks O
 ### Send all emails
 ```console
 $ mailmerge --no-dry-run --no-limit
->>> message 0
+>>> message 1
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:51:01 -0000
 
 Hi, Myself,
 
 Your number is 17.
-
->>> sent message 0
->>> message 1
+>>> sent message 1
+>>> message 2
 TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+MIME-Version: 1.0
+Content-Type: text/plain; charset="us-ascii"
+Content-Transfer-Encoding: 7bit
+Date: Thu, 19 Dec 2019 19:51:01 -0000
 
 Hi, Bob,
 
 Your number is 42.
-
->>> sent message 1
+>>> sent message 2
 ```
 
 ## Advanced template example
 This example will send progress reports to students.  The template uses more of the advanced features of the [jinja2 template engine documentation](http://jinja.pocoo.org/docs/latest/templates/) to customize messages to students.
 
-#### Template `progress_report_template.txt`
+#### Template `mailmerge_template.txt`
 ```
 TO: {{email}}
 SUBJECT: EECS 280 Mid-semester Progress Report
@@ -209,39 +228,13 @@ If you plan to continue in the course, I urge you to see your instructor in offi
 {% endif -%}
 ```
 
-#### Database `progress_report_database.csv`
+#### Database `mailmerge_database.csv`
 Again, we'll use the best practice of making yourself the first recipient, which is helpful for testing.
 ```
 email,name,p1,p2,p3,midterm,grade
 myself@mydomain.com,"My Self",100,100,100,100,A+
 borderline@fixme.com,"Borderline Name",50,50,50,50,C-
 failing@fixme.com,"Failing Name",0,0,0,0,F
-```
-
-### Dry run one message
-Test one message without actually sending any email.
-```console
-$ mailmerge --template progress_report_template.txt --database progress_report_database.csv 
->>> message 0
-TO: myself@mydomain.com
-SUBJECT: EECS 280 Mid-semester Progress Report
-FROM: My Self <myself@mydomain.com>
-
-Dear My Self,
-
-This email contains our record of your grades EECS 280, as well as an estimated letter grade.
-
-Project 1: 100
-Project 2: 100
-Project 3: 100
-Midterm exam: 100
-
-At this time, your estimated letter grade is A+.
-
-
->>> sent message 0 DRY RUN
->>> Limit was 1 messages.  To remove the limit, use the --no-limit option.
->>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
 ## HTML formatting
@@ -361,7 +354,7 @@ Pro-tip: Use Jinja to customize the attachments based on your database!
 Dry run to verify attachment files exist. If an attachment filename includes a template, it's a good idea to dry run with the `--no-limit` flag.
 ```console
 $ mailmerge
->>> message 0
+>>> message 1
 TO: myself@mydomain.com
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
@@ -371,11 +364,10 @@ Hi, Myself,
 This email contains three attachments.
 Pro-tip: Use Jinja to customize the attachments based on your database!
 
->>> encoding ascii
 >>> attached /Users/awdeorio/Documents/test/file1.docx
 >>> attached /Users/awdeorio/Documents/file2.pdf
 >>> attached /z/shared/Myself_submission.txt
->>> sent message 0 DRY RUN
+>>> sent message 1
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
