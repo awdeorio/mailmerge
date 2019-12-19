@@ -243,7 +243,8 @@ def read_csv_database(database_path):
     unclosed quotes.
     """
     # Our helper class is really simple
-    # pylint: disable=too-few-public-methods, missing-class-docstring
+    # pylint: disable=bad-option-value, missing-class-docstring
+    # pylint: disable=too-few-public-methods
 
     class StrictExcel(csv.excel):
         strict = True
