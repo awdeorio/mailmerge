@@ -808,7 +808,6 @@ def test_complicated(tmpdir):
 
 def test_english(tmpdir):
     """Verify correct English, message vs. messages."""
-    
     # Blank message
     template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
