@@ -3,6 +3,7 @@ SMTP client reads configuration and sends message.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
+import socket
 import smtplib
 import configparser
 import getpass
@@ -64,17 +65,33 @@ class SendmailClient(object):
             self.password = getpass.getpass(prompt)
 
         # Send
-        if self.security == "SSL/TLS":
-            with smtplib.SMTP_SSL(self.host, self.port) as smtp:
-                smtp.login(self.username, self.password)
-                smtp.sendmail(sender, recipients, message.as_string())
-        elif self.security == "STARTTLS":
-            with smtplib.SMTP(self.host, self.port) as smtp:
-                smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
-                smtp.login(self.username, self.password)
-                smtp.sendmail(sender, recipients, message.as_string())
-        elif self.security is None:
-            with smtplib.SMTP(self.host, self.port) as smtp:
-                smtp.sendmail(sender, recipients, message.as_string())
+        try:
+            if self.security == "SSL/TLS":
+                with smtplib.SMTP_SSL(self.host, self.port) as smtp:
+                    smtp.login(self.username, self.password)
+                    smtp.sendmail(sender, recipients, message.as_string())
+            elif self.security == "STARTTLS":
+                with smtplib.SMTP(self.host, self.port) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+                    smtp.login(self.username, self.password)
+                    smtp.sendmail(sender, recipients, message.as_string())
+            elif self.security is None:
+                with smtplib.SMTP(self.host, self.port) as smtp:
+                    smtp.sendmail(sender, recipients, message.as_string())
+        except smtplib.SMTPAuthenticationError as err:
+            raise MailmergeError(
+                "{}:{} failed to authenticate user '{}': {}"
+                .format(self.host, self.port, self.username, err)
+            )
+        except smtplib.SMTPException as err:
+            raise MailmergeError(
+                "{}:{} failed to send message: {}"
+                .format(self.host, self.port, err)
+            )
+        except socket.error as err:
+            raise MailmergeError(
+                "{}:{} failed to connect to server: {}"
+                .format(self.host, self.port, err)
+            )

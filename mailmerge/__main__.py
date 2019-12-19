@@ -99,12 +99,6 @@ def main(sample, dry_run, limit, no_limit,
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i + 1))
-    except smtplib.SMTPAuthenticationError as err:
-        sys.exit(">>> Authentication error: {}".format(err))
-    except smtplib.SMTPException as err:
-        sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
-    except socket.error:
-        sys.exit(">>> Error connecting to server")
     except MailmergeError as err:
         sys.exit(">>> {}".format(err))
 
