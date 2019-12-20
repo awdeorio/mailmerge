@@ -28,7 +28,7 @@ except ImportError:
 @click.version_option()  # Auto detect version from setup.py
 @click.option(
     "--sample", is_flag=True, default=False,
-    help="Create sample database, template email, and config",
+    help="Create sample template, database, and config",
 )
 @click.option(
     "--dry-run/--no-dry-run", default=True,
@@ -52,19 +52,19 @@ except ImportError:
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
-    help="template email file name (mailmerge_template.txt)"
+    help="template email (mailmerge_template.txt)"
 )
 @click.option(
     "--database", "database_path",
     default="mailmerge_database.csv",
     type=click.Path(),
-    help="database CSV file name (mailmerge_database.csv)",
+    help="database CSV (mailmerge_database.csv)",
 )
 @click.option(
     "--config", "config_path",
     default="mailmerge_server.conf",
     type=click.Path(),
-    help="configuration file name (mailmerge_server.conf)",
+    help="server configuration (mailmerge_server.conf)",
 )
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path):
