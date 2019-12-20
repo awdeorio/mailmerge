@@ -62,7 +62,7 @@ except ImportError:
     help="configuration file name (mailmerge_server.conf)",
 )
 def main(sample, dry_run, limit, no_limit,
-         database_path, template_path, config_path):
+         template_path, database_path, config_path):
     """
     Mailmerge is a simple, command line mail merge tool.
 
