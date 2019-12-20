@@ -32,16 +32,16 @@ except ImportError:
 )
 @click.option(
     "--dry-run/--no-dry-run", default=True,
-    help="Don't send email, just print (True)",
+    help="Don't send email, just print (dry-run)",
+)
+@click.option(
+    "--no-limit", is_flag=True, default=False,
+    help="Do not limit the number of messages",
 )
 @click.option(
     "--limit", is_flag=False, default=1,
     type=click.IntRange(0, None),
     help="Limit the number of messages (1)",
-)
-@click.option(
-    "--no-limit", is_flag=True, default=False,
-    help="Do not limit the number of messages",
 )
 @click.option(
     "--template", "template_path",
