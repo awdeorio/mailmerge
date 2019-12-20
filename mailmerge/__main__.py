@@ -44,6 +44,11 @@ except ImportError:
     help="Limit the number of messages (1)",
 )
 @click.option(
+    "--resume", is_flag=False, default=1,
+    type=int,
+    help="Resume on message number INTEGER",
+)
+@click.option(
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
@@ -61,7 +66,7 @@ except ImportError:
     type=click.Path(),
     help="configuration file name (mailmerge_server.conf)",
 )
-def main(sample, dry_run, limit, no_limit,
+def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path):
     """
     Mailmerge is a simple, command line mail merge tool.
@@ -90,6 +95,8 @@ def main(sample, dry_run, limit, no_limit,
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for i, row in enumerate_limit(csv_database, limit):
+            if i + 1 < resume:
+                continue
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(i + 1))
