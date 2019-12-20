@@ -23,3 +23,8 @@ script: tox
 after_script:
   - pip install codecov
   - codecov
+
+branches:
+  only:
+  - master
+  - develop
