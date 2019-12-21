@@ -46,7 +46,7 @@ except ImportError:
 @click.option(
     "--resume", is_flag=False, default=1,
     type=int,
-    help="Resume on message number INTEGER",
+    help="Start on message number INTEGER",
 )
 @click.option(
     "--template", "template_path",
@@ -84,19 +84,20 @@ def main(sample, dry_run, limit, no_limit, resume,
     database_path = Path(database_path)
     config_path = Path(config_path)
 
+    # Make sure input files exist and provide helpful prompts
     check_input_files(template_path, database_path, config_path, sample)
 
-    # No limit is an alias for limit=-1
-    if no_limit:
-        limit = -1
+    # Calculate start and stop indexes.  Start and stop are zero-based.  The
+    # input --resume is one-based.
+    start = resume - 1
+    stop = None if no_limit else resume - 1 + limit
 
+    # Run
     try:
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
-        for i, row in enumerate_limit(csv_database, limit):
-            if i + 1 < resume:
-                continue
+        for i, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(i + 1))
@@ -246,13 +247,17 @@ def read_csv_database(database_path):
             )
 
 
-def enumerate_limit(iterable, limit):
-    """Enumerate iterable, stopping after limit iterations.
+def enumerate_range(iterable, start=0, stop=None):
+    """Enumerate iterable, starting at index "start", stopping before "stop".
 
-    When limit == -1, enumerate entire iterable.
+    To enumerate the entire iterable, start=0 and stop=None.
     """
+    assert start >= 0
+    assert stop is None or stop >= 0
     for i, value in enumerate(iterable):
-        if limit != -1 and i >= limit:
+        if i < start:
+            continue
+        if stop is not None and i >= stop:
             return
         yield i, value
 
