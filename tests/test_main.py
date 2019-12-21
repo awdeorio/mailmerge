@@ -926,13 +926,8 @@ def test_resume_too_big(tmpdir):
     assert stderr == ""
 
 
-def test_resume_hint_on_smtp_error(tmpdir):
-    """Verify output on error hints user to resume."""
-    assert False
-
-
-def test_resume_hint_on_csv_error(tmpdir):
-    """Verify output on error hints user to resume."""
+def test_resume_hint_on_config_error(tmpdir):
+    """Verify --resume hint after config file read error."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
@@ -943,6 +938,41 @@ def test_resume_hint_on_csv_error(tmpdir):
     """))
 
     # Database with error on second entry
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        "world
+    """))
+
+    # Server config missing port
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge("--resume", "3", "--no-limit")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "--resume 1" in stderr
+
+
+def test_resume_hint_on_csv_error(tmpdir):
+    """Verify --resume hint after CSV error."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with unmatched quote on second entry
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
@@ -965,3 +995,8 @@ def test_resume_hint_on_csv_error(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "--resume 1" in stderr
+
+
+def test_resume_hint_on_smtp_error():
+    """Verify --resume hint after SMTP error."""
+    assert False
