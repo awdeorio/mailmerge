@@ -835,3 +835,44 @@ def test_english(tmpdir):
         assert "Limit was 1 message." in output
         output = sh.mailmerge("--limit", "2")
         assert "Limit was 2 messages." in output
+
+
+def test_resume(tmpdir):
+    """Verify --resume option starts "in the middle" of the database."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Dummry database with two entriesSimple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--resume", "2", "--no-limit")
+
+    # Verify only second message was sent
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert "hello" not in stdout
+    assert "sent message 1" not in stdout
+    assert "world" in stdout
+    assert "sent message " in stdout
