@@ -45,7 +45,7 @@ except ImportError:
 )
 @click.option(
     "--resume", is_flag=False, default=1,
-    type=int,
+    type=click.IntRange(1, None),
     help="Start on message number INTEGER",
 )
 @click.option(

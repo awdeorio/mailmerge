@@ -8,6 +8,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 import re
 import textwrap
 import sh
+import pytest
 
 # Python 2 pathlib support requires backport
 try:
@@ -875,4 +876,87 @@ def test_resume(tmpdir):
     assert "hello" not in stdout
     assert "sent message 1" not in stdout
     assert "world" in stdout
-    assert "sent message " in stdout
+    assert "sent message 2" in stdout
+
+
+def test_resume_too_small(tmpdir):
+    """Verify --resume <= 0 prints an error message."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Dummry database with two entriesSimple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run "mailmerge --resume 0" and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--resume", "0")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Invalid value" in stderr
+
+    # Run "mailmerge --resume -1" and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--resume", "-1")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Invalid value" in stderr
+
+
+def test_resume_too_big(tmpdir):
+    """Verify --resume > database does nothing."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Dummry database with two entriesSimple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--resume", "3", "--no-limit")
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert "sent message" not in stdout
+    assert stderr == ""
+
+
+# FIXME test hint user on failure
