@@ -165,7 +165,7 @@ def test_no_options(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error: can't find template mailmerge_template.txt" in stderr
+    assert 'Error: can\'t find template "mailmerge_template.txt"' in stderr
     assert "https://github.com/awdeorio/mailmerge" in stderr
 
 
@@ -849,7 +849,7 @@ def test_resume(tmpdir):
         {{message}}
     """))
 
-    # Dummry database with two entriesSimple database
+    # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
@@ -890,7 +890,7 @@ def test_resume_too_small(tmpdir):
         {{message}}
     """))
 
-    # Dummry database with two entriesSimple database
+    # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
@@ -934,7 +934,7 @@ def test_resume_too_big(tmpdir):
         {{message}}
     """))
 
-    # Dummry database with two entriesSimple database
+    # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
@@ -959,4 +959,41 @@ def test_resume_too_big(tmpdir):
     assert stderr == ""
 
 
-# FIXME test hint user on failure
+def test_resume_hint_on_error(tmpdir):
+    """Verify output on error hints user to resume."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with error on second entry
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        "world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge("--resume", "3", "--no-limit")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "--resume 1" in stderr
+
+
+# FIXME check resume index correctness on CSV error
+# FIXME global remove _ok_code=1

@@ -105,8 +105,13 @@ def main(sample, dry_run, limit, no_limit, resume,
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(i + 1))
-    except MailmergeError as err:
-        sys.exit(">>> {}".format(err))
+    except MailmergeError as error:
+        sys.exit(
+            "Error on message {message_num}\n"
+            "{error}\n"
+            'Hint: "--resume {message_num}"'
+            .format(message_num=i+1, error=error)
+        )
 
     # Hints for user
     if not no_limit:
