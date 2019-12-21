@@ -173,8 +173,6 @@ def test_sample(tmpdir):
     assert Path(tmpdir/"mailmerge_template.txt").exists()
     assert Path(tmpdir/"mailmerge_database.csv").exists()
     assert Path(tmpdir/"mailmerge_server.conf").exists()
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
     assert output.stderr.decode("utf-8") == ""
     assert "Created sample template" in output
     assert "Created sample database" in output
@@ -928,7 +926,12 @@ def test_resume_too_big(tmpdir):
     assert stderr == ""
 
 
-def test_resume_hint_on_error(tmpdir):
+def test_resume_hint_on_smtp_error(tmpdir):
+    """Verify output on error hints user to resume."""
+    assert False
+
+
+def test_resume_hint_on_csv_error(tmpdir):
     """Verify output on error hints user to resume."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -962,6 +965,3 @@ def test_resume_hint_on_error(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "--resume 1" in stderr
-
-
-# FIXME check resume index correctness on CSV error
