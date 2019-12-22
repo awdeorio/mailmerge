@@ -13,6 +13,7 @@ setup(
     name="mailmerge",
     description="A simple, command line mail merge tool",
     long_description=README,
+    long_description_content_type="text/markdown",
     version="2.0.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
