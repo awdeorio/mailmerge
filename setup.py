@@ -48,6 +48,7 @@ setuptools.setup(
             'pytest',
             'pytest-cov',
             'tox',
+            'twine',
         ]
     },
 
