@@ -16,6 +16,10 @@ try:
 except ImportError:
     from pathlib import Path
 
+# Every test_enumerate_range_* unit test uses a list comprehension to yield all
+# the values from the generator implementation.
+# pylint: disable=unnecessary-comprehension
+
 
 def test_enumerate_range_default():
     """Verify default start and stop."""
