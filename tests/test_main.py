@@ -954,7 +954,7 @@ def test_resume_hint_on_config_error(tmpdir):
 
     # Run and check output
     with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
-        sh.mailmerge("--resume", "3", "--no-limit")
+        sh.mailmerge()
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
@@ -990,13 +990,8 @@ def test_resume_hint_on_csv_error(tmpdir):
 
     # Run and check output
     with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
-        sh.mailmerge("--resume", "3", "--no-limit")
+        sh.mailmerge("--resume", "2", "--no-limit")
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "--resume 1" in stderr
-
-
-def test_resume_hint_on_smtp_error():
-    """Verify --resume hint after SMTP error."""
-    assert False
+    assert "--resume 2" in stderr

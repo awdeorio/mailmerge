@@ -93,24 +93,26 @@ def main(sample, dry_run, limit, no_limit, resume,
     stop = None if no_limit else resume - 1 + limit
 
     # Run
+    message_num = 1 + start
     try:
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
-        for i, row in enumerate_range(csv_database, start, stop):
+        for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(i + 1))
+            print(">>> message {}".format(message_num))
             print(message.as_string())
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(i + 1))
+            print(">>> sent message {}".format(message_num))
+            message_num += 1
     except MailmergeError as error:
         sys.exit(
             "Error on message {message_num}\n"
             "{error}\n"
             'Hint: "--resume {message_num}"'
-            .format(message_num=i+1, error=error)
+            .format(message_num=message_num, error=error)
         )
 
     # Hints for user
