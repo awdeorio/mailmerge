@@ -5,17 +5,13 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
-import socket
-import configparser
-import smtplib
 import textwrap
 import logging
 import hashlib
-import jinja2
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
-from .utils import MailmergeError
+from .exceptions import MailmergeError
 
 # Python 2 pathlib support requires backport
 try:
@@ -34,11 +30,15 @@ except ImportError:
 @click.version_option()  # Auto detect version from setup.py
 @click.option(
     "--sample", is_flag=True, default=False,
-    help="Create sample database, template email, and config",
+    help="Create sample template, database, and config",
 )
 @click.option(
     "--dry-run/--no-dry-run", default=True,
-    help="Don't send email, just print (True)",
+    help="Don't send email, just print (dry-run)",
+)
+@click.option(
+    "--no-limit", is_flag=True, default=False,
+    help="Do not limit the number of messages",
 )
 @click.option(
     "--limit", is_flag=False, default=1,
@@ -46,29 +46,30 @@ except ImportError:
     help="Limit the number of messages (1)",
 )
 @click.option(
-    "--no-limit", is_flag=True, default=False,
-    help="Do not limit the number of messages",
+    "--resume", is_flag=False, default=1,
+    type=click.IntRange(1, None),
+    help="Start on message number INTEGER",
 )
 @click.option(
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
-    help="template email file name (mailmerge_template.txt)"
+    help="template email (mailmerge_template.txt)"
 )
 @click.option(
     "--database", "database_path",
     default="mailmerge_database.csv",
     type=click.Path(),
-    help="database CSV file name (mailmerge_database.csv)",
+    help="database CSV (mailmerge_database.csv)",
 )
 @click.option(
     "--config", "config_path",
     default="mailmerge_server.conf",
     type=click.Path(),
-    help="configuration file name (mailmerge_server.conf)",
+    help="server configuration (mailmerge_server.conf)",
 )
-def main(sample, dry_run, limit, no_limit,
-         database_path, template_path, config_path):
+def main(sample, dry_run, limit, no_limit, resume,
+         template_path, database_path, config_path):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -104,39 +105,33 @@ def main(sample, dry_run, limit, no_limit,
     # Verify input files are present and give user hints about creating them
     check_input_files(template_path, database_path, config_path, sample)
 
-    # No limit is an alias for limit=-1
-    if no_limit:
-        limit = -1
+    # Calculate start and stop indexes.  Start and stop are zero-based.  The
+    # input --resume is one-based.
+    start = resume - 1
+    stop = None if no_limit else resume - 1 + limit
 
+    # Run
+    message_num = 1 + start
     try:
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
-        for i, row in enumerate_limit(csv_database, limit):
+        for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(i + 1))
+            print(">>> message {}".format(message_num))
             print(message.as_string())
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(i + 1))
-    except jinja2.exceptions.TemplateError as err:
-        sys.exit(">>> Error in Jinja2 template: {}".format(err))
-    except csv.Error as err:
-        sys.exit(">>> Error reading CSV file: {}".format(err))
-    except smtplib.SMTPAuthenticationError as err:
-        sys.exit(">>> Authentication error: {}".format(err))
-    except configparser.Error as err:
+            print(">>> sent message {}".format(message_num))
+            message_num += 1
+    except MailmergeError as error:
         sys.exit(
-            ">>> Error reading config file {filename}: {message}"
-            .format(filename=config_path, message=err)
+            "Error on message {message_num}\n"
+            "{error}\n"
+            'Hint: "--resume {message_num}"'
+            .format(message_num=message_num, error=error)
         )
-    except smtplib.SMTPException as err:
-        sys.exit(">>> Error sending message", err, sep=' ', file=sys.stderr)
-    except socket.error:
-        sys.exit(">>> Error connecting to server")
-    except MailmergeError as err:
-        sys.exit(">>> {}".format(err))
 
     # Hints for user
     if not no_limit:
@@ -169,27 +164,27 @@ def check_input_files(template_path, database_path, config_path, sample):
 
     if not template_path.exists():
         sys.exit(textwrap.dedent(u"""\
-            Error: can't find template {template_path}
+            Error: can't find template "{template_path}".
 
-            Create a sample (--sample) or specify a file (--template)
+            Create a sample (--sample) or specify a file (--template).
 
             See https://github.com/awdeorio/mailmerge for examples.\
         """.format(template_path=template_path)))
 
     if not database_path.exists():
         sys.exit(textwrap.dedent(u"""\
-            Error: can't find database {database_path}
+            Error: can't find database "{database_path}".
 
-            Create a sample (--sample) or specify a file (--database)
+            Create a sample (--sample) or specify a file (--database).
 
             See https://github.com/awdeorio/mailmerge for examples.\
         """.format(database_path=database_path)))
 
     if not config_path.exists():
         sys.exit(textwrap.dedent(u"""\
-            Error: can't find config {config_path}
+            Error: can't find config "{config_path}".
 
-            Create a sample (--sample) or specify a file (--config)
+            Create a sample (--sample) or specify a file (--config).
 
             See https://github.com/awdeorio/mailmerge for examples.\
         """.format(config_path=config_path)))
@@ -291,17 +286,26 @@ def read_csv_database(database_path):
 
     with database_path.open("r") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
-        for row in reader:
-            yield row
+        try:
+            for row in reader:
+                yield row
+        except csv.Error as err:
+            raise MailmergeError(
+                "{}:{}: {}".format(database_path, reader.line_num, err)
+            )
 
 
-def enumerate_limit(iterable, limit):
-    """Enumerate iterable, stopping after limit iterations.
+def enumerate_range(iterable, start=0, stop=None):
+    """Enumerate iterable, starting at index "start", stopping before "stop".
 
-    When limit == -1, enumerate entire iterable.
+    To enumerate the entire iterable, start=0 and stop=None.
     """
+    assert start >= 0
+    assert stop is None or stop >= 0
     for i, value in enumerate(iterable):
-        if limit != -1 and i >= limit:
+        if i < start:
+            continue
+        if stop is not None and i >= stop:
             return
         yield i, value
 

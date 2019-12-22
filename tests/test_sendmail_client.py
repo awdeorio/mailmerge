@@ -4,12 +4,12 @@ Tests for SendmailClient.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
-import configparser
+import socket
 import smtplib
 import pytest
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
-from mailmerge.sendmail_client import SendmailClient
+from mailmerge import SendmailClient, MailmergeError
 
 try:
     from unittest import mock  # Python 3
@@ -132,7 +132,7 @@ def test_bad_config_key(tmp_path):
         [smtp_server]
         badkey = open-smtp.example.com
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=True)
 
 
@@ -146,7 +146,7 @@ def test_security_error(tmp_path):
         security = bad_value
         username = YOUR_USERNAME_HERE
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=False)
 
 
@@ -292,7 +292,7 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 
 
 def test_missing_username(tmp_path):
-    """Verify open (Never) security configuration."""
+    """Verify exception on missing username."""
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
@@ -300,22 +300,22 @@ def test_missing_username(tmp_path):
         port = 465
         security = SSL/TLS
     """))
-    with pytest.raises(configparser.Error):
+    with pytest.raises(MailmergeError):
         SendmailClient(config_path, dry_run=False)
 
 
 @mock.patch('smtplib.SMTP_SSL')
 @mock.patch('getpass.getpass')
-def test_smtp_error(mock_getpass, mock_SMTP_SSL, tmp_path):
-    """Connection is closed on error."""
+def test_smtp_login_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+    """Login failure."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
-        host = smtp.mail.umich.edu
+        host = smtp.gmail.com
         port = 465
         security = SSL/TLS
-        username = YOUR_USERNAME_HERE
+        username = awdeorio
     """))
 
     # Simple template
@@ -325,18 +325,108 @@ def test_smtp_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     # Mock the password entry
     mock_getpass.return_value = "password"
 
-    # Configure SMTP_SSL to raise an exception
+    # Configure SMTP login() to raise an exception
     mock_SMTP_SSL.return_value.__enter__.return_value.login = mock.Mock(
         side_effect=smtplib.SMTPAuthenticationError(
-            code=534,
-            msg="Error from mock",
+            code=535,
+            msg=(
+                "5.7.8 Username and Password not accepted. Learn more at "
+                "5.7.8  https://support.google.com/mail/?p=BadCredentials "
+                "xyzxyz.32 - gsmtp"
+            )
         )
     )
 
     # Send a message
-    with pytest.raises(smtplib.SMTPAuthenticationError):
+    with pytest.raises(MailmergeError) as err:
         sendmail_client.sendmail(
             sender="test@test.com",
             recipients=["test@test.com"],
             message=message,
         )
+
+    # Verify exception string
+    assert "smtp.gmail.com:465 failed to authenticate user 'awdeorio'" in\
+        str(err.value)
+    assert "535" in str(err.value)
+    assert (
+        "5.7.8 Username and Password not accepted. Learn more at "
+        "5.7.8  https://support.google.com/mail/?p=BadCredentials "
+        "xyzxyz.32 - gsmtp"
+    ) in str(err.value)
+
+
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_smtp_sendmail_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+    """Failure during SMTP protocol."""
+    # Config for SSL SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = smtp.gmail.com
+        port = 465
+        security = SSL/TLS
+        username = awdeorio
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"Hello world")
+
+    # Mock the password entry
+    mock_getpass.return_value = "password"
+
+    # Configure SMTP sendmail() to raise an exception
+    mock_SMTP_SSL.return_value.__enter__.return_value.sendmail = mock.Mock(
+        side_effect=smtplib.SMTPException("Dummy error message")
+    )
+
+    # Send a message
+    with pytest.raises(MailmergeError) as err:
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+    # Verify exception string
+    assert "Dummy error message" in str(err.value)
+
+
+@mock.patch('smtplib.SMTP_SSL')
+@mock.patch('getpass.getpass')
+def test_socket_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+    """Failed socket connection."""
+    # Config for SSL SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = smtp.gmail.com
+        port = 465
+        security = SSL/TLS
+        username = awdeorio
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(u"Hello world")
+
+    # Mock the password entry
+    mock_getpass.return_value = "password"
+
+    # Configure SMTP_SSL constructor to raise an exception
+    mock_SMTP_SSL.return_value.__enter__ = mock.Mock(
+        side_effect=socket.error("Dummy error message")
+    )
+
+    # Send a message
+    with pytest.raises(MailmergeError) as err:
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+    # Verify exception string
+    assert "Dummy error message" in str(err.value)

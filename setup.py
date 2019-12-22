@@ -1,19 +1,21 @@
 """Mailmerge build and install configuration."""
 import os
+import io
+import setuptools
 
-try:
-    from setuptools import setup
-except ImportError:
-    from distutils.core import setup
 
-with open(os.path.join(os.path.dirname(__file__), 'README.md')) as readme_file:
-    README = readme_file.read()
+# Read the contents of README file
+PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
+with io.open(os.path.join(PROJECT_DIR, 'README.md'), encoding='utf-8') as f:
+    LONG_DESCRIPTION = f.read()
 
-setup(
+
+setuptools.setup(
     name="mailmerge",
     description="A simple, command line mail merge tool",
-    long_description=README,
-    version="1.9",
+    long_description=LONG_DESCRIPTION,
+    long_description_content_type="text/markdown",
+    version="2.0.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
@@ -46,6 +48,7 @@ setup(
             'pytest',
             'pytest-cov',
             'tox',
+            'twine',
         ]
     },
 

@@ -4,10 +4,14 @@
 System tests.
 
 Andrew DeOrio <awdeorio@umich.edu>
+
+pytest tmpdir docs:
+http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
 import re
 import textwrap
 import sh
+import pytest
 
 # Python 2 pathlib support requires backport
 try:
@@ -152,19 +156,13 @@ def test_no_options(tmpdir):
 
     Run mailmerge at the CLI with no options.  Do this in an empty temporary
     directory to ensure that mailmerge doesn't find any default input files.
-
-    pytest tmpdir docs:
-    http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
-
-    sh _ok_code docs
-    https://amoffat.github.io/sh/sections/special_arguments.html#ok-code
     """
-    with tmpdir.as_cwd():
-        output = sh.mailmerge(_ok_code=1)  # expect non-zero exit
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge()
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error: can't find template mailmerge_template.txt" in stderr
+    assert 'Error: can\'t find template "mailmerge_template.txt"' in stderr
     assert "https://github.com/awdeorio/mailmerge" in stderr
 
 
@@ -172,9 +170,9 @@ def test_sample(tmpdir):
     """Verify --sample creates sample input files."""
     with tmpdir.as_cwd():
         output = sh.mailmerge("--sample")
-        assert Path("mailmerge_template.txt").exists()
-        assert Path("mailmerge_database.csv").exists()
-        assert Path("mailmerge_server.conf").exists()
+    assert Path(tmpdir/"mailmerge_template.txt").exists()
+    assert Path(tmpdir/"mailmerge_database.csv").exists()
+    assert Path(tmpdir/"mailmerge_server.conf").exists()
     assert output.stderr.decode("utf-8") == ""
     assert "Created sample template" in output
     assert "Created sample database" in output
@@ -183,33 +181,33 @@ def test_sample(tmpdir):
 
 def test_sample_clobber_template(tmpdir):
     """Verify --sample won't clobber template if it already exists."""
-    with tmpdir.as_cwd():
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
         Path("mailmerge_template.txt").touch()
-        output = sh.mailmerge("--sample", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        sh.mailmerge("--sample")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: file exists: mailmerge_template.txt" in stderr
 
 
 def test_sample_clobber_database(tmpdir):
     """Verify --sample won't clobber database if it already exists."""
-    with tmpdir.as_cwd():
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
         Path("mailmerge_database.csv").touch()
-        output = sh.mailmerge("--sample", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        sh.mailmerge("--sample")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: file exists: mailmerge_database.csv" in stderr
 
 
 def test_sample_clobber_config(tmpdir):
     """Verify --sample won't clobber config if it already exists."""
-    with tmpdir.as_cwd():
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
         Path("mailmerge_server.conf").touch()
-        output = sh.mailmerge("--sample", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        sh.mailmerge("--sample")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: file exists: mailmerge_server.conf" in stderr
 
@@ -228,7 +226,7 @@ def test_defaults(tmpdir):
 def test_bad_limit(tmpdir):
     """Verify --limit with bad value."""
     # Simple template
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         FROM: from@test.com
@@ -237,7 +235,7 @@ def test_bad_limit(tmpdir):
     """))
 
     # Simple database with two entries
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email
         one@test.com
@@ -245,7 +243,7 @@ def test_bad_limit(tmpdir):
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -253,21 +251,16 @@ def test_bad_limit(tmpdir):
     """))
 
     # Run mailmerge
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        "--dry-run",
-        "--limit", "-1",
-        _ok_code=2,
-    )
-    assert "Error: Invalid value" in output.stderr.decode("utf-8")
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--dry-run", "--limit", "-1")
+    stderr = error.value.stderr.decode("utf-8")
+    assert "Error: Invalid value" in stderr
 
 
 def test_limit_combo(tmpdir):
     """Verify --limit 1 --no-limit results in no limit."""
     # Simple template
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         FROM: from@test.com
@@ -276,7 +269,7 @@ def test_limit_combo(tmpdir):
     """))
 
     # Simple database with two entries
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email
         one@test.com
@@ -284,7 +277,7 @@ def test_limit_combo(tmpdir):
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -292,14 +285,8 @@ def test_limit_combo(tmpdir):
     """))
 
     # Run mailmerge
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        "--dry-run",
-        "--no-limit",
-        "--limit", "1",
-    )
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--no-limit", "--limit", "1")
     assert output.stderr.decode("utf-8") == ""
     assert "sent message 1" in output
     assert "sent message 2" in output
@@ -308,33 +295,33 @@ def test_limit_combo(tmpdir):
 
 def test_template_not_found(tmpdir):
     """Verify error when template input file not found."""
-    with tmpdir.as_cwd():
-        output = sh.mailmerge("--template", "notfound.txt", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge("--template", "notfound.txt")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: can't find template" in stderr
 
 
 def test_database_not_found(tmpdir):
     """Verify error when database input file not found."""
-    with tmpdir.as_cwd():
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
         Path("mailmerge_template.txt").touch()
-        output = sh.mailmerge("--database", "notfound.csv", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        sh.mailmerge("--database", "notfound.csv")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: can't find database" in stderr
 
 
 def test_config_not_found(tmpdir):
     """Verify error when config input file not found."""
-    with tmpdir.as_cwd():
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
         Path("mailmerge_template.txt").touch()
         Path("mailmerge_database.csv").touch()
-        output = sh.mailmerge("--config", "notfound.conf", _ok_code=1)
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        sh.mailmerge("--config", "notfound.conf")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "Error: can't find config" in stderr
 
@@ -360,7 +347,7 @@ def test_version():
 def test_bad_template(tmpdir):
     """Template mismatch with database header should produce an error."""
     # Template has a bad key
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{error_not_in_database}}
         SUBJECT: Testing mailmerge
@@ -370,14 +357,14 @@ def test_bad_template(tmpdir):
     """))
 
     # Normal database
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email
         to@test.com
     """))
 
     # Normal, unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -385,25 +372,20 @@ def test_bad_template(tmpdir):
     """))
 
     # Run mailmerge, which should exit 1
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        _ok_code=1,
-    )
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge()
 
     # Verify output
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error in Jinja2 template" in stderr
-    assert "error_not_in_database" in stderr
+    assert "template.txt: 'error_not_in_database' is undefined" in stderr
 
 
 def test_bad_database(tmpdir):
     """Database read error should produce a sane error."""
     # Normal template
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
         FROM: from@test.com
@@ -412,14 +394,14 @@ def test_bad_database(tmpdir):
     """))
 
     # Database with unmatched quote
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
         "hello world
     """))
 
     # Normal, unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -427,59 +409,48 @@ def test_bad_database(tmpdir):
     """))
 
     # Run mailmerge, which should exit 1
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        _ok_code=1,
-    )
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge()
 
     # Verify output
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error reading CSV file: unexpected end of data" in stderr
+    assert "database.csv:1: unexpected end of data" in stderr
 
 
 def test_bad_config(tmpdir):
     """Config containing an error should produce an error."""
     # Normal template
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
-        TO: {{email}}
-        SUBJECT: Testing mailmerge
+        TO: to@test.com
         FROM: from@test.com
-
-        Hi {{name}},
     """))
 
     # Normal database
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
-        email,name
-        to@test.com,Bob
+        dummy
+        asdf
     """))
 
     # Server config is missing host
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         port = 25
     """))
 
     # Run mailmerge, which should exit 1
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        _ok_code=1,
-    )
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge()
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
 
     # Verify output
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
     assert stdout == ""
-    assert "Error reading config file" in stderr
+    assert "server.conf: No option 'host' in section: 'smtp_server'" in stderr
 
 
 def test_attachment(tmpdir):
@@ -493,7 +464,7 @@ def test_attachment(tmpdir):
     attachment2_path.write_text(u"Hello mailmerge\n")
 
     # Template with attachment header
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         FROM: from@test.com
@@ -504,14 +475,14 @@ def test_attachment(tmpdir):
     """))
 
     # Simple database
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email
         to@test.com
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -519,11 +490,8 @@ def test_attachment(tmpdir):
     """))
 
     # Run mailmerge
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-    )
+    with tmpdir.as_cwd():
+        output = sh.mailmerge()
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
@@ -537,7 +505,7 @@ def test_attachment(tmpdir):
 def test_utf8_template(tmpdir):
     """Message is utf-8 encoded when only the template contains utf-8 chars."""
     # Template with UTF-8 characters and emoji
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
         FROM: from@test.com
@@ -546,14 +514,14 @@ def test_utf8_template(tmpdir):
     """))
 
     # Simple database without utf-8 characters
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         email
         to@test.com
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -576,7 +544,7 @@ def test_utf8_template(tmpdir):
 def test_utf8_database(tmpdir):
     """Message is utf-8 encoded when only the databse contains utf-8 chars."""
     # Simple template without UTF-8 characters
-    template_path = Path(tmpdir/"template.txt")
+    template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
         FROM: from@test.com
@@ -585,14 +553,14 @@ def test_utf8_database(tmpdir):
     """))
 
     # Database with utf-8 characters and emoji
-    database_path = Path(tmpdir/"database.csv")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent(u"""\
         message
         Laȝamon 😀 klâwen
     """))
 
     # Simple unsecure server config
-    config_path = Path(tmpdir/"server.conf")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = open-smtp.example.com
@@ -600,12 +568,8 @@ def test_utf8_database(tmpdir):
     """))
 
     # Run mailmerge
-    output = sh.mailmerge(
-        "--template", template_path,
-        "--database", database_path,
-        "--config", config_path,
-        "--dry-run",
-    )
+    with tmpdir.as_cwd():
+        output = sh.mailmerge()
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
@@ -839,3 +803,195 @@ def test_english(tmpdir):
         assert "Limit was 1 message." in output
         output = sh.mailmerge("--limit", "2")
         assert "Limit was 2 messages." in output
+
+
+def test_resume(tmpdir):
+    """Verify --resume option starts "in the middle" of the database."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with two entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--resume", "2", "--no-limit")
+
+    # Verify only second message was sent
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    assert "hello" not in stdout
+    assert "sent message 1" not in stdout
+    assert "world" in stdout
+    assert "sent message 2" in stdout
+
+
+def test_resume_too_small(tmpdir):
+    """Verify --resume <= 0 prints an error message."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with two entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run "mailmerge --resume 0" and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--resume", "0")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Invalid value" in stderr
+
+    # Run "mailmerge --resume -1" and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--resume", "-1")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "Invalid value" in stderr
+
+
+def test_resume_too_big(tmpdir):
+    """Verify --resume > database does nothing."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with two entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--resume", "3", "--no-limit")
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert "sent message" not in stdout
+    assert stderr == ""
+
+
+def test_resume_hint_on_config_error(tmpdir):
+    """Verify --resume hint after config file read error."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with error on second entry
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        "world
+    """))
+
+    # Server config missing port
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge()
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "--resume 1" in stderr
+
+
+def test_resume_hint_on_csv_error(tmpdir):
+    """Verify --resume hint after CSV error."""
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Database with unmatched quote on second entry
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+        "world
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run and check output
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
+        sh.mailmerge("--resume", "2", "--no-limit")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert "--resume 2" in stderr

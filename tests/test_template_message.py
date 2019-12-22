@@ -10,11 +10,9 @@ import re
 import shutil
 import textwrap
 import collections
-import jinja2
 import pytest
 import markdown
-from mailmerge.template_message import TemplateMessage
-from mailmerge.utils import MailmergeError
+from mailmerge import TemplateMessage, MailmergeError
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -91,7 +89,7 @@ def test_bad_jinja(tmp_path):
     template_path = tmp_path / "template.txt"
     template_path.write_text(u"TO: {{error_not_in_database}}")
     template_message = TemplateMessage(template_path)
-    with pytest.raises(jinja2.exceptions.UndefinedError):
+    with pytest.raises(MailmergeError):
         template_message.render({"name": "Bob", "number": 17})
 
 

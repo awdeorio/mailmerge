@@ -3,9 +3,11 @@ SMTP client reads configuration and sends message.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
+import socket
 import smtplib
 import configparser
 import getpass
+from .exceptions import MailmergeError
 
 
 class SendmailClient(object):
@@ -18,28 +20,33 @@ class SendmailClient(object):
     # https://python-future.org/compatible_idioms.html#custom-class-behaviour
     # pylint: disable=bad-option-value,useless-object-inheritance
 
-    def __init__(self, config_filename, dry_run=False):
-        """Read configuration from config_filename."""
-        config = configparser.RawConfigParser()
-        config.read(str(config_filename))  # str need for older Python versions
+    def __init__(self, config_path, dry_run=False):
+        """Read configuration from server configuration file."""
+        self.config_path = config_path
         self.dry_run = dry_run
-        self.host = config.get("smtp_server", "host")
-        self.port = config.getint("smtp_server", "port")
-        self.security = config.get("smtp_server", "security", fallback=None)
+        self.username = None
         self.password = None
-
-        # Coerce legacy option "security = Never"
-        if self.security == "Never":
-            self.security = None
-
-        # Read username only if needed
-        if self.security is not None:
-            self.username = config.get("smtp_server", "username")
+        try:
+            config = configparser.RawConfigParser()
+            config.read(str(config_path))
+            self.host = config.get("smtp_server", "host")
+            self.port = config.getint("smtp_server", "port")
+            self.security = config.get("smtp_server", "security",
+                                       fallback=None)
+            if self.security == "Never":
+                # Coerce legacy option "security = Never"
+                self.security = None
+            if self.security is not None:
+                # Read username only if needed
+                self.username = config.get("smtp_server", "username")
+        except configparser.Error as err:
+            raise MailmergeError("{}: {}".format(self.config_path, err))
 
         # Verify security type
         if self.security not in [None, "SSL/TLS", "STARTTLS"]:
-            raise configparser.Error(
-                "Unrecognized security type: {}".format(self.security)
+            raise MailmergeError(
+                "{}: unrecognized security type: '{}'"
+                .format(self.config_path, self.security)
             )
 
     def sendmail(self, sender, recipients, message):
@@ -59,17 +66,33 @@ class SendmailClient(object):
             self.password = getpass.getpass(prompt)
 
         # Send
-        if self.security == "SSL/TLS":
-            with smtplib.SMTP_SSL(self.host, self.port) as smtp:
-                smtp.login(self.username, self.password)
-                smtp.sendmail(sender, recipients, message.as_string())
-        elif self.security == "STARTTLS":
-            with smtplib.SMTP(self.host, self.port) as smtp:
-                smtp.ehlo()
-                smtp.starttls()
-                smtp.ehlo()
-                smtp.login(self.username, self.password)
-                smtp.sendmail(sender, recipients, message.as_string())
-        elif self.security is None:
-            with smtplib.SMTP(self.host, self.port) as smtp:
-                smtp.sendmail(sender, recipients, message.as_string())
+        try:
+            if self.security == "SSL/TLS":
+                with smtplib.SMTP_SSL(self.host, self.port) as smtp:
+                    smtp.login(self.username, self.password)
+                    smtp.sendmail(sender, recipients, message.as_string())
+            elif self.security == "STARTTLS":
+                with smtplib.SMTP(self.host, self.port) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+                    smtp.login(self.username, self.password)
+                    smtp.sendmail(sender, recipients, message.as_string())
+            elif self.security is None:
+                with smtplib.SMTP(self.host, self.port) as smtp:
+                    smtp.sendmail(sender, recipients, message.as_string())
+        except smtplib.SMTPAuthenticationError as err:
+            raise MailmergeError(
+                "{}:{} failed to authenticate user '{}': {}"
+                .format(self.host, self.port, self.username, err)
+            )
+        except smtplib.SMTPException as err:
+            raise MailmergeError(
+                "{}:{} failed to send message: {}"
+                .format(self.host, self.port, err)
+            )
+        except socket.error as err:
+            raise MailmergeError(
+                "{}:{} failed to connect to server: {}"
+                .format(self.host, self.port, err)
+            )
