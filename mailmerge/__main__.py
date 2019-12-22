@@ -8,6 +8,7 @@ import sys
 import textwrap
 import logging
 import hashlib
+import pkg_resources
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
@@ -24,6 +25,10 @@ try:
     from backports import csv
 except ImportError:
     import csv
+
+# Read version from setup.py
+# https://stackoverflow.com/questions/2058802/how-can-i-get-the-version-defined-in-setup-py-setuptools-in-my-package
+VERSION = pkg_resources.require("mailmerge")[0].version
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -86,7 +91,7 @@ def main(sample, dry_run, limit, no_limit, resume,
         filemode='a',
         level=logging.DEBUG,
     )
-    logging.debug("mailmerge starts")
+    logging.debug("mailmerge version {}".format(VERSION))
     logging.debug(" ".join(sys.argv))
     logging.debug("sample %s", sample)
     logging.debug("dry_run %s", dry_run)
