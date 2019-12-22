@@ -26,3 +26,4 @@ build/
 /.tox/
 /tmp/
 /.coverage
+*,cover

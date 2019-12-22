@@ -4,7 +4,7 @@ Mail merge module importable API.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 
-from .api import main
-from .api import TEMPLATE_FILENAME_DEFAULT
-from .api import DATABASE_FILENAME_DEFAULT
-from .api import CONFIG_FILENAME_DEFAULT
+
+from .sendmail_client import SendmailClient
+from .template_message import TemplateMessage
+from .exceptions import MailmergeError

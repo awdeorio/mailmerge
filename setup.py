@@ -13,7 +13,7 @@ setup(
     name="mailmerge",
     description="A simple, command line mail merge tool",
     long_description=README,
-    version="1.9",
+    version="2.0.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
@@ -21,19 +21,25 @@ setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-        "chardet",
+        "backports.csv;python_version<'3.0'",
         "click",
         "configparser",
+
+        # The attachments feature relies on a bug fix in the future library
+        # https://github.com/awdeorio/mailmerge/pull/56
+        "future>0.18.0",
+
         "jinja2",
-        "future",
-        "backports.csv;python_version<='2.7'",
         "markdown",
-        "mock;python_version<='2.7'",
+        "mock;python_version<'3.0'",
+        "pathlib2;python_version<'3.6'",
+        "sh",
     ],
     extras_require={
         'dev': [
+            'check-manifest',
             'codecov>=1.4.0',
-            'pdbpp'
+            'pdbpp',
             'pycodestyle',
             'pydocstyle',
             'pylint',
@@ -46,7 +52,7 @@ setup(
     # Python command line utilities will be installed in a PATH-accessible bin/
     entry_points={
         'console_scripts': [
-            'mailmerge = mailmerge.__main__:cli',
+            'mailmerge = mailmerge.__main__:main',
         ]
     },
 )
