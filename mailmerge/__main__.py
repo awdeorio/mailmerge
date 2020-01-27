@@ -4,9 +4,12 @@ Command line interface implementation.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
+import io
 import sys
 import textwrap
 import click
+import future.backports.email as email
+import future.backports.email.generator
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
@@ -102,7 +105,7 @@ def main(sample, dry_run, limit, no_limit, resume,
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
             print(">>> message {}".format(message_num))
-            print(message.as_string())
+            print_message(message)
             for filename in get_attachment_filenames(message):
                 print(">>> attached {}".format(filename))
             print(">>> sent message {}".format(message_num))
@@ -267,6 +270,17 @@ def enumerate_range(iterable, start=0, stop=None):
         if stop is not None and i >= stop:
             return
         yield i, value
+
+
+def print_message(message, ):
+    for part in message.walk():
+        for header, value in part.items():
+            print("{}: {}".format(header, value))
+        print()
+        if part.get_content_maintype() == "text":
+            charset = str(part.get_charset())
+            print(part.get_payload(decode=True).decode(charset))
+            print()
 
 
 def get_attachment_filenames(message):
