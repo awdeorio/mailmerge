@@ -4,12 +4,10 @@ Command line interface implementation.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
-import io
 import sys
 import textwrap
 import click
-import future.backports.email as email
-import future.backports.email.generator
+import blessings
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
@@ -25,6 +23,10 @@ try:
     from backports import csv
 except ImportError:
     import csv
+
+# Initialize colorizer
+# https://pypi.org/project/blessings/#simple-formatting
+TERM = blessings.Terminal()
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -104,11 +106,9 @@ def main(sample, dry_run, limit, no_limit, resume,
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(message_num))
+            print(TERM.reverse_bold_cyan(">>> message {}".format(message_num)))
             print_message(message)
-            for filename in get_attachment_filenames(message):
-                print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(message_num))
+            print(TERM.reverse_bold_cyan(">>> message {} sent".format(message_num)))
             message_num += 1
     except MailmergeError as error:
         sys.exit(
@@ -273,30 +273,28 @@ def enumerate_range(iterable, start=0, stop=None):
 
 
 def print_message(message, ):
+    """Print a message with colorized output."""
+    for header, value in message.items():
+        print("{}: {}".format(header, value))
     for part in message.walk():
-        for header, value in part.items():
-            print("{}: {}".format(header, value))
-        print()
-        if part.get_content_maintype() == "text":
+        if part.get_content_maintype() == "multipart":
+            pass
+        elif part.get_content_maintype() == "text":
+            print(TERM.cyan(">>> message part: {}".format(part.get_content_type())))
             charset = str(part.get_charset())
             print(part.get_payload(decode=True).decode(charset))
             print()
+        elif is_attachment(part):
+            print(TERM.cyan(">>> message part: attachment {}".format(part.get_filename())))
+        else:
+            print(TERM.cyan(">>> message part: {}".format(part.get_content_type())))
 
 
-def get_attachment_filenames(message):
-    """Return a list of attachment filenames."""
-    if message.get_content_maintype() != "multipart":
-        return []
-
-    filenames = []
-    for part in message.walk():
-        if part.get_content_maintype() == "multipart":
-            continue
-        if part.get_content_maintype() == "text":
-            continue
-        if part.get("Content-Disposition") == "inline":
-            continue
-        if part.get("Content-Disposition") is None:
-            continue
-        filenames.append(part.get_filename())
-    return filenames
+def is_attachment(part):
+    """Return True if message part looks like an attachment."""
+    return (
+        part.get_content_maintype() != "multipart" and
+        part.get_content_maintype() != "text" and
+        part.get("Content-Disposition") != "inline" and
+        part.get("Content-Disposition") is not None
+    )
