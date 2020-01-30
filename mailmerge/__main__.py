@@ -287,6 +287,8 @@ def enumerate_range(iterable, start=0, stop=None):
 
 def print_message(message, output_format):
     """Print a message with colorized output."""
+    assert output_format in ["raw", "human"]
+
     if output_format == "raw":
         print(message.as_string())
         return
