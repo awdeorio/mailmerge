@@ -71,8 +71,15 @@ TERM = blessings.Terminal()
     type=click.Path(),
     help="server configuration (mailmerge_server.conf)",
 )
+@click.option(
+    "--output-format", "output_format",
+    default="human",
+    type=click.Choice(['human', 'raw']),
+    help="Output format (human).",
+)
 def main(sample, dry_run, limit, no_limit, resume,
-         template_path, database_path, config_path):
+         template_path, database_path, config_path,
+         output_format):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -109,7 +116,7 @@ def main(sample, dry_run, limit, no_limit, resume,
                 .format(message_num=message_num)
             ))
             sender, recipients, message = template_message.render(row)
-            print_message(message)
+            print_message(message, output_format)
             sendmail_client.sendmail(sender, recipients, message)
             print(TERM.reverse_bold_cyan(
                 ">>> message {message_num} sent"
@@ -278,8 +285,12 @@ def enumerate_range(iterable, start=0, stop=None):
         yield i, value
 
 
-def print_message(message, ):
+def print_message(message, output_format):
     """Print a message with colorized output."""
+    if output_format == "raw":
+        print(message.as_string())
+        return
+
     for header, value in message.items():
         print("{header}: {value}".format(header=header, value=value))
     for part in message.walk():
