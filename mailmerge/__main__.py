@@ -104,11 +104,17 @@ def main(sample, dry_run, limit, no_limit, resume,
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for _, row in enumerate_range(csv_database, start, stop):
+            print(TERM.reverse_bold_cyan(
+                ">>> message {message_num}"
+                .format(message_num=message_num)
+            ))
             sender, recipients, message = template_message.render(row)
-            sendmail_client.sendmail(sender, recipients, message)
-            print(TERM.reverse_bold_cyan(">>> message {}".format(message_num)))
             print_message(message)
-            print(TERM.reverse_bold_cyan(">>> message {} sent".format(message_num)))
+            sendmail_client.sendmail(sender, recipients, message)
+            print(TERM.reverse_bold_cyan(
+                ">>> message {message_num} sent"
+                .format(message_num=message_num)
+            ))
             message_num += 1
     except MailmergeError as error:
         sys.exit(
@@ -275,19 +281,28 @@ def enumerate_range(iterable, start=0, stop=None):
 def print_message(message, ):
     """Print a message with colorized output."""
     for header, value in message.items():
-        print("{}: {}".format(header, value))
+        print("{header}: {value}".format(header=header, value=value))
     for part in message.walk():
         if part.get_content_maintype() == "multipart":
             pass
         elif part.get_content_maintype() == "text":
-            print(TERM.cyan(">>> message part: {}".format(part.get_content_type())))
+            print(TERM.cyan(
+                ">>> message part: {content_type}"
+                .format(content_type=part.get_content_type())
+            ))
             charset = str(part.get_charset())
             print(part.get_payload(decode=True).decode(charset))
             print()
         elif is_attachment(part):
-            print(TERM.cyan(">>> message part: attachment {}".format(part.get_filename())))
+            print(TERM.cyan(
+                ">>> message part: attachment {filename}"
+                .format(filename=part.get_filename())
+            ))
         else:
-            print(TERM.cyan(">>> message part: {}".format(part.get_content_type())))
+            print(TERM.cyan(
+                ">>> message part: {content_type}"
+                .format(content_type=part.get_content_type())
+            ))
 
 
 def is_attachment(part):
