@@ -24,8 +24,7 @@ try:
 except ImportError:
     import csv
 
-# Initialize colorizer
-# https://pypi.org/project/blessings/#simple-formatting
+# Initialize colorizer https://github.com/erikrose/blessings
 TERM = blessings.Terminal()
 
 

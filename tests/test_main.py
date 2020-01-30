@@ -11,6 +11,7 @@ http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 import re
 import textwrap
 import sh
+import blessings
 import pytest
 
 # Python 2 pathlib support requires backport
@@ -18,6 +19,9 @@ try:
     from pathlib2 import Path
 except ImportError:
     from pathlib import Path
+
+# Initialize colorizer https://github.com/erikrose/blessings
+TERM = blessings.Terminal()
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member
@@ -70,32 +74,34 @@ def test_stdout(tmpdir):
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent(u"""\
-        >>> message 1
+        {t.reverse_bold_cyan}>>> message 1{t.normal}
         TO: myself@mydomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
         MIME-Version: 1.0
         Content-Type: text/plain; charset="us-ascii"
         Content-Transfer-Encoding: 7bit
-
+        {t.cyan}>>> message part: text/plain{t.normal}
         Hi, Myself,
 
         Your number is 17.
-        >>> sent message 1
-        >>> message 2
+
+        {t.reverse_bold_cyan}>>> message 1 sent{t.normal}
+        {t.reverse_bold_cyan}>>> message 2{t.normal}
         TO: bob@bobdomain.com
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
         MIME-Version: 1.0
         Content-Type: text/plain; charset="us-ascii"
         Content-Transfer-Encoding: 7bit
-
+        {t.cyan}>>> message part: text/plain{t.normal}
         Hi, Bob,
 
         Your number is 42.
-        >>> sent message 2
+
+        {t.reverse_bold_cyan}>>> message 2 sent{t.normal}
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-        """)
+        """.format(t=TERM))
 
 
 def test_stdout_utf8(tmpdir):
