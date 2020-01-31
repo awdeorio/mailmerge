@@ -11,7 +11,6 @@ http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 import re
 import textwrap
 import sh
-import blessings
 import pytest
 
 # Python 2 pathlib support requires backport
@@ -373,28 +372,33 @@ def test_output_format_colorized(tmpdir):
     # Remove the Date string, which will be different each time
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
 
-    # Verify output
+    # The long output string below is the correct answer with Python 3.  With
+    # Python 2, we get a few differences in newlines.  We'll just query-replace
+    # those known mismatches so that the equality test passes.
+    # stdout = stdout.replace('</html>\n\n\n', '</html>\n\n')  # FIXME
+
+    # Verify output.  The funny looking character sequences are colors.
     assert stderr == ""
     assert stdout == textwrap.dedent(u"""\
-        {t.reverse_bold_cyan}>>> message 1{t.normal}
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
         TO: to@test.com
         FROM: from@test.com
         MIME-Version: 1.0
         Content-Type: multipart/alternative; boundary="boundary"
         Date: REDACTED
 
-        {t.cyan}>>> message part: text/plain{t.normal}
-        Laȝamon 😀 klâwen
+        \x1b[36m>>> message part: text/plain\x1b(B\x1b[m
+        La\u021damon \U0001f600 kl\xe2wen
 
 
-        {t.cyan}>>> message part: text/html{t.normal}
+        \x1b[36m>>> message part: text/html\x1b(B\x1b[m
         <html>
           <body>
-            <p>Laȝamon 😀 klâwen</p>
+            <p>La\u021damon \U0001f600 kl\xe2wen</p>
           </body>
         </html>
 
-        {t.reverse_bold_cyan}>>> message 1 sent{t.normal}
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1 sent\x1b(B\x1b[m
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """.format(t=blessings.Terminal(force_styling=True)))  # noqa: E501
+    """)  # noqa: E501
