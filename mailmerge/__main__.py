@@ -29,9 +29,10 @@ except ImportError:
 # Initialize colorizer https://github.com/erikrose/blessings
 TERM = blessings.Terminal()
 
-# Ensure proper output encoding when redirecting UTF-8 stdout to file
-# http://blog.mathieu-leplatre.info/python-utf-8-print-fails-when-redirecting-stdout.html
-sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
+# Python 2 UTF8 file redirection
+# http://www.macfreek.nl/memory/Encoding_of_Python_stdout
+if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
