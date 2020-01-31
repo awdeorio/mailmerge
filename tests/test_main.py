@@ -702,7 +702,6 @@ def test_complicated(tmpdir):
     # The long output string below is the correct answer with Python 3.  With
     # Python 2, we get a few differences in newlines.  We'll just query-replace
     # those known mismatches so that the equality test passes.
-    # FIXME: could this be due to Generator?
     stdout = stdout.replace(
         "TGHInWFtb24g8J+YgCBrbMOid2VuCgoK",
         "TGHInWFtb24g8J+YgCBrbMOid2VuCgo=",
@@ -1038,3 +1037,213 @@ def test_resume_hint_on_csv_error(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "--resume 2" in stderr
+
+
+def test_output_format_bad(tmpdir):
+    """Verify bad output format."""
+    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
+        sh.mailmerge("--output-format", "bad")
+    stdout = error.value.stdout.decode("utf-8")
+    stderr = error.value.stderr.decode("utf-8")
+    assert stdout == ""
+    assert 'Invalid value for "--output-format"' in stderr
+    assert "invalid choice: bad." in stderr
+
+
+def test_output_format_raw(tmpdir):
+    """Verify raw output format."""
+    # Attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        to@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--output-format", "raw")
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+
+    # Remove the Date string, which will be different each time
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert stderr == ""
+    assert stdout == textwrap.dedent("""\
+        >>> message 1
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+        Date: REDACTED
+
+        TGHInWFtb24g8J+YgCBrbMOid2Vu
+
+        >>> message 1 sent
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)
+
+
+def test_output_format_text(tmpdir):
+    """Verify text output format."""
+    # Attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        to@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--output-format", "text")
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+
+    # Remove the Date string, which will be different each time
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert stderr == ""
+    assert stdout == textwrap.dedent("""\
+        >>> message 1
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+        Date: REDACTED
+
+        Laȝamon 😀 klâwen
+
+        >>> message 1 sent
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)
+
+
+def test_output_format_colorized(tmpdir):
+    """Verify colorized output format."""
+    # Attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # HTML template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        Content-Type: text/plain; charset=us-ascii
+
+        Laȝamon 😀 klâwen
+
+        --boundary
+        Content-Type: text/html; charset=us-ascii
+
+        <html>
+          <body>
+            <p>Laȝamon 😀 klâwen</p>
+          </body>
+        </html>
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        to@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge("--output-format", "colorized")
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+
+    # Remove the Date string, which will be different each time
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert stderr == ""
+    assert stdout == textwrap.dedent("""\
+        {t.reverse_bold_cyan}>>> message 1{t.normal}
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        {t.cyan}>>> message part: text/plain{t.normal}
+        Laȝamon 😀 klâwen
+
+
+        {t.cyan}>>> message part: text/html{t.normal}
+        <html>
+          <body>
+            <p>Laȝamon 😀 klâwen</p>
+          </body>
+        </html>
+
+        {t.reverse_bold_cyan}>>> message 1 sent{t.normal}
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """.format(t=blessings.Terminal(force_styling=True)))
