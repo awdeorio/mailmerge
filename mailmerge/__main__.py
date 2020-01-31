@@ -5,6 +5,8 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
+import codecs
+import locale
 import textwrap
 import click
 import blessings
@@ -26,6 +28,10 @@ except ImportError:
 
 # Initialize colorizer https://github.com/erikrose/blessings
 TERM = blessings.Terminal()
+
+# Ensure proper output encoding when redirecting UTF-8 stdout to file
+# http://blog.mathieu-leplatre.info/python-utf-8-print-fails-when-redirecting-stdout.html
+sys.stdout = codecs.getwriter(locale.getpreferredencoding())(sys.stdout)
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
