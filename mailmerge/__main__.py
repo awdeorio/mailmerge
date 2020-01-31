@@ -110,14 +110,14 @@ def main(sample, dry_run, limit, no_limit, resume,
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for _, row in enumerate_range(csv_database, start, stop):
+            sender, recipients, message = template_message.render(row)
+            sendmail_client.sendmail(sender, recipients, message)
             print_reverse_bold_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
                 output_format,
             )
-            sender, recipients, message = template_message.render(row)
             print_message(message, output_format)
-            sendmail_client.sendmail(sender, recipients, message)
             print_reverse_bold_cyan(
                 ">>> message {message_num} sent"
                 .format(message_num=message_num),
@@ -312,6 +312,7 @@ def print_message(message, output_format):
 
     for header, value in message.items():
         print("{header}: {value}".format(header=header, value=value))
+    print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":
             pass
