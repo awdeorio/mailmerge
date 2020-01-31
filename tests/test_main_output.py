@@ -300,7 +300,7 @@ def test_output_format_text(tmpdir):
 
     # Verify output
     assert stderr == ""
-    assert stdout == textwrap.dedent("""\
+    assert stdout == textwrap.dedent(u"""\
         >>> message 1
         TO: to@test.com
         FROM: from@test.com
@@ -375,7 +375,7 @@ def test_output_format_colorized(tmpdir):
 
     # Verify output
     assert stderr == ""
-    assert stdout == textwrap.dedent("""\
+    assert stdout == textwrap.dedent(u"""\
         {t.reverse_bold_cyan}>>> message 1{t.normal}
         TO: to@test.com
         FROM: from@test.com
@@ -397,4 +397,4 @@ def test_output_format_colorized(tmpdir):
         {t.reverse_bold_cyan}>>> message 1 sent{t.normal}
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """.format(t=blessings.Terminal(force_styling=True)))
+    """.format(t=blessings.Terminal(force_styling=True)))  # noqa: E501

@@ -414,7 +414,7 @@ def test_utf8_template(tmpdir):
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
-    assert stdout == textwrap.dedent("""\
+    assert stdout == textwrap.dedent(u"""\
         >>> message 1
         TO: to@test.com
         FROM: from@test.com
@@ -467,7 +467,7 @@ def test_utf8_database(tmpdir):
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
-    assert stdout == textwrap.dedent("""\
+    assert stdout == textwrap.dedent(u"""\
         >>> message 1
         TO: to@test.com
         FROM: from@test.com
