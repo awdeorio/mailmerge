@@ -20,9 +20,6 @@ try:
 except ImportError:
     from pathlib import Path
 
-# Initialize colorizer https://github.com/erikrose/blessings
-TERM = blessings.Terminal()
-
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member
 
