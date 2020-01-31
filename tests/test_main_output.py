@@ -8,6 +8,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 pytest tmpdir docs:
 http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
+import os
 import re
 import textwrap
 import sh
@@ -152,6 +153,45 @@ def test_stdout_utf8(tmpdir):
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
+
+
+def test_stdout_utf8_redirect(tmpdir):
+    """Verify utf-8 output is properly encoded when redirected.
+
+    UTF-8 print fails when redirecting stdout under Pythnon 2
+    http://blog.mathieu-leplatre.info/python-utf-8-print-fails-when-redirecting-stdout.html
+    """
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        Laȝamon 😀 klâwen
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        myself@mydomain.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge.  We only care that no exceptions occur.  Note that we
+    # can't use the sh.mailmerge() here, even with its redirection utility,
+    # because it doesn't accurately recreate the conditions of the bug where
+    # the redirect destination lacks utf-8 encoding.
+    with tmpdir.as_cwd():
+        exit_code = os.system("mailmerge > mailmerge.out")
+    assert exit_code == 0
 
 
 def test_english(tmpdir):
