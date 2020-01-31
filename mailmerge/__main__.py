@@ -298,10 +298,12 @@ def print_message(message, output_format):
         if part.get_content_maintype() == "multipart":
             pass
         elif part.get_content_maintype() == "text":
-            print(TERM.cyan(
-                ">>> message part: {content_type}"
-                .format(content_type=part.get_content_type())
-            ))
+            if message.is_multipart():
+                # Only print message part dividers for multipart messages
+                print(TERM.cyan(
+                    ">>> message part: {content_type}"
+                    .format(content_type=part.get_content_type())
+                ))
             charset = str(part.get_charset())
             print(part.get_payload(decode=True).decode(charset))
             print()
