@@ -6,7 +6,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 from __future__ import print_function
 import sys
 import codecs
-import locale
 import textwrap
 import click
 import blessings
