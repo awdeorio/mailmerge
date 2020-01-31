@@ -415,7 +415,7 @@ def test_output_format_colorized(tmpdir):
     # The long output string below is the correct answer with Python 3.  With
     # Python 2, we get a few differences in newlines.  We'll just query-replace
     # those known mismatches so that the equality test passes.
-    # stdout = stdout.replace('</html>\n\n\n', '</html>\n\n')  # FIXME
+    stdout = stdout.replace("\n\n\n\n", "\n\n\n")
 
     # Verify output.  The funny looking character sequences are colors.
     assert stderr == ""
