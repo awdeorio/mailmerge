@@ -72,9 +72,9 @@ TERM = blessings.Terminal()
 )
 @click.option(
     "--output-format", "output_format",
-    default="human",
-    type=click.Choice(['human', 'raw']),
-    help="Output format (human).",
+    default="colorized",
+    type=click.Choice(["colorized", "text", "raw"]),
+    help="Output format (colorized).",
 )
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
@@ -286,7 +286,7 @@ def enumerate_range(iterable, start=0, stop=None):
 
 def print_message(message, output_format):
     """Print a message with colorized output."""
-    assert output_format in ["raw", "human"]
+    assert output_format in ["colorized", "text", "raw"]
 
     if output_format == "raw":
         print(message.as_string())
