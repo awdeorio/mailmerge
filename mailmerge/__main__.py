@@ -8,7 +8,6 @@ import sys
 import codecs
 import textwrap
 import click
-import blessings
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
@@ -24,9 +23,6 @@ try:
     from backports import csv
 except ImportError:
     import csv
-
-# Initialize colorizer https://github.com/erikrose/blessings
-TERM = blessings.Terminal()
 
 # Python 2 UTF8 file redirection
 # http://www.macfreek.nl/memory/Encoding_of_Python_stdout
@@ -118,13 +114,13 @@ def main(sample, dry_run, limit, no_limit, resume,
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print_reverse_bold_cyan(
+            print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
                 output_format,
             )
             print_message(message, output_format)
-            print_reverse_bold_cyan(
+            print_bright_white_on_cyan(
                 ">>> message {message_num} sent"
                 .format(message_num=message_num),
                 output_format,
@@ -295,17 +291,15 @@ def enumerate_range(iterable, start=0, stop=None):
 def print_cyan(string, output_format):
     """Print string to stdout, optionally enabling color."""
     if output_format == "colorized":
-        print(TERM.cyan(string))
-    else:
-        print(string)
+        string = "\x1b[36m" + string + "\x1b(B\x1b[m"
+    print(string)
 
 
-def print_reverse_bold_cyan(string, output_format):
+def print_bright_white_on_cyan(string, output_format):
     """Print string to stdout, optionally enabling color."""
     if output_format == "colorized":
-        print(TERM.reverse_bold_cyan(string))
-    else:
-        print(string)
+        string = "\x1b[7m\x1b[1m\x1b[36m" + string + "\x1b(B\x1b[m"
+    print(string)
 
 
 def print_message(message, output_format):
