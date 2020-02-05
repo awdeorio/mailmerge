@@ -799,7 +799,7 @@ def test_resume_too_big(tmpdir):
 
 
 def test_resume_hint_on_config_error(tmpdir):
-    """Verify --resume hint after config file read error."""
+    """Verify *no* --resume hint when error is after first message."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
@@ -830,7 +830,7 @@ def test_resume_hint_on_config_error(tmpdir):
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "--resume 1" in stderr
+    assert "--resume 1" not in stderr
 
 
 def test_resume_hint_on_csv_error(tmpdir):
