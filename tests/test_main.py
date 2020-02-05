@@ -884,7 +884,6 @@ def test_other_mime_type(tmpdir):
 
         Hello world
 
-
         --boundary
         Content-Type: application/pdf
 
@@ -914,7 +913,7 @@ def test_other_mime_type(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
     assert stderr == ""
-    #stdout = stdout.replace("\n\n\n\n", "\n\n\n")
+    stdout = stdout.replace("\n\n\n\n", "\n\n\n")
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
     assert stdout == textwrap.dedent(u"""\
         \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
@@ -926,7 +925,6 @@ def test_other_mime_type(tmpdir):
 
         \x1b[36m>>> message part: text/plain\x1b(B\x1b[m
         Hello world
-
 
 
         \x1b[36m>>> message part: application/pdf\x1b(B\x1b[m
