@@ -927,7 +927,7 @@ def test_resume_too_big(tmpdir):
 
 
 def test_resume_hint_on_config_error(tmpdir):
-    """Verify --resume hint after config file read error."""
+    """Verify if config file read fails on first message, no hint."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent(u"""\
@@ -958,7 +958,7 @@ def test_resume_hint_on_config_error(tmpdir):
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert "--resume 1" in stderr
+    assert "--resume 1" not in stderr
 
 
 def test_resume_hint_on_csv_error(tmpdir):
@@ -995,40 +995,3 @@ def test_resume_hint_on_csv_error(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "--resume 2" in stderr
-
-
-def test_resume_first_message(tmpdir):
-    """Do not print hint about --resume option if it's the first message."""
-    # Simple template with an error
-    template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
-        TO: to@test.com
-        FROM: from@test.com
-
-        {{key_not_found}}
-    """))
-
-    # Database with an error
-    database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
-        message
-        world
-    """))
-
-    # Simple unsecure server config
-    config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
-        [smtp_server]
-        host = open-smtp.example.com
-        port = 25
-    """))
-
-    # Run mailmerge
-    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_1) as error:
-        sh.mailmerge()
-
-    # Verify "--resume 1" hint is not in output
-    stdout = error.value.stdout.decode("utf-8")
-    stderr = error.value.stderr.decode("utf-8")
-    assert stdout == ""
-    assert "--resume 1" not in stderr
