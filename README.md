@@ -90,7 +90,7 @@ bob@bobdomain.com,"Bob",42
 ```
 
 ### Dry run
-First, dry run one email message (`mailmerge`).  This will fill in the template fields of the first email message and print it to the terminal.
+First, dry run one email message (`mailmerge` defaults).  This will fill in the template fields of the first email message and print it to the terminal.
 ```console
 $ mailmerge
 >>> message 1

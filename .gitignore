@@ -25,5 +25,5 @@ build/
 # Test tools
 /.tox/
 /tmp/
-/.coverage
+/.coverage*
 *,cover
