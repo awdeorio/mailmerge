@@ -867,3 +867,70 @@ def test_resume_hint_on_csv_error(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
     assert "--resume 2" in stderr
+
+
+def test_other_mime_type(tmpdir):
+    """Verify output with a MIME type that's not text or an attachment."""
+    # Template containing a pdf
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        --boundary
+        Content-Type: text/plain; charset=us-ascii
+
+        Hello world
+
+
+        --boundary
+        Content-Type: application/pdf
+
+        DUMMY
+    """))
+
+    # Simple database with two entries
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        email
+        one@test.com
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    with tmpdir.as_cwd():
+        output = sh.mailmerge()
+
+    # Verify output
+    stdout = output.stdout.decode("utf-8")
+    stderr = output.stderr.decode("utf-8")
+    assert stderr == ""
+    #stdout = stdout.replace("\n\n\n\n", "\n\n\n")
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    assert stdout == textwrap.dedent(u"""\
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
+        TO: one@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        \x1b[36m>>> message part: text/plain\x1b(B\x1b[m
+        Hello world
+
+
+
+        \x1b[36m>>> message part: application/pdf\x1b(B\x1b[m
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1 sent\x1b(B\x1b[m
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)
