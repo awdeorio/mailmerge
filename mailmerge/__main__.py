@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
+import codecs
 import textwrap
 import click
 from .template_message import TemplateMessage
@@ -22,6 +23,11 @@ try:
     from backports import csv
 except ImportError:
     import csv
+
+# Python 2 UTF8 file redirection
+# http://www.macfreek.nl/memory/Encoding_of_Python_stdout
+if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
+    sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -66,8 +72,15 @@ except ImportError:
     type=click.Path(),
     help="server configuration (mailmerge_server.conf)",
 )
+@click.option(
+    "--output-format", "output_format",
+    default="colorized",
+    type=click.Choice(["colorized", "text", "raw"]),
+    help="Output format (colorized).",
+)
 def main(sample, dry_run, limit, no_limit, resume,
-         template_path, database_path, config_path):
+         template_path, database_path, config_path,
+         output_format):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -101,11 +114,17 @@ def main(sample, dry_run, limit, no_limit, resume,
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
-            print(">>> message {}".format(message_num))
-            print(message.as_string())
-            for filename in get_attachment_filenames(message):
-                print(">>> attached {}".format(filename))
-            print(">>> sent message {}".format(message_num))
+            print_bright_white_on_cyan(
+                ">>> message {message_num}"
+                .format(message_num=message_num),
+                output_format,
+            )
+            print_message(message, output_format)
+            print_bright_white_on_cyan(
+                ">>> message {message_num} sent"
+                .format(message_num=message_num),
+                output_format,
+            )
             message_num += 1
     except MailmergeError as error:
         sys.exit(
@@ -269,20 +288,64 @@ def enumerate_range(iterable, start=0, stop=None):
         yield i, value
 
 
-def get_attachment_filenames(message):
-    """Return a list of attachment filenames."""
-    if message.get_content_maintype() != "multipart":
-        return []
+def print_cyan(string, output_format):
+    """Print string to stdout, optionally enabling color."""
+    if output_format == "colorized":
+        string = "\x1b[36m" + string + "\x1b(B\x1b[m"
+    print(string)
 
-    filenames = []
+
+def print_bright_white_on_cyan(string, output_format):
+    """Print string to stdout, optionally enabling color."""
+    if output_format == "colorized":
+        string = "\x1b[7m\x1b[1m\x1b[36m" + string + "\x1b(B\x1b[m"
+    print(string)
+
+
+def print_message(message, output_format):
+    """Print a message with colorized output."""
+    assert output_format in ["colorized", "text", "raw"]
+
+    if output_format == "raw":
+        print(message.as_string())
+        return
+
+    for header, value in message.items():
+        print("{header}: {value}".format(header=header, value=value))
+    print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":
-            continue
-        if part.get_content_maintype() == "text":
-            continue
-        if part.get("Content-Disposition") == "inline":
-            continue
-        if part.get("Content-Disposition") is None:
-            continue
-        filenames.append(part.get_filename())
-    return filenames
+            pass
+        elif part.get_content_maintype() == "text":
+            if message.is_multipart():
+                # Only print message part dividers for multipart messages
+                print_cyan(
+                    ">>> message part: {content_type}"
+                    .format(content_type=part.get_content_type()),
+                    output_format,
+                )
+            charset = str(part.get_charset())
+            print(part.get_payload(decode=True).decode(charset))
+            print()
+        elif is_attachment(part):
+            print_cyan(
+                ">>> message part: attachment {filename}"
+                .format(filename=part.get_filename()),
+                output_format,
+            )
+        else:
+            print_cyan(
+                ">>> message part: {content_type}"
+                .format(content_type=part.get_content_type()),
+                output_format,
+            )
+
+
+def is_attachment(part):
+    """Return True if message part looks like an attachment."""
+    return (
+        part.get_content_maintype() != "multipart" and
+        part.get_content_maintype() != "text" and
+        part.get("Content-Disposition") != "inline" and
+        part.get("Content-Disposition") is not None
+    )
