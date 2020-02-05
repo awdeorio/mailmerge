@@ -931,4 +931,4 @@ def test_other_mime_type(tmpdir):
         \x1b[7m\x1b[1m\x1b[36m>>> message 1 sent\x1b(B\x1b[m
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """)
+    """)  # noqa: E501
