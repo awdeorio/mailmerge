@@ -127,11 +127,16 @@ def main(sample, dry_run, limit, no_limit, resume,
             )
             message_num += 1
     except MailmergeError as error:
+        hint_text = '\nHint: "--resume {}"'.format(message_num)
         sys.exit(
             "Error on message {message_num}\n"
-            "{error}\n"
-            'Hint: "--resume {message_num}"'
-            .format(message_num=message_num, error=error)
+            "{error}"
+            "{hint}"
+            .format(
+                message_num=message_num,
+                error=error,
+                hint=(hint_text if message_num > 1 else ""),
+            )
         )
 
     # Hints for user
