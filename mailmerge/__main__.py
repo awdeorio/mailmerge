@@ -316,7 +316,7 @@ def print_message(message, output_format):
         return
 
     for header, value in message.items():
-        print("{header}: {value}".format(header=header, value=value))
+        print(u"{header}: {value}".format(header=header, value=value))
     print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":
