@@ -101,10 +101,10 @@ def main(sample, dry_run, limit, no_limit, resume,
     # Configure logging
     logging.basicConfig(
         filename="mailmerge.log",
-        filemode='a',
+        filemode="a",
         level=logging.DEBUG,
     )
-    logging.debug("mailmerge version {}".format(VERSION))
+    logging.debug("mailmerge version %s", VERSION)
     logging.debug(" ".join(sys.argv))
     logging.debug("sample %s", sample)
     logging.debug("dry_run %s", dry_run)
