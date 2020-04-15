@@ -5,7 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import io
 import future.backports.email as email
-import future.backports.email.generator
+import future.backports.email.generator  # pylint: disable=unused-import
 
 
 def flatten_message(message):
