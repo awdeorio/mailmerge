@@ -14,6 +14,7 @@ import future.backports.email.utils
 import future.backports.email.generator
 import markdown
 import jinja2
+import uuid
 from .exceptions import MailmergeError
 
 # Python 2 pathlib support requires backport
@@ -44,6 +45,7 @@ class TemplateMessage(object):
         self._message = None
         self._sender = None
         self._recipients = None
+        self._attachment_content_ids = {}
 
         # Configure Jinja2 template engine with the template dirname as root.
         #
@@ -170,7 +172,13 @@ class TemplateMessage(object):
 
         # Add each attachment to the message
         for path in self._message.get_all('attachment', failobj=[]):
+            
+            # Generate a GUID as the Content-ID
+            # and store it in a dict against the path
+            guid = str(uuid.uuid4())
             path = self._resolve_attachment_path(path)
+            self._attachment_content_ids[path] = guid
+
             with path.open("rb") as attachment:
                 content = attachment.read()
             basename = path.parts[-1]
@@ -182,6 +190,7 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
+            part.add_header('Content-Id', guid)
             self._message.attach(part)
 
         # Remove the attachment header, it's non-standard for email

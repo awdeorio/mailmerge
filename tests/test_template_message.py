@@ -13,6 +13,7 @@ import collections
 import pytest
 import markdown
 from mailmerge import TemplateMessage, MailmergeError
+from uuid import UUID
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -340,7 +341,7 @@ def test_markdown_encoding(tmp_path):
 
 Attachment = collections.namedtuple(
     "Attachment",
-    ["filename", "content"],
+    ["filename", "content", "content_id"],
 )
 
 
@@ -360,6 +361,7 @@ def extract_attachments(message):
             attachments.append(Attachment(
                 filename=part.get_param('name'),
                 content=part.get_payload(decode=True),
+                content_id=part.get("Content-Id")
             ))
     return attachments
 
@@ -395,7 +397,7 @@ def test_attachment_simple(tmpdir):
     assert len(attachments) == 1
 
     # Verify attachment
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -425,7 +427,7 @@ def test_attachment_relative(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -454,7 +456,7 @@ def test_attachment_absolute(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -485,7 +487,7 @@ def test_attachment_template(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -985,3 +987,39 @@ def test_encoding_multipart_mismatch(tmp_path):
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
     assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
+
+
+def test_attachment_image_in_markdown(tmp_path):
+    """Images sent as attachments should get linked correctly in images"""
+    pass
+
+def test_content_id_header_for_attachments(tmpdir):
+    """All attachments should get a content-id header"""
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+
+        Hello world
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        sender, recipients, message = template_message.render({})
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+
+    # Verify attachment
+    filename, content, cid = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+    assert re.match('[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}', cid)
