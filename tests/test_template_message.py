@@ -710,6 +710,63 @@ def test_utf8_database(tmp_path):
     assert plaintext == u"Hi Laȝamon"
 
 
+def test_utf8_to(tmp_path):
+    """Verify UTF8 support in TO field."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: Laȝamon <to@test.com>
+        FROM: from@test.com
+
+        {{message}}
+    """))
+    template_message = TemplateMessage(template_path)
+    _, recipients, message = template_message.render({
+        "message": "hello",
+    })
+
+    # Verify recipient name and email
+    assert recipients == ["to@test.com"]
+    assert message["to"] == u"Laȝamon <to@test.com>"
+
+
+def test_utf8_from(tmp_path):
+    """Verify UTF8 support in FROM field."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: Laȝamon <from@test.com>
+
+        {{message}}
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, _, message = template_message.render({
+        "message": "hello",
+    })
+
+    # Verify sender name and email
+    assert sender == u"Laȝamon <from@test.com>"
+    assert message["from"] == u"Laȝamon <from@test.com>"
+
+
+def test_utf8_subject(tmp_path):
+    """Verify UTF8 support in SUBJECT field."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        SUBJECT: Laȝamon
+
+        {{message}}
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, _, message = template_message.render({
+        "message": "hello",
+    })
+
+    # Verify subject
+    assert message["subject"] == u"Laȝamon"
+
+
 def test_emoji(tmp_path):
     """Verify emoji are encoded."""
     template_path = tmp_path / "template.txt"
