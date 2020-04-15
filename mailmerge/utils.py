@@ -19,7 +19,11 @@ def flatten_message(message):
 
     """
     stream = io.StringIO()
-    generator = email.generator.Generator(stream, mangle_from_=False, maxheaderlen=78)
+    generator = email.generator.Generator(
+        stream,
+        mangle_from_=False,
+        maxheaderlen=78,
+    )
     generator.flatten(message)
     text = stream.getvalue()
     return text
