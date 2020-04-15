@@ -15,7 +15,7 @@ setuptools.setup(
     description="A simple, command line mail merge tool",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    version="2.0.0",
+    version="2.1.0",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",

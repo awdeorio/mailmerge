@@ -58,7 +58,7 @@ Edit these files, then run mailmerge again.
 ```
 
 ### Edit the SMTP server config `mailmerge_server.conf`
-The defaults are set up for gmail.  Be sure to change your username.  If you use 2-factor authentication, you may need to set up a one-time password for use by an app.  `mailmerge` will give an error with a URL to the right GMail support page.  Other configuration examples are in the comments of `mailmerge_server.conf`.
+The defaults are set up for GMail.  Be sure to change your username.  If you use 2-factor authentication, create an [app password](https://support.google.com/accounts/answer/185833?hl=en) first.  Other configuration examples are in the comments of `mailmerge_server.conf`.
 ```
 [smtp_server]
 host = smtp.gmail.com
@@ -162,7 +162,9 @@ Your number is 17.
 >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
 ```
 
-Now, check your email make sure the message went through.  If everything looks OK, then it's time to send all the messages.
+You may have to type your email password when prompted. (If you use GMail with 2-factor authentication, don't forget to use the [app password](https://support.google.com/accounts/answer/185833?hl=en) you created while [setting up the SMTP server config](#edit-the-smtp-server-config-mailmerge_serverconf).)
+
+Now, check your email and make sure the message went through.  If everything looks OK, then it's time to send all the messages.
 
 ### Send all emails
 ```console
