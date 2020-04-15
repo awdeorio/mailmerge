@@ -11,11 +11,12 @@ import future.backports.email.generator
 def flatten_message(message):
     """Return message as string.
 
-    We can't use Python 3's __str__() because it doesn't work on Python 2.  We
-    can't use message.as_string() because it errors on UTF-8 headers.
+    We can't use Python 3's message.__str__() because it doesn't work on Python
+    2.  We can't use message.as_string() because it errors on UTF-8 headers.
 
     Based on Python 2 documentation
     https://docs.python.org/2/library/email.message.html
+
     """
     stream = io.StringIO()
     generator = email.generator.Generator(stream, mangle_from_=False, maxheaderlen=78)
