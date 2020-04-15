@@ -3,7 +3,7 @@ Utility functions used by multiple mailmerge modules.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-import StringIO
+import io
 import future.backports.email as email
 import future.backports.email.generator
 
@@ -17,7 +17,7 @@ def flatten_message(message):
     Based on Python 2 documentation
     https://docs.python.org/2/library/email.message.html
     """
-    stream = StringIO.StringIO()
+    stream = io.StringIO()
     generator = email.generator.Generator(stream, mangle_from_=False, maxheaderlen=78)
     generator.flatten(message)
     text = stream.getvalue()
