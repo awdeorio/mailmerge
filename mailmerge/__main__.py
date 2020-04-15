@@ -225,18 +225,16 @@ def check_input_files(template_path, database_path, config_path, sample):
 
 def file_to_log(path):
     """Log a file name, content, mtime and hash."""
+    with path.open("rb") as file:
+        raw = file.read()
+    sha1sum = hashlib.sha1(raw).hexdigest()
+    logging.debug("%s sha1sum: %s", path, sha1sum)
     with path.open("r") as file:
-        content = file.read()
-    sha1sum = hashlib.sha1(content.encode("utf-8")).hexdigest()
-    logging.debug("%s mtime %s", path, path.stat().st_mtime)
-    logging.debug("%s sha1sum %s", path, sha1sum)
-    logging.debug(
-        "%s content\n"
-        "*** content begin ***\n"
-        "%s"
-        "*** content end ***",
-        path, content
-    )
+        lines = file.readlines()
+    logging.debug("%s mtime: %s", path, path.stat().st_mtime)
+    for line in lines:
+        line = line.rstrip()
+        logging.debug("%s content: %s", path, line)
 
 
 def create_sample_input_files(template_path, database_path, config_path):
