@@ -34,7 +34,7 @@ def flatten_message(message):
 
 
 # Monkey patch the future.backports.email library to avoid a bug that shows up
-# when printing an email header containing base64-encoded UTF8 characters.
+# when flattening an email header containing base64-encoded UTF8 characters.
 # This error only shows up on Python 2.
 #
 # We'll patch one function from future/backports/email/base64mime.py .  One
