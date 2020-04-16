@@ -11,26 +11,6 @@ import future.backports.email.generator  # pylint: disable=unused-import
 import future.builtins
 
 
-# Monkey patch future.backports.email library
-# FIXME better comments
-def header_encode_patched(header_bytes, charset='iso-8859-1'):
-    """Encode a single header line with Base64 encoding in a given charset.
-
-    charset names the character set to use to encode the header.  It defaults
-    to iso-8859-1.  Base64 encoding is defined in RFC 2045.
-    """
-    if not header_bytes:
-        return ""
-    if isinstance(header_bytes, str):
-        # FIXME comment
-        # header_bytes = header_bytes.encode(charset)
-        header_bytes = future.builtins.bytes(header_bytes, charset)
-    encoded = base64.b64encode(header_bytes).decode("ascii")
-    return '=?%s?b?%s?=' % (charset, encoded)
-
-future.backports.email.base64mime.header_encode = header_encode_patched
-
-
 def flatten_message(message):
     """Return message as string.
 
@@ -51,3 +31,30 @@ def flatten_message(message):
     generator.flatten(message)
     text = stream.getvalue()
     return text
+
+
+# Monkey patch the future.backports.email library to avoid a bug that shows up
+# when printing an email header containing base64-encoded UTF8 characters.
+# This error only shows up on Python 2.
+#
+# We'll patch one function from future/backports/email/base64mime.py .  One
+# line is modified:
+#     header_bytes = header_bytes.encode(charset)                  # Old
+#     header_bytes = future.builtins.bytes(header_bytes, charset)  # New
+
+def header_encode_patched(header_bytes, charset='iso-8859-1'):
+    """Encode a single header line with Base64 encoding in a given charset.
+
+    charset names the character set to use to encode the header.  It defaults
+    to iso-8859-1.  Base64 encoding is defined in RFC 2045.
+    """
+    if not header_bytes:
+        return ""
+    if isinstance(header_bytes, str):
+        header_bytes = future.builtins.bytes(header_bytes, charset)
+    encoded = base64.b64encode(header_bytes).decode("ascii")
+    return '=?%s?b?%s?=' % (charset, encoded)
+
+
+# Overwrite email library's buggy function
+future.backports.email.base64mime.header_encode = header_encode_patched
