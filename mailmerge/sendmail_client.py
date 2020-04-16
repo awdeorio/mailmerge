@@ -8,6 +8,7 @@ import smtplib
 import configparser
 import getpass
 from .exceptions import MailmergeError
+from . import utils
 
 
 class SendmailClient(object):
@@ -54,7 +55,7 @@ class SendmailClient(object):
 
         Note that we can't use the elegant smtp.send_message(message)" because
         Python 2 doesn't support it.  Both Python 2 and Python 3 support
-        smtp.sendmail(sender, recipients, message.as_string()).
+        smtp.sendmail(sender, recipients, flattened_message_str).
         """
         if self.dry_run:
             return
@@ -67,20 +68,21 @@ class SendmailClient(object):
 
         # Send
         try:
+            message_flattened = utils.flatten_message(message)
             if self.security == "SSL/TLS":
                 with smtplib.SMTP_SSL(self.host, self.port) as smtp:
                     smtp.login(self.username, self.password)
-                    smtp.sendmail(sender, recipients, message.as_string())
+                    smtp.sendmail(sender, recipients, message_flattened)
             elif self.security == "STARTTLS":
                 with smtplib.SMTP(self.host, self.port) as smtp:
                     smtp.ehlo()
                     smtp.starttls()
                     smtp.ehlo()
                     smtp.login(self.username, self.password)
-                    smtp.sendmail(sender, recipients, message.as_string())
+                    smtp.sendmail(sender, recipients, message_flattened)
             elif self.security is None:
                 with smtplib.SMTP(self.host, self.port) as smtp:
-                    smtp.sendmail(sender, recipients, message.as_string())
+                    smtp.sendmail(sender, recipients, message_flattened)
         except smtplib.SMTPAuthenticationError as err:
             raise MailmergeError(
                 "{}:{} failed to authenticate user '{}': {}"
