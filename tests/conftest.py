@@ -5,7 +5,10 @@ import aiosmtpd.controller
 @pytest.fixture(name='live_smtp_server')
 def setup_teardown_live_smtp_server():
     """Start SMTP server in a separate thread."""
-    controller = aiosmtpd.controller.Controller(ExampleHandler())
+    controller = aiosmtpd.controller.Controller(
+        ExampleHandler(),
+        port=8025,
+    )
     controller.start()
 
     # Transfer control to testcase
