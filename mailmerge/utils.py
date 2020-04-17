@@ -39,9 +39,8 @@ def flatten_message(message):
 #
 # We'll patch one function from future/backports/email/base64mime.py .  One
 # line is modified:
-#     header_bytes = header_bytes.encode(charset)                  # Old
-#     header_bytes = future.builtins.bytes(header_bytes, charset)  # New
-
+#     if isinstance(header_bytes, str):                  # Old
+#     if isinstance(header_bytes, future.builtins.str):  # New
 def header_encode_patched(header_bytes, charset='iso-8859-1'):
     """Encode a single header line with Base64 encoding in a given charset.
 
@@ -53,8 +52,8 @@ def header_encode_patched(header_bytes, charset='iso-8859-1'):
 
     if not header_bytes:
         return ""
-    if isinstance(header_bytes, str):
-        header_bytes = future.builtins.bytes(header_bytes, charset)
+    if isinstance(header_bytes, future.builtins.str):
+        header_bytes = header_bytes.encode(charset)
     encoded = base64.b64encode(header_bytes).decode("ascii")
     return '=?%s?b?%s?=' % (charset, encoded)
 
