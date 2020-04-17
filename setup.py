@@ -23,6 +23,7 @@ setuptools.setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
+        "aiosmtpd",
         "backports.csv;python_version<'3.0'",
         "click",
         "configparser",
