@@ -11,6 +11,7 @@ import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
+from . import utils
 
 # Python 2 pathlib support requires backport
 try:
@@ -312,11 +313,11 @@ def print_message(message, output_format):
     assert output_format in ["colorized", "text", "raw"]
 
     if output_format == "raw":
-        print(message.as_string())
+        print(utils.flatten_message(message))
         return
 
     for header, value in message.items():
-        print("{header}: {value}".format(header=header, value=value))
+        print(u"{header}: {value}".format(header=header, value=value))
     print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":

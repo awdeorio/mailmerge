@@ -11,7 +11,6 @@ import future.backports.email.mime.multipart
 import future.backports.email.mime.text
 import future.backports.email.parser
 import future.backports.email.utils
-import future.backports.email.generator
 import markdown
 import jinja2
 from .exceptions import MailmergeError

@@ -484,6 +484,66 @@ def test_utf8_database(tmpdir):
     """)  # noqa: E501
 
 
+def test_utf8_headers(tmpdir):
+    """Message is utf-8 encoded when headers contain utf-8 chars."""
+    # Template with UTF-8 characters and emoji in headers
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: Laȝamon <to@test.com>
+        FROM: klâwen <from@test.com>
+        SUBJECT: Laȝamon 😀 klâwen
+
+        {{message}}
+    """))
+
+    # Simple database without utf-8 characters
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge
+    output = sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        "--dry-run",
+        "--output-format", "raw",
+    )
+
+    # Remove the Date string, which will be different each time
+    stdout = output.stdout.decode("utf-8")
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert output.stderr.decode("utf-8") == ""
+    assert stdout == textwrap.dedent(u"""\
+        >>> message 1
+        TO: =?utf-8?b?TGHInWFtb24gPHRvQHRlc3QuY29tPg==?=
+        FROM: =?utf-8?b?a2zDondlbiA8ZnJvbUB0ZXN0LmNvbT4=?=
+        SUBJECT: =?utf-8?b?TGHInWFtb24g8J+YgCBrbMOid2Vu?=
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+        Date: REDACTED
+
+        aGVsbG8=
+
+        >>> message 1 sent
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)  # noqa: E501
+
+
 def test_complicated(tmpdir):
     """Complicated end-to-end test.
 

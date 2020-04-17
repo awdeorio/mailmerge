@@ -16,12 +16,12 @@ python:
   - "3.7"
   - "3.8"
 
-install: pip install tox-travis codecov
+install: pip install --upgrade tox-travis codecov
 
 script: tox
 
 after_script:
-  - pip install codecov
+  - pip install --upgrade codecov
   - codecov
 
 branches:
