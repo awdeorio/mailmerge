@@ -1,3 +1,4 @@
+
 # coding=utf-8
 # Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
@@ -682,7 +683,58 @@ def test_duplicate_headers_markdown(tmp_path):
 
 def test_attachment_image_in_markdown(tmp_path):
     """Images sent as attachments should get linked correctly in images"""
-    pass
+    shutil.copy(str(utils.TESTDATA/"attachment_3.jpg"), str(tmp_path))
+
+    # Create template .txt file
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        ATTACHMENT: attachment_3.jpg
+        CONTENT-TYPE: text/markdown
+
+        ![{{alttext}}](attachment_3.jpg)
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "email": "myself@mydomain.com",
+        "alttext": "Sample image"
+    })
+
+    # Verify sender and recipients
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+
+    # Verify message is multipart
+    assert message.is_multipart()
+
+    # Make sure there is a plaintext part and an HTML part
+    payload = message.get_payload()
+    assert len(payload) == 3
+
+    # Ensure that the first part is plaintext and the last part
+    # is HTML (as per RFC 2046)
+    plaintext_part = payload[0]
+    assert plaintext_part['Content-Type'].startswith("text/plain")
+    plaintext_encoding = str(plaintext_part.get_charset())
+    plaintext = plaintext_part.get_payload(decode=True) \
+                              .decode(plaintext_encoding)
+
+    assert plaintext.strip() == "![Sample image](attachment_3.jpg)"
+
+    html_part = payload[1]
+    assert html_part['Content-Type'].startswith("text/html")
+    html_encoding = str(html_part.get_charset())
+    htmltext = html_part.get_payload(decode=True) \
+                        .decode(html_encoding)
+
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+    filename, content, cid = attachments[0]
+    assert filename == "attachment_3.jpg"
+    assert len(content) == 697
+    assert htmltext.strip() == '<html><body><p><img alt="Sample image" src="cid:{cid}" /></p></body></html>'.format(cid=cid)
 
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
