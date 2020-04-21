@@ -17,6 +17,7 @@ A simple, command line mail merge tool.
 - [HTML formatting](#html-formatting)
 - [Markdown formatting](#markdown-formatting)
 - [Attachments](#attachments)
+- [Inline Image Attachments](#inline-image-attachments)
 - [Contributing](#contributing)
 - [Acknowledgements](#acknowledgements)
 
@@ -372,6 +373,52 @@ Pro-tip: Use Jinja to customize the attachments based on your database!
 >>> sent message 1
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
+
+## Inline Image Attachments
+
+This example shows how to add inline-image-attachments, so the images are rendered directly from the attachment.
+
+#### Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+ATTACHMENT: image.jpg
+CONTENT-TYPE: text/markdown
+
+Hi, {{name}},
+
+![image](image.jpg)
+```
+
+You can do the same with HTML templates as well:
+
+#### Template `mailmerge_template.txt`
+
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+Content-Type: text/html
+ATTACHMENT: image.jpg
+ATTACHMENT: second/image.jpg
+
+<html>
+<body>
+
+<p>Hi, {{name}},</p>
+
+<img alt="Sample image" src="image.jpg" />
+
+The second image: <img alt="second" src="second/image.jpg">
+
+<p>Sent by <a href="https://github.com/awdeorio/mailmerge">mailmerge</a></p>
+
+</body>
+</html>
+```
+
+In case you have a local image referenced via `<img src=?>`, it must be added as an attachment. This is true for both markdown/html formatting.
 
 ## Contributing
 Contributions from the community are welcome! Check out the [guide for contributing](CONTRIBUTING.md).
