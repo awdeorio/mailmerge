@@ -12,7 +12,6 @@ import pytest
 import aiosmtpd.controller
 import aiosmtpd.handlers
 
-
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member
 
@@ -67,6 +66,63 @@ def test_no_security(tmpdir, live_smtp_server):
     )
 
 
+@pytest.fixture(name='live_smtp_server_starttls')
+def setup_teardown_live_smtp_server_starttls():
+    """Start a message-swallowing SMTP server in a separate thread."""
+    context = ssl.create_default_context(ssl.Purpose.CLIENT_AUTH)
+    context.load_cert_chain(
+        pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.crt'),
+        pkg_resources.resource_filename('aiosmtpd.tests.certs', 'server.key'),
+    )
+    controller = aiosmtpd.controller.Controller(
+        aiosmtpd.handlers.Sink(),
+        port=8025,
+        ssl_context=context,
+    )
+    controller.start()
+    yield controller
+    controller.stop()
+
+
+def test_starttls(tmpdir, live_smtp_server):
+    """Connect to a live server with STARTTLS security."""
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+
+        {{message}}
+    """))
+
+    # Simple database
+    database_path = Path(tmpdir/"database.csv")
+    database_path.write_text(textwrap.dedent(u"""\
+        message
+        hello
+    """))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = localhost
+        port = 8025
+        security = STARTTLS
+        username = root
+    """))
+
+    # Run mailmerge
+    sh.mailmerge(
+        "--template", template_path,
+        "--database", database_path,
+        "--config", config_path,
+        "--no-dry-run",
+        _in="password",
+        _tty_in=True,  # Needed to trick getpass()
+    )
+
+
 @pytest.fixture(name='live_smtp_server_ssl_tls')
 def setup_teardown_live_smtp_server_ssl_tls():
     """Start a message-swallowing SMTP server in a separate thread."""
@@ -77,7 +133,7 @@ def setup_teardown_live_smtp_server_ssl_tls():
     )
     controller = aiosmtpd.controller.Controller(
         aiosmtpd.handlers.Sink(),
-        port=8025,
+        port=8465,
         ssl_context=tls_context,
     )
     controller.start()
@@ -108,7 +164,7 @@ def test_ssl_tls(tmpdir, live_smtp_server):
     config_path.write_text(textwrap.dedent(u"""\
         [smtp_server]
         host = localhost
-        port = 8025
+        port = 8465
         security = SSL/TLS
         username = root
     """))
