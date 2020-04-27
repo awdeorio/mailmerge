@@ -12,9 +12,11 @@ import future.backports.email.mime.text
 import future.backports.email.parser
 import future.backports.email.utils
 import future.backports.email.generator
+import html5lib
 import markdown
 import jinja2
 import uuid
+from xml.etree import ElementTree
 from .exceptions import MailmergeError
 
 # Python 2 pathlib support requires backport
@@ -72,11 +74,31 @@ class TemplateMessage(object):
         self._transform_recipients()
         self._transform_markdown()
         self._transform_attachments()
+        self._transform_attachment_references()
         self._message.__setitem__('Date', email.utils.formatdate())
         assert self._sender
         assert self._recipients
         assert self._message
         return self._sender, self._recipients, self._message
+
+    def _make_msgid(self, filepath):
+        """
+        Returns a string suitable for RFC 2822 compliant Message-ID, e.g:
+        <794e9da8-1a3c-4962-9417-d8cd71b921bd@mailmerge.invalid>
+        filepath is the path of the file being used
+        Adapted from the Python defined one:
+        https://github.com/python/cpython/blob/68b352a6982f51e19bf9b9f4ae61b34f5864d131/Lib/email/utils.py#L174-L194
+        But doesn't leak the hostname, and doesn't rely on time/pid
+        """
+        guid = uuid.uuid4()
+        # save it for lookups
+        # Using .invalid for privacy protection
+        # has been done before: https://en.wikipedia.org/wiki/.invalid
+
+        domain = 'anonymous.invalid'
+        cid = '%s@%s' % (guid, domain)
+        self._attachment_content_ids[str(filepath)] = cid
+        return "<%s>" % cid
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
@@ -172,12 +194,9 @@ class TemplateMessage(object):
 
         # Add each attachment to the message
         for path in self._message.get_all('attachment', failobj=[]):
-            
-            # Generate a GUID as the Content-ID
-            # and store it in a dict against the path
-            guid = str(uuid.uuid4())
+
+            cid_header = self._make_msgid(path)
             path = self._resolve_attachment_path(path)
-            self._attachment_content_ids[path] = guid
 
             with path.open("rb") as attachment:
                 content = attachment.read()
@@ -190,11 +209,30 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
-            part.add_header('Content-Id', guid)
+            part.add_header('Content-Id', cid_header)
             self._message.attach(part)
 
         # Remove the attachment header, it's non-standard for email
         del self._message['attachment']
+
+    def _transform_attachment_references(self):
+        if not self._message.is_multipart():
+            return
+
+        for message in self._message.get_payload():
+            if message['Content-Type'].startswith('text/html'):
+                html = message.get_payload()
+                document = html5lib.parse(html, namespaceHTMLElements=False)
+                for img in document.findall('.//img'):
+                    src = img.get('src')
+                    if src in self._attachment_content_ids:
+                        cid = self._attachment_content_ids[src]
+                        url = "cid:%s" % (cid)
+                        img.set('src', url)
+
+                message.set_payload(ElementTree.tostring(document).decode())
+
+
 
     def _resolve_attachment_path(self, path):
         """Find attachment file or raise MailmergeError."""
