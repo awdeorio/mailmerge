@@ -13,6 +13,7 @@ import textwrap
 import collections
 import pytest
 import markdown
+import html5lib
 from mailmerge import TemplateMessage, MailmergeError
 from uuid import UUID
 from . import utils
@@ -221,7 +222,7 @@ def test_html_plaintext(tmp_path):
     assert html_part.get_content_type() == "text/html"
     htmltext = html_part.get_payload()
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+    assert htmltext == "<html><head/><body><p>Helloworld</p></body></html>"
 
 
 def test_markdown(tmp_path):
@@ -297,8 +298,19 @@ def test_markdown(tmp_path):
 
     # Verify rendered Markdown
     rendered = markdown.markdown(plaintext)
-    htmltext_correct = "<html><body>{}</body></html>".format(rendered)
-    assert htmltext.strip() == htmltext_correct.strip()
+    rendered_document = html5lib.parse(rendered)
+
+    # https://stackoverflow.com/a/24349916
+    def elements_equal(e1, e2):
+        if e1.tag != e2.tag: return False
+        if e1.text != e2.text: return False
+        if e1.tail != e2.tail: return False
+        if e1.attrib != e2.attrib: return False
+        if len(e1) != len(e2): return False
+        return all(elements_equal(c1, c2) for c1, c2 in zip(e1, e2))
+
+    htmltext_document = html5lib.parse(htmltext)
+    assert elements_equal(htmltext_document, rendered_document)
 
 
 def test_markdown_encoding(tmp_path):
@@ -1040,10 +1052,11 @@ def test_attachment_image_in_markdown(tmp_path):
 
     attachments = extract_attachments(message)
     assert len(attachments) == 1
-    filename, content, cid = attachments[0]
+    filename, content, cid_header = attachments[0]
+    cid = cid_header[1:-1]
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
-    assert htmltext.strip() == '<html><body><p><img alt="Sample image" src="cid:{cid}" /></p></body></html>'.format(cid=cid)
+    assert htmltext.strip() == '<html><head /><body><p><img src="cid:{cid}" alt="Sample image" /></p></body></html>'.format(cid=cid)
 
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
@@ -1071,7 +1084,7 @@ def test_content_id_header_for_attachments(tmpdir):
     assert len(attachments) == 1
 
     # Verify attachment
-    filename, content, cid = attachments[0]
+    filename, content, cid_header = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
-    assert re.match('[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}', cid)
+    assert re.match('<[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}@anonymous.invalid>', cid_header)
