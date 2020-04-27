@@ -91,13 +91,16 @@ class TemplateMessage(object):
         But doesn't leak the hostname, and doesn't rely on time/pid
         """
         guid = uuid.uuid4()
-        # save it for lookups
         # Using .invalid for privacy protection
         # has been done before: https://en.wikipedia.org/wiki/.invalid
 
         domain = 'anonymous.invalid'
         cid = '%s@%s' % (guid, domain)
+
+        # save it for lookups
         self._attachment_content_ids[str(filepath)] = cid
+        # The header format is `<[addr-spec]>`, and references
+        # elsewhere must use `cid:[addr-spec]`.
         return "<%s>" % cid
 
     def _transform_encoding(self, raw_message):
@@ -226,16 +229,32 @@ class TemplateMessage(object):
 
         for message in self._message.get_payload():
             if message['Content-Type'].startswith('text/html'):
-                html = message.get_payload()
+
+                html = message.get_payload(decode=True).decode('utf-8')
                 document = html5lib.parse(html, namespaceHTMLElements=False)
+                images = document.findall('.//img')
+
+                if len(images) == 0:
+                    continue
+
                 for img in document.findall('.//img'):
                     src = img.get('src')
                     if src in self._attachment_content_ids:
+                        # We only clear the header if we are using an image
+                        del message['Content-Transfer-Encoding']
                         cid = self._attachment_content_ids[src]
                         url = "cid:%s" % (cid)
                         img.set('src', url)
 
-                message.set_payload(ElementTree.tostring(document).decode())
+                # Unless the _charset argument is explicitly set to None, the MIMEText object created will have both a Content-Type header with a charset parameter, and a Content-Transfer-Encoding header.
+                # This means that a subsequent set_payload call will not result in an encoded payload, even if a charset is passed in the set_payload command.
+                # You can “reset” this behavior by deleting the Content-Transfer-Encoding header, after which a set_payload call will automatically encode the new payload (and add a new Content-Transfer-Encoding header).
+
+                # We only update the message if we cleared the header
+                # which only happens in the case of transforming an attachment reference
+                if not 'Content-Transfer-Encoding' in message:
+                    newhtml = ElementTree.tostring(document).decode('utf-8')
+                    message.set_payload(newhtml)
 
 
 
