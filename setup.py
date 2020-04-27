@@ -25,7 +25,7 @@ setuptools.setup(
     install_requires=[
         "backports.csv;python_version<'3.0'",
         "click",
-        "configparser",
+        "configparser;python_version<'3.6'",
 
         # The attachments feature relies on a bug fix in the future library
         # https://github.com/awdeorio/mailmerge/pull/56
