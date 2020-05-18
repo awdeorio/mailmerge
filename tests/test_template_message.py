@@ -125,6 +125,13 @@ def test_cc_bcc(tmp_path):
     assert "Secret" not in plaintext
 
 
+def is_multipart(message):
+    """Returns whether the message is a valid multipart message."""
+    return message.is_multipart() \
+        and len(message.get_all('content-type')) == 1 \
+        and len(message.get_all('mime-version')) == 1
+
+
 def test_html(tmp_path):
     """Verify HTML template results in a simple rendered message."""
     template_path = tmp_path / "template.txt"
@@ -150,7 +157,7 @@ def test_html(tmp_path):
     assert recipients == ["to@test.com"]
 
     # A simple HTML message is not multipart
-    assert not message.is_multipart()
+    assert not is_multipart(message)
 
     # Verify encoding
     assert message.get_charset() == "us-ascii"
@@ -200,7 +207,7 @@ def test_html_plaintext(tmp_path):
     assert recipients == ["to@test.com"]
 
     # Should be multipart: plaintext and HTML
-    assert message.is_multipart()
+    assert is_multipart(message)
     parts = message.get_payload()
     assert len(parts) == 2
     plaintext_part, html_part = parts
@@ -273,7 +280,7 @@ def test_markdown(tmp_path):
     assert recipients == ["myself@mydomain.com"]
 
     # Verify message is multipart
-    assert message.is_multipart()
+    assert is_multipart(message)
 
     # Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
@@ -390,7 +397,7 @@ def test_attachment_simple(tmpdir):
     assert recipients == ["to@test.com"]
 
     # Verify message is multipart and contains attachment
-    assert message.is_multipart()
+    assert is_multipart(message)
     attachments = extract_attachments(message)
     assert len(attachments) == 1
 
@@ -579,7 +586,7 @@ def test_attachment_multiple(tmp_path):
     assert recipients == ["myself@mydomain.com"]
 
     # Verify message is multipart
-    assert message.is_multipart()
+    assert is_multipart(message)
 
     # Make sure the attachments are all present and valid
     email_body_present = False
