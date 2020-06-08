@@ -626,7 +626,7 @@ def test_attachment_empty(tmp_path):
         template_message.render({})
 
 
-def test_duplicate_headers(tmp_path):
+def test_duplicate_headers_attachment(tmp_path):
     """Verify multipart messages do not contain duplicate headers.
 
     Duplicate headers are rejected by some SMTP servers.
@@ -648,6 +648,31 @@ def test_duplicate_headers(tmp_path):
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "message": "Hello world"
+    })
+
+    # Verifty no duplicate headers
+    assert len(message.keys()) == len(set(message.keys()))
+
+
+def test_duplicate_headers_markdown(tmp_path):
+    """Verify multipart messages do not contain duplicate headers.
+
+    Duplicate headers are rejected by some SMTP servers.
+    """
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+        CONTENT-TYPE: text/markdown
+
+        ```
+        Message as code block: {{message}}
+        ```
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({
+        "message": "hello world",
     })
 
     # Verifty no duplicate headers
