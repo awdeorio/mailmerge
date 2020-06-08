@@ -125,13 +125,6 @@ def test_cc_bcc(tmp_path):
     assert "Secret" not in plaintext
 
 
-def is_multipart(message):
-    """Returns whether the message is a valid multipart message."""
-    return message.is_multipart() \
-        and len(message.get_all('content-type')) == 1 \
-        and len(message.get_all('mime-version')) == 1
-
-
 def test_html(tmp_path):
     """Verify HTML template results in a simple rendered message."""
     template_path = tmp_path / "template.txt"
@@ -157,7 +150,7 @@ def test_html(tmp_path):
     assert recipients == ["to@test.com"]
 
     # A simple HTML message is not multipart
-    assert not is_multipart(message)
+    assert not message.is_multipart()
 
     # Verify encoding
     assert message.get_charset() == "us-ascii"
@@ -207,7 +200,7 @@ def test_html_plaintext(tmp_path):
     assert recipients == ["to@test.com"]
 
     # Should be multipart: plaintext and HTML
-    assert is_multipart(message)
+    assert message.is_multipart()
     parts = message.get_payload()
     assert len(parts) == 2
     plaintext_part, html_part = parts
@@ -280,7 +273,7 @@ def test_markdown(tmp_path):
     assert recipients == ["myself@mydomain.com"]
 
     # Verify message is multipart
-    assert is_multipart(message)
+    assert message.is_multipart()
 
     # Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
@@ -397,7 +390,7 @@ def test_attachment_simple(tmpdir):
     assert recipients == ["to@test.com"]
 
     # Verify message is multipart and contains attachment
-    assert is_multipart(message)
+    assert message.is_multipart()
     attachments = extract_attachments(message)
     assert len(attachments) == 1
 
@@ -586,7 +579,7 @@ def test_attachment_multiple(tmp_path):
     assert recipients == ["myself@mydomain.com"]
 
     # Verify message is multipart
-    assert is_multipart(message)
+    assert message.is_multipart()
 
     # Make sure the attachments are all present and valid
     email_body_present = False
@@ -631,3 +624,31 @@ def test_attachment_empty(tmp_path):
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
+
+
+def test_duplicate_headers(tmp_path):
+    """Verify multipart messages do not contain duplicate headers.
+
+    Duplicate headers are rejected by some SMTP servers.
+    """
+    # Simple attachment
+    attachment_path = Path(tmp_path/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple message
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com>
+        ATTACHMENT: attachment.txt
+
+        {{message}}
+    """))
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({
+        "message": "Hello world"
+    })
+
+    # Verifty no duplicate headers
+    assert len(message.keys()) == len(set(message.keys()))
