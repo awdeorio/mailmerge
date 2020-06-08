@@ -102,20 +102,20 @@ class TemplateMessage(object):
         # Create empty multipart message
         multipart_message = email.mime.multipart.MIMEMultipart('alternative')
 
-        original_encoding = str(self._message.get_charset())
-        # To prevent duplicate keys from being added to the message, remove
-        # these headers from the original message.
-        del self._message['Content-Type']
-        del self._message['MIME-Version']
-
-        # Copy headers, preserving duplicate headers
+        # Copy headers.  Avoid duplicate Content-Type and MIME-Version headers,
+        # which we set explicitely.  MIME-Version was set when we created an
+        # empty mulitpart message.  Content-Type will be set when we copy the
+        # original text later.
         for header_key in set(self._message.keys()):
+            if header_key.lower() in ["content-type", "mime-version"]:
+                continue
             values = self._message.get_all(header_key, failobj=[])
             for value in values:
                 multipart_message[header_key] = value
 
         # Copy text, preserving original encoding
         original_text = self._message.get_payload(decode=True)
+        original_encoding = str(self._message.get_charset())
         multipart_message.attach(email.mime.text.MIMEText(
             original_text,
             _charset=original_encoding,
