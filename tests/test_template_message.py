@@ -705,12 +705,11 @@ def test_attachment_image_in_markdown(tmp_path):
         ATTACHMENT: attachment_3.jpg
         CONTENT-TYPE: text/markdown
 
-        ![{{alttext}}](attachment_3.jpg)
+        ![](attachment_3.jpg)
     """))
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
-        "email": "myself@mydomain.com",
-        "alttext": "Sample image"
+        "email": "myself@mydomain.com"
     })
 
     # Verify sender and recipients
@@ -732,7 +731,7 @@ def test_attachment_image_in_markdown(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True) \
                               .decode(plaintext_encoding)
 
-    assert plaintext.strip() == "![Sample image](attachment_3.jpg)"
+    assert plaintext.strip() == "![](attachment_3.jpg)"
 
     html_part = payload[1]
     assert html_part['Content-Type'].startswith("text/html")
@@ -746,7 +745,7 @@ def test_attachment_image_in_markdown(tmp_path):
     cid = cid_header[1:-1]
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
-    assert htmltext.strip() == '<html><head /><body><p><img alt="Sample image" src="cid:{cid}" /></p></body></html>'.format(cid=cid)
+    assert htmltext.strip() == '<html><head /><body><p><img src="cid:{cid}" alt="" /></p></body></html>'.format(cid=cid)
 
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
