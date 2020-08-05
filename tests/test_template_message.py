@@ -222,7 +222,7 @@ def test_html_plaintext(tmp_path):
     assert html_part.get_content_type() == "text/html"
     htmltext = html_part.get_payload()
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><head/><body><p>Helloworld</p></body></html>"
+    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
 
 
 def test_markdown(tmp_path):
@@ -938,7 +938,7 @@ def test_encoding_multipart(tmp_path):
     assert html_part.get_charset() == "utf-8"
     assert html_part.get_content_charset() == "utf-8"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    htmltext = html_part.get_payload(decode=True).decode('utf-8')
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
     assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
 
@@ -989,7 +989,7 @@ def test_encoding_multipart_mismatch(tmp_path):
     assert plaintext_part.get_charset() == "utf-8"
     assert plaintext_part.get_content_charset() == "utf-8"
     assert plaintext_part.get_content_type() == "text/plain"
-    plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
+    plaintext = plaintext_part.get_payload(decode=True).decode('utf-8')
     plaintext = plaintext.strip()
     assert plaintext == u"Hello Laȝamon"
 
@@ -997,7 +997,7 @@ def test_encoding_multipart_mismatch(tmp_path):
     assert html_part.get_charset() == "utf-8"
     assert html_part.get_content_charset() == "utf-8"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload(decode=True).decode("utf-8")
+    htmltext = html_part.get_payload(decode=True).decode('utf-8')
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
     assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
 
@@ -1056,7 +1056,7 @@ def test_attachment_image_in_markdown(tmp_path):
     cid = cid_header[1:-1]
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
-    assert htmltext.strip() == '<html><head /><body><p><img src="cid:{cid}" alt="Sample image" /></p></body></html>'.format(cid=cid)
+    assert htmltext.strip() == '<html><head /><body><p><img alt="Sample image" src="cid:{cid}" /></p></body></html>'.format(cid=cid)
 
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
@@ -1087,4 +1087,4 @@ def test_content_id_header_for_attachments(tmpdir):
     filename, content, cid_header = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
-    assert re.match('<[0-9a-fA-F]{8}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{4}\-[0-9a-fA-F]{12}@anonymous.invalid>', cid_header)
+    assert re.match('<[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}@anonymous.invalid>', cid_header)
