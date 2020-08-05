@@ -236,7 +236,7 @@ def test_output_format_bad(tmpdir):
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert 'Invalid value for "--output-format"' in stderr
+    assert 'Invalid value for \'--output-format\'' in stderr
     assert "invalid choice: bad." in stderr
 
 
