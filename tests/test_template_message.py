@@ -611,7 +611,7 @@ def test_attachment_multiple(tmp_path):
 
 
 def test_attachment_empty(tmp_path):
-    """Errr on empty attachment field."""
+    """Err on empty attachment field."""
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
@@ -624,6 +624,93 @@ def test_attachment_empty(tmp_path):
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
+
+
+def test_attachment_html_body(tmpdir):
+    """
+    Verify that the content-type of the message is correctly retained with an
+    HTML body.
+    """
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # HTML template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+        CONTENT-TYPE: text/html
+
+        Hello world
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+
+    # Verify that the message content type is HTML
+    payload = message.get_payload()
+    assert len(payload) == 2
+    assert payload[0].get_content_type() == 'text/html'
+
+
+def test_attachment_markdown_body(tmpdir):
+    """
+    Verify that the content-types of the MarkDown message are correct when
+    attachments are included.
+    """
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # HTML template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+        CONTENT-TYPE: text/markdown
+
+        Hello **world**
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    payload = message.get_payload()
+    assert len(payload) == 3
+
+    # Ensure that the first part is plaintext and the second part
+    # is HTML (as per RFC 2046)
+    plaintext_part = payload[0]
+    assert plaintext_part['Content-Type'].startswith("text/plain")
+
+    html_part = payload[1]
+    assert html_part['Content-Type'].startswith("text/html")
 
 
 def test_duplicate_headers_attachment(tmp_path):
