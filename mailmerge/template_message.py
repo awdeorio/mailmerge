@@ -115,9 +115,11 @@ class TemplateMessage(object):
 
         # Copy text, preserving original encoding
         original_text = self._message.get_payload(decode=True)
+        original_subtype = self._message.get_content_subtype()
         original_encoding = str(self._message.get_charset())
         multipart_message.attach(email.mime.text.MIMEText(
             original_text,
+            _subtype=original_subtype,
             _charset=original_encoding,
         ))
 
