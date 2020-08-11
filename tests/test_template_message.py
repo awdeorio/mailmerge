@@ -626,7 +626,7 @@ def test_attachment_empty(tmp_path):
         template_message.render({})
 
 
-def test_contenttype_attachment_html_body(tmpdir):
+def test_attachment_html_body(tmpdir):
     """
     Verify that the content-type of the message is correctly retained with an
     HTML body.
@@ -649,7 +649,16 @@ def test_contenttype_attachment_html_body(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({})
+        sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
 
     # Verify that the message content type is HTML
     payload = message.get_payload()
@@ -657,7 +666,7 @@ def test_contenttype_attachment_html_body(tmpdir):
     assert payload[0].get_content_type() == 'text/html'
 
 
-def test_contenttype_attachment_markdown_body(tmpdir):
+def test_attachment_markdown_body(tmpdir):
     """
     Verify that the content-types of the MarkDown message are correct when
     attachments are included.
@@ -680,7 +689,16 @@ def test_contenttype_attachment_markdown_body(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({})
+        sender, recipients, message = template_message.render({})
+
+    # Verify sender and recipients
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
 
     # Markdown: Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
