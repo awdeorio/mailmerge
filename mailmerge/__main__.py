@@ -218,7 +218,7 @@ def create_sample_input_files(template_path, database_path, config_path):
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
             # Pro-tip: SSH or VPN into your network first.  This sometimes helps avoid
-            # spam filters or throttling.
+            # spam filters or server throttling.
 
             # Example: GMail
             [smtp_server]
