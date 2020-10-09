@@ -59,6 +59,8 @@ Edit these files, then run mailmerge again.
 
 ### Edit the SMTP server config `mailmerge_server.conf`
 The defaults are set up for GMail.  Be sure to change your username.  If you use 2-factor authentication, create an [app password](https://support.google.com/accounts/answer/185833?hl=en) first.  Other configuration examples are in the comments of `mailmerge_server.conf`.
+
+**Pro-tip:** SSH or VPN into your network first.  This sometimes helps avoid spam filters or throttling.
 ```
 [smtp_server]
 host = smtp.gmail.com
