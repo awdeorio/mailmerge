@@ -13,7 +13,8 @@ import pkg_resources
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
-from .exceptions import MailmergeError
+from . import exceptions
+from . import utils
 
 # Python 2 pathlib support requires backport
 try:
@@ -149,7 +150,7 @@ def main(sample, dry_run, limit, no_limit, resume,
                 output_format,
             )
             message_num += 1
-    except MailmergeError as error:
+    except exceptions.MailmergeError as error:
         hint_text = '\nHint: "--resume {}"'.format(message_num)
         sys.exit(
             "Error on message {message_num}\n"
@@ -260,6 +261,9 @@ def create_sample_input_files(template_path, database_path, config_path):
         """))
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
+            # Pro-tip: SSH or VPN into your network first to avoid spam
+            # filters and server throttling.
+
             # Example: GMail
             [smtp_server]
             host = smtp.gmail.com
@@ -311,13 +315,13 @@ def read_csv_database(database_path):
         # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
-    with database_path.open("r") as database_file:
+    with database_path.open(mode="r", encoding="utf-8") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         try:
             for row in reader:
                 yield row
         except csv.Error as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{}: {}".format(database_path, reader.line_num, err)
             )
 
@@ -356,11 +360,11 @@ def print_message(message, output_format):
     assert output_format in ["colorized", "text", "raw"]
 
     if output_format == "raw":
-        print(message.as_string())
+        print(utils.flatten_message(message))
         return
 
     for header, value in message.items():
-        print("{header}: {value}".format(header=header, value=value))
+        print(u"{header}: {value}".format(header=header, value=value))
     print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":

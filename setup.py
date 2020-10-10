@@ -15,7 +15,7 @@ setuptools.setup(
     description="A simple, command line mail merge tool",
     long_description=LONG_DESCRIPTION,
     long_description_content_type="text/markdown",
-    version="2.1.0",
+    version="2.1.1",
     author="Andrew DeOrio",
     author_email="awdeorio@umich.edu",
     url="https://github.com/awdeorio/mailmerge/",
@@ -25,7 +25,7 @@ setuptools.setup(
     install_requires=[
         "backports.csv;python_version<'3.0'",
         "click",
-        "configparser",
+        "configparser;python_version<'3.6'",
 
         # The attachments feature relies on a bug fix in the future library
         # https://github.com/awdeorio/mailmerge/pull/56

@@ -236,7 +236,12 @@ def test_output_format_bad(tmpdir):
     stdout = error.value.stdout.decode("utf-8")
     stderr = error.value.stderr.decode("utf-8")
     assert stdout == ""
-    assert 'Invalid value for "--output-format"' in stderr
+
+    # Remove single and double quotes from error message.  Different versions
+    # of the click library use different formats.
+    stderr = stderr.replace('"', "")
+    stderr = stderr.replace("'", "")
+    assert 'Invalid value for --output-format' in stderr
     assert "invalid choice: bad." in stderr
 
 
