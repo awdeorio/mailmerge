@@ -13,7 +13,7 @@ import future.backports.email.parser
 import future.backports.email.utils
 import markdown
 import jinja2
-from .exceptions import MailmergeError
+from . import exceptions
 
 # Python 2 pathlib support requires backport
 try:
@@ -61,7 +61,7 @@ class TemplateMessage(object):
         try:
             raw_message = self.template.render(context)
         except jinja2.exceptions.TemplateError as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}: {}".format(self.template_path, err)
             )
         self._message = email.message_from_string(raw_message)
@@ -197,7 +197,7 @@ class TemplateMessage(object):
         """Find attachment file or raise MailmergeError."""
         # Error on empty path
         if not path.strip():
-            raise MailmergeError("Empty attachment header.")
+            raise exceptions.MailmergeError("Empty attachment header.")
 
         # Create a Path object and handle home directory (tilde ~) notation
         path = Path(path.strip())
@@ -212,7 +212,9 @@ class TemplateMessage(object):
 
         # Check that the attachment exists
         if not path.exists():
-            raise MailmergeError("Attachment not found: {}".format(path))
+            raise exceptions.MailmergeError(
+                "Attachment not found: {}".format(path)
+            )
 
         return path
 
