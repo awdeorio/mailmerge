@@ -10,7 +10,7 @@ import textwrap
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
-from .exceptions import MailmergeError
+from . import exceptions
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -127,7 +127,7 @@ def main(sample, dry_run, limit, no_limit, resume,
                 output_format,
             )
             message_num += 1
-    except MailmergeError as error:
+    except exceptions.MailmergeError as error:
         hint_text = '\nHint: "--resume {}"'.format(message_num)
         sys.exit(
             "Error on message {message_num}\n"
@@ -277,7 +277,7 @@ def read_csv_database(database_path):
             for row in reader:
                 yield row
         except csv.Error as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{}: {}".format(database_path, reader.line_num, err)
             )
 
