@@ -71,13 +71,13 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     "--config", "config_path",
     default="mailmerge_server.conf",
     type=click.Path(),
-    help="server configuration (mailmerge_server.conf)",
+    help="SMTP configuration (mailmerge_server.conf)",
 )
 @click.option(
     "--output-format", "output_format",
     default="colorized",
     type=click.Choice(["colorized", "text", "raw"]),
-    help="Output format (colorized).",
+    help="Logging output format (colorized).",
 )
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
