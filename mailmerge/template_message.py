@@ -37,12 +37,13 @@ class TemplateMessage(object):
     # https://python-future.org/compatible_idioms.html#custom-class-behaviour
     # pylint: disable=bad-option-value,useless-object-inheritance
 
-    def __init__(self, template_path):
+    def __init__(self, template_path, dump_to=None):
         """Initialize variables and Jinja2 template."""
         self.template_path = Path(template_path)
         self._message = None
         self._sender = None
         self._recipients = None
+        self._dump_to_path = None
 
         # Configure Jinja2 template engine with the template dirname as root.
         #
@@ -55,6 +56,8 @@ class TemplateMessage(object):
         self.template = template_env.get_template(
             template_path.parts[-1],  # basename
         )
+        self.dump_to_template = None if dump_to is None else \
+            template_env.from_string(dump_to)
 
     def render(self, context):
         """Return rendered message object."""
@@ -73,7 +76,10 @@ class TemplateMessage(object):
         assert self._sender
         assert self._recipients
         assert self._message
-        return self._sender, self._recipients, self._message
+        if self.dump_to_template is not None:
+            self._dump_to_path = self.dump_to_template.render(context)
+        return self._sender, self._recipients, self._message, \
+            self._dump_to_path
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""

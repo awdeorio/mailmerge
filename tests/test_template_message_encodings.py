@@ -32,7 +32,7 @@ def test_utf8_template(tmp_path):
         http://www.columbia.edu/~fdc/utf8/
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "email": "myself@mydomain.com",
     })
 
@@ -75,7 +75,7 @@ def test_utf8_database(tmp_path):
 
     # Render template with context containing unicode characters
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "name": u"Laȝamon",
     })
 
@@ -104,7 +104,7 @@ def test_utf8_to(tmp_path):
         {{message}}
     """))
     template_message = TemplateMessage(template_path)
-    _, recipients, message = template_message.render({
+    _, recipients, message, _ = template_message.render({
         "message": "hello",
     })
 
@@ -123,7 +123,7 @@ def test_utf8_from(tmp_path):
         {{message}}
     """))
     template_message = TemplateMessage(template_path)
-    sender, _, message = template_message.render({
+    sender, _, message, _ = template_message.render({
         "message": "hello",
     })
 
@@ -143,7 +143,7 @@ def test_utf8_subject(tmp_path):
         {{message}}
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({
+    _, _, message, _ = template_message.render({
         "message": "hello",
     })
 
@@ -162,7 +162,7 @@ def test_emoji(tmp_path):
         Hi 😀
     """))  # grinning face emoji
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
 
     # Verify encoding
     assert message.get_charset() == "utf-8"
@@ -187,7 +187,7 @@ def test_emoji_markdown(tmp_path):
         ```
             """))  # grinning face emoji
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
 
     # Message should contain an unrendered Markdown plaintext part and a
     # rendered Markdown HTML part
@@ -226,7 +226,7 @@ def test_emoji_database(tmp_path):
         Hi {{emoji}}
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({
+    _, _, message, _ = template_message.render({
         "emoji": u"😀"  # grinning face
     })
 
@@ -249,7 +249,7 @@ def test_encoding_us_ascii(tmp_path):
         Hello world
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
     assert message.get_charset() == "us-ascii"
     assert message.get_content_charset() == "us-ascii"
     assert message.get_payload() == "Hello world"
@@ -265,7 +265,7 @@ def test_encoding_utf8(tmp_path):
         Hello Laȝamon
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
@@ -285,7 +285,7 @@ def test_encoding_is8859_1(tmp_path):
         Hello L'Haÿ-les-Roses
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
@@ -306,7 +306,7 @@ def test_encoding_mismatch(tmp_path):
         Hello Laȝamon
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
@@ -340,7 +340,7 @@ def test_encoding_multipart(tmp_path):
         </html>
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({})
+    sender, recipients, message, _ = template_message.render({})
 
     # Verify sender and recipients
     assert sender == "from@test.com"
@@ -399,7 +399,7 @@ def test_encoding_multipart_mismatch(tmp_path):
         </html>
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({})
+    sender, recipients, message, _ = template_message.render({})
 
     # Verify sender and recipients
     assert sender == "from@test.com"

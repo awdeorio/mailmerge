@@ -33,7 +33,7 @@ def test_simple(tmp_path):
         Hello {{name}}!
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "name": "world",
     })
     assert sender == "from@test.com"
@@ -53,7 +53,7 @@ def test_no_substitutions(tmp_path):
         Hello world!
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({})
+    sender, recipients, message, _ = template_message.render({})
     assert sender == "from@test.com"
     assert recipients == ["to@test.com"]
     plaintext = message.get_payload()
@@ -72,7 +72,7 @@ def test_multiple_substitutions(tmp_path):
         Your number is {{number}}.
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -106,7 +106,7 @@ def test_cc_bcc(tmp_path):
         Hello world
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "email": "myself@mydomain.com",
     })
 
@@ -141,7 +141,7 @@ def test_html(tmp_path):
         </html>
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "message": "Hello world"
     })
 
@@ -191,7 +191,7 @@ def test_html_plaintext(tmp_path):
         </html>
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "message": "Hello world"
     })
 
@@ -224,6 +224,7 @@ def test_html_plaintext(tmp_path):
 
 def test_markdown(tmp_path):
     """Markdown messages should be converted to HTML."""
+    # pylint: disable=R0914
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
         TO: {{email}}
@@ -262,7 +263,7 @@ def test_markdown(tmp_path):
             http://pluspng.com/img-png/python-logo-png-open-2000.png)
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -316,7 +317,7 @@ def test_markdown_encoding(tmp_path):
         æøå
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({
+    _, _, message, _ = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
     })
@@ -383,7 +384,7 @@ def test_attachment_simple(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        sender, recipients, message = template_message.render({})
+        sender, recipients, message, _ = template_message.render({})
 
     # Verify sender and recipients
     assert sender == "from@test.com"
@@ -418,7 +419,7 @@ def test_attachment_relative(tmpdir):
 
     # Render
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({})
+    _, _, message, _ = template_message.render({})
 
     # Verify directory used to render is different from template directory
     assert os.getcwd() != tmpdir
@@ -450,7 +451,7 @@ def test_attachment_absolute(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({})
+        _, _, message, _ = template_message.render({})
 
     # Verify attachment
     attachments = extract_attachments(message)
@@ -479,7 +480,7 @@ def test_attachment_template(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({
+        _, _, message, _ = template_message.render({
             "filename": str(attachment_path),
         })
 
@@ -568,7 +569,7 @@ def test_attachment_multiple(tmp_path):
         Your number is {{number}}.
     """))
     template_message = TemplateMessage(template_path)
-    sender, recipients, message = template_message.render({
+    sender, recipients, message, _ = template_message.render({
         "email": "myself@mydomain.com",
         "name": "Myself",
         "number": 17,
@@ -649,7 +650,7 @@ def test_contenttype_attachment_html_body(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({})
+        _, _, message, _ = template_message.render({})
 
     # Verify that the message content type is HTML
     payload = message.get_payload()
@@ -680,7 +681,7 @@ def test_contenttype_attachment_markdown_body(tmpdir):
     # Render in tmpdir
     with tmpdir.as_cwd():
         template_message = TemplateMessage(template_path)
-        _, _, message = template_message.render({})
+        _, _, message, _ = template_message.render({})
 
     # Markdown: Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
@@ -715,7 +716,7 @@ def test_duplicate_headers_attachment(tmp_path):
         {{message}}
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({
+    _, _, message, _ = template_message.render({
         "message": "Hello world"
     })
 
@@ -740,7 +741,7 @@ def test_duplicate_headers_markdown(tmp_path):
         ```
     """))
     template_message = TemplateMessage(template_path)
-    _, _, message = template_message.render({
+    _, _, message, _ = template_message.render({
         "message": "hello world",
     })
 

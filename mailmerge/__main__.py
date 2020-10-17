@@ -74,13 +74,19 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     help="server configuration (mailmerge_server.conf)",
 )
 @click.option(
+    "--dump-to", "dump_to",
+    type=click.Path(),
+    help="""Specify the path to store the generated messages in. May be an
+            existing directory or a file path template with {{variables}}."""
+)
+@click.option(
     "--output-format", "output_format",
     default="colorized",
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
 def main(sample, dry_run, limit, no_limit, resume,
-         template_path, database_path, config_path,
+         template_path, database_path, config_path, dump_to,
          output_format):
     """
     Mailmerge is a simple, command line mail merge tool.
@@ -97,6 +103,11 @@ def main(sample, dry_run, limit, no_limit, resume,
     template_path = Path(template_path)
     database_path = Path(database_path)
     config_path = Path(config_path)
+    if dump_to is not None:
+        dump_to = Path(dump_to)
+        if dump_to.is_dir():
+            dump_to = dump_to.joinpath("{{_mailmerge_message_num}}.eml")
+        dump_to = str(dump_to)
 
     # Make sure input files exist and provide helpful prompts
     check_input_files(template_path, database_path, config_path, sample)
@@ -109,15 +120,21 @@ def main(sample, dry_run, limit, no_limit, resume,
     # Run
     message_num = 1 + start
     try:
-        template_message = TemplateMessage(template_path)
+        template_message = TemplateMessage(template_path, dump_to=dump_to)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for _, row in enumerate_range(csv_database, start, stop):
-            sender, recipients, message = template_message.render(row)
+            row.update(_mailmerge_message_num=message_num)
+            sender, recipients, message, dump_to_path = \
+                template_message.render(row)
+            if dump_to_path is not None:
+                with open(dump_to_path, 'w', encoding="latin1") as msg_file:
+                    msg_file.write(utils.flatten_message(message))
             sendmail_client.sendmail(sender, recipients, message)
             print_bright_white_on_cyan(
-                ">>> message {message_num}"
-                .format(message_num=message_num),
+                (">>> message %s" % message_num) +
+                ("" if dump_to_path is None else
+                    " written to %s" % dump_to_path),
                 output_format,
             )
             print_message(message, output_format)
