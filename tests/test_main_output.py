@@ -84,7 +84,7 @@ def test_stdout(tmpdir):
 
         Your number is 17.
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> message 2
         TO: bob@bobdomain.com
         SUBJECT: Testing mailmerge
@@ -97,7 +97,7 @@ def test_stdout(tmpdir):
 
         Your number is 42.
 
-        >>> message 2 sent
+        >>> message 2 not sent (dry run)
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
         """)
 
@@ -149,7 +149,7 @@ def test_stdout_utf8(tmpdir):
 
         Laȝamon 😀 klâwen
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -297,7 +297,7 @@ def test_output_format_raw(tmpdir):
 
         TGHInWFtb24g8J+YgCBrbMOid2Vu
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -355,7 +355,7 @@ def test_output_format_text(tmpdir):
 
         Laȝamon 😀 klâwen
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -443,7 +443,7 @@ def test_output_format_colorized(tmpdir):
           </body>
         </html>
 
-        \x1b[7m\x1b[1m\x1b[36m>>> message 1 sent\x1b(B\x1b[m
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1 not sent (dry run)\x1b(B\x1b[m
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501

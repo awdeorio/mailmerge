@@ -90,7 +90,7 @@ def test_defaults(tmpdir):
         sh.mailmerge("--sample")
         output = sh.mailmerge()
     assert output.stderr.decode("utf-8") == ""
-    assert "message 1 sent" in output
+    assert "message 1 not sent (dry run)" in output
     assert "Limit was 1 message" in output
     assert "This was a dry run" in output
 
@@ -160,8 +160,8 @@ def test_limit_combo(tmpdir):
     with tmpdir.as_cwd():
         output = sh.mailmerge("--no-limit", "--limit", "1")
     assert output.stderr.decode("utf-8") == ""
-    assert "message 1 sent" in output
-    assert "message 2 sent" in output
+    assert "message 1 not sent (dry run)" in output
+    assert "message 2 not sent (dry run)" in output
     assert "Limit was 1" not in output
 
 
@@ -425,7 +425,7 @@ def test_utf8_template(tmpdir):
 
         Laȝamon 😀 klâwen
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -478,7 +478,7 @@ def test_utf8_database(tmpdir):
 
         Laȝamon 😀 klâwen
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -538,7 +538,7 @@ def test_utf8_headers(tmpdir):
 
         aGVsbG8=
 
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
@@ -688,7 +688,7 @@ def test_complicated(tmpdir):
         aGVsbG8sbWFpbG1lcmdlCg==
 
         --boundary--
-        >>> message 1 sent
+        >>> message 1 not sent (dry run)
         >>> message 2
         TO: Lazamon<two@test.com>
         FROM: from@test.com
@@ -732,7 +732,7 @@ def test_complicated(tmpdir):
         aGVsbG8sbWFpbG1lcmdlCg==
 
         --boundary--
-        >>> message 2 sent
+        >>> message 2 not sent (dry run)
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
 
@@ -773,9 +773,9 @@ def test_resume(tmpdir):
     stderr = output.stderr.decode("utf-8")
     assert stderr == ""
     assert "hello" not in stdout
-    assert "message 1 sent" not in stdout
+    assert "message 1 not sent (dry run)" not in stdout
     assert "world" in stdout
-    assert "message 2 sent" in stdout
+    assert "message 2 not sent (dry run)" in stdout
 
 
 def test_resume_too_small(tmpdir):
@@ -988,7 +988,7 @@ def test_other_mime_type(tmpdir):
 
 
         \x1b[36m>>> message part: application/pdf\x1b(B\x1b[m
-        \x1b[7m\x1b[1m\x1b[36m>>> message 1 sent\x1b(B\x1b[m
+        \x1b[7m\x1b[1m\x1b[36m>>> message 1 not sent (dry run)\x1b(B\x1b[m
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501

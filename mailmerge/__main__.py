@@ -122,8 +122,9 @@ def main(sample, dry_run, limit, no_limit, resume,
             )
             print_message(message, output_format)
             print_bright_white_on_cyan(
-                ">>> message {message_num} sent"
-                .format(message_num=message_num),
+                ">>> message {message_num} {status}"
+                .format(message_num=message_num,
+                        status="not sent (dry run)" if dry_run else "sent"),
                 output_format,
             )
             message_num += 1
