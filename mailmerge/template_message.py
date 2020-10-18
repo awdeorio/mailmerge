@@ -70,8 +70,8 @@ class TemplateMessage(object):
         self._transform_markdown()
         self._transform_attachments()
         self._message.__setitem__('Date', email.utils.formatdate())
-        assert self._sender
-        assert self._recipients
+        assert self._sender, "Missing FROM header in the template"
+        assert self._recipients, "Missing TO/CC headers in the template"
         assert self._message
         return self._sender, self._recipients, self._message
 
