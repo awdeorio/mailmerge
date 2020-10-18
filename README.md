@@ -107,7 +107,7 @@ Date: Thu, 19 Dec 2019 19:49:11 -0000
 Hi, Myself,
 
 Your number is 17.
->>> sent message 1
+>>> message 1 not sent (dry run)
 >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
@@ -127,7 +127,7 @@ Date: Thu, 19 Dec 2019 19:49:33 -0000
 Hi, Myself,
 
 Your number is 17.
->>> sent message 1
+>>> message 1 not sent (dry run)
 >>> message 2
 TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
@@ -140,7 +140,7 @@ Date: Thu, 19 Dec 2019 19:49:33 -0000
 Hi, Bob,
 
 Your number is 42.
->>> sent message 2
+>>> message 2 not sent (dry run)
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 
@@ -160,7 +160,7 @@ Date: Thu, 19 Dec 2019 19:50:24 -0000
 Hi, Myself,
 
 Your number is 17.
->>> sent message 1
+>>> message 1 sent
 >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
 ```
 
@@ -183,7 +183,7 @@ Date: Thu, 19 Dec 2019 19:51:01 -0000
 Hi, Myself,
 
 Your number is 17.
->>> sent message 1
+>>> message 1 sent
 >>> message 2
 TO: bob@bobdomain.com
 SUBJECT: Testing mailmerge
@@ -196,7 +196,7 @@ Date: Thu, 19 Dec 2019 19:51:01 -0000
 Hi, Bob,
 
 Your number is 42.
->>> sent message 2
+>>> message 2 sent
 ```
 
 ## Advanced template example
@@ -371,7 +371,7 @@ Pro-tip: Use Jinja to customize the attachments based on your database!
 >>> attached /Users/awdeorio/Documents/test/file1.docx
 >>> attached /Users/awdeorio/Documents/file2.pdf
 >>> attached /z/shared/Myself_submission.txt
->>> sent message 1
+>>> message 1 sent
 >>> This was a dry run.  To send messages, use the --no-dry-run option.
 ```
 

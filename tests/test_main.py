@@ -854,7 +854,7 @@ def test_resume_too_big(tmpdir):
         output = sh.mailmerge("--resume", "3", "--no-limit")
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
-    assert "sent message" not in stdout
+    assert "sent" not in stdout
     assert stderr == ""
 
 
