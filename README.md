@@ -5,9 +5,9 @@ Mailmerge
 [![Build Status](https://travis-ci.com/awdeorio/mailmerge.svg?branch=develop)](https://travis-ci.com/awdeorio/mailmerge)
 [![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/develop/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
 
-A simple, command line [mail merge](https://en.wikipedia.org/wiki/Mail_merge) tool.
+A simple, command line mail merge tool.
 
-`mailmerge` generates and sends e-mails based on a [jinja2](http://jinja.pocoo.org/docs/latest/templates/) template, filling it with data from a CSV file.
+Write a template email using [jinja2](http://jinja.pocoo.org/docs/latest/templates/) syntax and `mailmerge` will fill it in from a CSV file and, optionally, send it.
 
 **Table of Contents**
 - [Quickstart](#quickstart)
