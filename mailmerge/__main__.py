@@ -77,7 +77,7 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     "--output-format", "output_format",
     default="colorized",
     type=click.Choice(["colorized", "text", "raw"]),
-    help="Logging output format (colorized).",
+    help="Console output format (colorized).",
 )
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
