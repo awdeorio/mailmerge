@@ -8,6 +8,8 @@ import sys
 import codecs
 import textwrap
 import click
+import time
+import datetime
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from . import exceptions
@@ -56,6 +58,11 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     help="Start on message number INTEGER",
 )
 @click.option(
+    "--rate", is_flag=False, default=None,
+    type=click.IntRange(0,None),
+    help="Send no more then INTEGER messages per minute",
+)
+@click.option(
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
@@ -79,7 +86,7 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
-def main(sample, dry_run, limit, no_limit, resume,
+def main(sample, dry_run, limit, no_limit, resume, rate,
          template_path, database_path, config_path,
          output_format):
     """
@@ -112,7 +119,38 @@ def main(sample, dry_run, limit, no_limit, resume,
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
+        
+        if rate:
+            now = datetime.datetime.now()
+            rate_time = now.hour*100+now.minute
+            rate_count = 0
+            first_sleep = True
+
+
         for _, row in enumerate_range(csv_database, start, stop):
+            # Rate limiting
+            if rate:
+                now = datetime.datetime.now()
+                now_time = now.hour*100+now.minute
+                # Still te same minute?
+                if rate_time == now_time: 
+                    if rate_count < rate :
+                        rate_count = rate_count + 1
+                    else:
+                        print(
+                            "Rate limit of {} message per minute hit, sleeping..".format(rate), end=''
+                        )
+                        sys.stdout.flush()
+                        # Wait till the end of the minute
+                        while rate_time == now_time:
+                            time.sleep(1)
+                            sys.stdout.write(".")
+                            sys.stdout.flush()
+                            now = datetime.datetime.now()
+                            now_time = now.hour*100+now.minute
+                        print("")
+                        rate_time=now_time
+
             sender, recipients, message = template_message.render(row)
             sendmail_client.sendmail(sender, recipients, message)
             print_bright_white_on_cyan(
@@ -127,6 +165,7 @@ def main(sample, dry_run, limit, no_limit, resume,
                 output_format,
             )
             message_num += 1
+
     except exceptions.MailmergeError as error:
         hint_text = '\nHint: "--resume {}"'.format(message_num)
         sys.exit(
