@@ -128,6 +128,7 @@ def test_bad_limit(tmpdir):
     stderr = error.value.stderr.decode("utf-8")
     assert "Error: Invalid value" in stderr
 
+
 def test_rate_limit(tmpdir):
     """Verify --limit with bad value."""
     # Simple template
@@ -163,6 +164,7 @@ def test_rate_limit(tmpdir):
     assert "message 1 sent" in output
     assert "Limit was 1 message" in output
     assert "This was a dry run" in output
+
 
 def test_limit_combo(tmpdir):
     """Verify --limit 1 --no-limit results in no limit."""
