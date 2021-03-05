@@ -158,11 +158,11 @@ def test_rate_limit(tmpdir):
 
     # Run mailmerge
     with tmpdir.as_cwd():
-        sh.mailmerge("--dry-run", "--rate", "2")
-        output = sh.mailmerge()
+        output = sh.mailmerge("--no-limit", "--rate", "1")
     assert output.stderr.decode("utf-8") == ""
     assert "message 1 sent" in output
-    assert "Limit was 1 message" in output
+    assert "Rate limit of 1 message per minute hit" in output
+    assert "message 2 sent" in output
     assert "This was a dry run" in output
 
 
@@ -183,7 +183,6 @@ def test_limit_combo(tmpdir):
         email
         one@test.com
         two@test.com
-        three@test.com
     """))
 
     # Simple unsecure server config
@@ -196,9 +195,11 @@ def test_limit_combo(tmpdir):
 
     # Run mailmerge
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--no-limit", "--rate", "1")
+        output = sh.mailmerge("--no-limit", "--limit", "1")
     assert output.stderr.decode("utf-8") == ""
-    assert "Rate limit of 1 message per minute hit, sleeping..." in output
+    assert "message 1 sent" in output
+    assert "message 2 sent" in output
+    assert "Limit was 1" not in output
 
 
 def test_template_not_found(tmpdir):
