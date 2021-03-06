@@ -100,7 +100,7 @@ class TemplateMessage(object):
             return
 
         # Create empty multipart message
-        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+        multipart_message = email.mime.multipart.MIMEMultipart('mixed')
 
         # Copy headers.  Avoid duplicate Content-Type and MIME-Version headers,
         # which we set explicitely.  MIME-Version was set when we created an
@@ -143,26 +143,39 @@ class TemplateMessage(object):
         # plaintext payload is formatted with Markdown.
         for mimetext in self._message.get_payload():
             if mimetext['Content-Type'].startswith('text/plain'):
+                original_text_payload = mimetext
                 encoding = str(mimetext.get_charset())
                 text = mimetext.get_payload(decode=True).decode(encoding)
                 break
+        assert original_text_payload
         assert encoding
         assert text
+        # Remove the original text payload.
+        self._message.set_payload(
+            self._message.get_payload().remove(original_text_payload))
 
+        # Add a multipart/alternative part to the message. Email clients can
+        # choose which payload-part they wish to render.
+        #
         # Render Markdown to HTML and add the HTML as the last part of the
-        # multipart message as per RFC 2046.
+        # multipart/alternative message as per RFC 2046.
         #
         # Note: We need to use u"..." to ensure that unicode string
         # substitution works properly in Python 2.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text)
-        payload = future.backports.email.mime.text.MIMEText(
+        html_payload = future.backports.email.mime.text.MIMEText(
             u"<html><body>{}</body></html>".format(html),
             _subtype="html",
             _charset=encoding,
         )
-        self._message.attach(payload)
+
+        message_payload = email.mime.multipart.MIMEMultipart('alternative')
+        message_payload.attach(original_text_payload)
+        message_payload.attach(html_payload)
+
+        self._message.attach(message_payload)
 
     def _transform_attachments(self):
         """Parse Attachment headers and add attachments."""
