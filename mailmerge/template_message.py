@@ -156,7 +156,7 @@ class TemplateMessage(object):
         # substitution works properly in Python 2.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
-        html = markdown.markdown(text)
+        html = markdown.markdown(text, extensions=['nl2br'])
         payload = future.backports.email.mime.text.MIMEText(
             u"<html><body>{}</body></html>".format(html),
             _subtype="html",
