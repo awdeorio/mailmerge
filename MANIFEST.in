@@ -3,10 +3,10 @@ include LICENSE
 include MANIFEST.in
 include README.md
 include .pylintrc
-include .editorconfig
 graft tests
 
 # Avoid dev and and binary files
 exclude tox.ini
+exclude .editorconfig
 global-exclude *.pyc
 global-exclude __pycache__
