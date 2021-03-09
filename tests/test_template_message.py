@@ -294,7 +294,7 @@ def test_markdown(tmp_path):
                         .decode(html_encoding)
 
     # Verify rendered Markdown
-    rendered = markdown.markdown(plaintext)
+    rendered = markdown.markdown(plaintext, extensions=['nl2br'])
     htmltext_correct = "<html><body>{}</body></html>".format(rendered)
     assert htmltext.strip() == htmltext_correct.strip()
 
@@ -335,7 +335,8 @@ def test_markdown_encoding(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     assert plaintext == u"Hi, Myself,\næøå"
-    assert htmltext == u"<html><body><p>Hi, Myself,\næøå</p></body></html>"
+    assert htmltext == \
+        u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
 
 
 Attachment = collections.namedtuple(
