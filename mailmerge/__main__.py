@@ -12,7 +12,7 @@ from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
 from .log import MailmergeLog
-from . import utils
+from . impofrom . import utils
 
 # Python 2 pathlib support requires backport
 try:
@@ -236,6 +236,9 @@ def create_sample_input_files(template_path, database_path, config_path):
         """))
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
+            # Pro-tip: SSH or VPN into your network first to avoid spam
+            # filters and server throttling.
+
             # Example: GMail
             [smtp_server]
             host = smtp.gmail.com
@@ -293,7 +296,7 @@ def read_csv_database(database_path):
             for row in reader:
                 yield row
         except csv.Error as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{}: {}".format(database_path, reader.line_num, err)
             )
 

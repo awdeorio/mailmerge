@@ -7,7 +7,7 @@ import socket
 import smtplib
 import configparser
 import getpass
-from .exceptions import MailmergeError
+from . import exceptions
 from . import utils
 
 
@@ -41,11 +41,13 @@ class SendmailClient(object):
                 # Read username only if needed
                 self.username = config.get("smtp_server", "username")
         except configparser.Error as err:
-            raise MailmergeError("{}: {}".format(self.config_path, err))
+            raise exceptions.MailmergeError(
+                "{}: {}".format(self.config_path, err)
+            )
 
         # Verify security type
         if self.security not in [None, "SSL/TLS", "STARTTLS"]:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}: unrecognized security type: '{}'"
                 .format(self.config_path, self.security)
             )
@@ -84,17 +86,17 @@ class SendmailClient(object):
                 with smtplib.SMTP(self.host, self.port) as smtp:
                     smtp.sendmail(sender, recipients, message_flattened)
         except smtplib.SMTPAuthenticationError as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{} failed to authenticate user '{}': {}"
                 .format(self.host, self.port, self.username, err)
             )
         except smtplib.SMTPException as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{} failed to send message: {}"
                 .format(self.host, self.port, err)
             )
         except socket.error as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}:{} failed to connect to server: {}"
                 .format(self.host, self.port, err)
             )
