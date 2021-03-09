@@ -56,6 +56,10 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     help="Start on message number INTEGER",
 )
 @click.option(
+    "--continue-on-error/--no-continue-on-error", default=False,
+    help="(Do not) continue program if an error is encountered"
+)
+@click.option(
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
@@ -81,7 +85,7 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
 )
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
-         output_format):
+         output_format, continue_on_error):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -113,32 +117,27 @@ def main(sample, dry_run, limit, no_limit, resume,
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for _, row in enumerate_range(csv_database, start, stop):
-            sender, recipients, message = template_message.render(row)
-            sendmail_client.sendmail(sender, recipients, message)
-            print_bright_white_on_cyan(
-                ">>> message {message_num}"
-                .format(message_num=message_num),
-                output_format,
-            )
-            print_message(message, output_format)
-            print_bright_white_on_cyan(
-                ">>> message {message_num} sent"
-                .format(message_num=message_num),
-                output_format,
-            )
+            try:
+                sender, recipients, message = template_message.render(row)
+                sendmail_client.sendmail(sender, recipients, message)
+                print_bright_white_on_cyan(
+                    ">>> message {message_num}"
+                    .format(message_num=message_num),
+                    output_format,
+                )
+                print_message(message, output_format)
+                print_bright_white_on_cyan(
+                    ">>> message {message_num} sent"
+                    .format(message_num=message_num),
+                    output_format,
+                )
+            except MailmergeError as error:
+                print_error(
+                    error, message_num, output_format, continue_on_error
+                )
             message_num += 1
     except MailmergeError as error:
-        hint_text = '\nHint: "--resume {}"'.format(message_num)
-        sys.exit(
-            "Error on message {message_num}\n"
-            "{error}"
-            "{hint}"
-            .format(
-                message_num=message_num,
-                error=error,
-                hint=(hint_text if message_num > 1 else ""),
-            )
-        )
+        print_error(error, message_num, output_format, False)
 
     # Hints for user
     if not no_limit:
@@ -306,6 +305,31 @@ def print_bright_white_on_cyan(string, output_format):
     if output_format == "colorized":
         string = "\x1b[7m\x1b[1m\x1b[36m" + string + "\x1b(B\x1b[m"
     print(string)
+
+
+def print_error(error, message_num, output_format, continue_on_error):
+    """Print string to stdout, optionally enabling color."""
+    if message_num > 1 and not continue_on_error:
+        hint_text = '\nHint: "--resume {}"'.format(message_num)
+    else:
+        hint_text = ""
+    error_message = (
+        "Error on message {message_num}\n"
+        "{error}"
+        "{hint}"
+        .format(
+            message_num=message_num,
+            error=error,
+            hint=hint_text,
+        )
+    )
+
+    if output_format == "colorized":
+        error_message = "\x1b[31m" + error_message + "\x1b(B\x1b[m"
+    if continue_on_error:
+        print(error_message, file=sys.stderr)
+    else:
+        sys.exit(error_message)
 
 
 def print_message(message, output_format):
