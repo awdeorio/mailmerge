@@ -335,7 +335,8 @@ def test_markdown_encoding(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     assert plaintext == u"Hi, Myself,\næøå"
-    assert htmltext == u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
+    assert htmltext == \
+        u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
 
 
 Attachment = collections.namedtuple(
