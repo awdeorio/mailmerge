@@ -11,6 +11,7 @@ import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
+from .log import MailmergeLog
 from . import utils
 
 # Python 2 pathlib support requires backport
@@ -83,9 +84,15 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
+@click.option(
+    "--log", "log_path",
+    default="",
+    type=click.Path(),
+    help="log CSV (not created by default)",
+)
 def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
-         output_format, continue_on_error):
+         output_format, continue_on_error, log_path):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -112,12 +119,15 @@ def main(sample, dry_run, limit, no_limit, resume,
 
     # Run
     message_num = 1 + start
+    recipients = []
     try:
+        log = MailmergeLog(log_path)
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
         for _, row in enumerate_range(csv_database, start, stop):
             try:
+                recipients = []
                 sender, recipients, message = template_message.render(row)
                 sendmail_client.sendmail(sender, recipients, message)
                 print_bright_white_on_cyan(
@@ -132,11 +142,18 @@ def main(sample, dry_run, limit, no_limit, resume,
                     output_format,
                 )
             except MailmergeError as error:
+                log.log(message_num, recipients, error)
                 print_error(
                     error, message_num, output_format, continue_on_error
                 )
+            else:
+                if dry_run:
+                    log.log(message_num, recipients, "OK, not sent")
+                else:
+                    log.log(message_num, recipients, "Sent")
             message_num += 1
     except MailmergeError as error:
+        log.log(message_num, recipients, error)
         print_error(error, message_num, output_format, False)
 
     # Hints for user
@@ -151,6 +168,9 @@ def main(sample, dry_run, limit, no_limit, resume,
             ">>> This was a dry run.  "
             "To send messages, use the --no-dry-run option."
         )
+
+    # Close log
+    log.close()
 
 
 if __name__ == "__main__":
