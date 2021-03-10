@@ -94,7 +94,13 @@ class TemplateMessage(object):
         self._sender = self._message["from"]
 
     def _make_message_multipart(self):
-        """Convert a message into a multipart message."""
+        """
+        Convert self._message into a multipart message.
+
+        Specifically, if the message's content-type is not multipart, this
+        method will create a new `multipart/mixed` message, copy message
+        headers and re-attach the original payload.
+        """
         # Do nothing if message already multipart
         if self._message.is_multipart():
             return
@@ -127,7 +133,20 @@ class TemplateMessage(object):
         self._message = multipart_message
 
     def _transform_markdown(self):
-        """Convert markdown in message text to HTML."""
+        """
+        Convert markdown in message text to HTML.
+
+        Specifically, if the message's content-type is `text/markdown`, we
+        transform `self._message` to have the following structure:
+
+        multipart/mixed
+         └── multipart/alternative
+             ├── text/plain (original markdown plaintext)
+             └── text/html (converted markdown)
+
+        Attachments should be added as subsequent payload items of the
+        top-level `multipart/mixed` message.
+        """
         # Do nothing if Content-Type is not text/markdown
         if not self._message['Content-Type'].startswith("text/markdown"):
             return
@@ -178,7 +197,29 @@ class TemplateMessage(object):
         self._message.attach(message_payload)
 
     def _transform_attachments(self):
-        """Parse Attachment headers and add attachments."""
+        """
+        Parse Attachment headers and add attachments.
+
+        Attachments are added to the payload of a `multipart/mixed` message.
+        For instance, a plaintext message with attachments would have the
+        following structure:
+
+        multipart/mixed
+         ├── text/plain
+         ├── attachment1
+         └── attachment2
+
+        Another example: If the original message contained `text/markdown`,
+        then the message would have the following structure after transforming
+        markdown and attachments:
+
+        multipart/mixed
+         ├── multipart/alternative
+         │   ├── text/plain
+         │   └── text/html
+         ├── attachment1
+         └── attachment2
+        """
         # Do nothing if message has no attachment header
         if 'attachment' not in self._message:
             return
