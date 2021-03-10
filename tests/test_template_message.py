@@ -274,20 +274,26 @@ def test_markdown(tmp_path):
 
     # Verify message is multipart
     assert message.is_multipart()
+    assert message.get_content_subtype() == "mixed"
 
-    # Make sure there is a plaintext part and an HTML part
-    payload = message.get_payload()
-    assert len(payload) == 2
+    # Make sure there is a single multipart/alternative payload
+    assert len(message.get_payload()) == 1
+    assert message.get_payload()[0].is_multipart()
+    assert message.get_payload()[0].get_content_subtype() == "alternative"
+
+    # And there should be a plaintext part and an HTML part
+    message_payload = message.get_payload()[0].get_payload()
+    assert len(message_payload) == 2
 
     # Ensure that the first part is plaintext and the last part
     # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
+    plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
     plaintext_encoding = str(plaintext_part.get_charset())
     plaintext = plaintext_part.get_payload(decode=True) \
                               .decode(plaintext_encoding)
 
-    html_part = payload[1]
+    html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")
     html_encoding = str(html_part.get_charset())
     htmltext = html_part.get_payload(decode=True) \
@@ -323,7 +329,7 @@ def test_markdown_encoding(tmp_path):
 
     # Message should contain an unrendered Markdown plaintext part and a
     # rendered Markdown HTML part
-    plaintext_part, html_part = message.get_payload()
+    plaintext_part, html_part = message.get_payload()[0].get_payload()
 
     # Verify encodings
     assert str(plaintext_part.get_charset()) == "utf-8"
@@ -683,16 +689,19 @@ def test_contenttype_attachment_markdown_body(tmpdir):
         template_message = TemplateMessage(template_path)
         _, _, message = template_message.render({})
 
-    # Markdown: Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
-    assert len(payload) == 3
+    assert len(payload) == 2
+
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    message_payload = payload[0].get_payload()
+    assert len(message_payload) == 2
 
     # Ensure that the first part is plaintext and the second part
     # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
+    plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
 
-    html_part = payload[1]
+    html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")
 
 
