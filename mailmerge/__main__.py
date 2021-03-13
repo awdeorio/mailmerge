@@ -12,7 +12,7 @@ from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from .exceptions import MailmergeError
 from .log import MailmergeLog
-from . impofrom . import utils
+from . import utils
 
 # Python 2 pathlib support requires backport
 try:
