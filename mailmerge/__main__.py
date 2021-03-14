@@ -296,7 +296,7 @@ def read_csv_database(database_path):
             for row in reader:
                 yield row
         except csv.Error as err:
-            raise exceptions.MailmergeError(
+            raise MailmergeError(
                 "{}:{}: {}".format(database_path, reader.line_num, err)
             )
 
