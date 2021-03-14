@@ -6,10 +6,9 @@ Andrew DeOrio <awdeorio@umich.edu>
 import os.path
 
 from .exceptions import MailmergeError
-from . import utils
 
 
-class MailmergeLog(object):
+class MailmergeLog():
     """Represents a log file."""
 
     def __init__(self, path, dry_run=False):
@@ -25,12 +24,12 @@ class MailmergeLog(object):
                     print("number,email,log", file=self.file)
             else:
                 self.file = None
-        except MailmergeError:
+        except MailmergeError as err:
             raise MailmergeError(
                 "{}: {}".format(
                     self.path, "Unable to open log file"
                 )
-            )
+            ) from err
 
     def log(self, number, recipients, message):
         """Write a message to a log file."""
@@ -45,12 +44,12 @@ class MailmergeLog(object):
                         ),
                         file=self.file
                     )
-            except MailmergeError:
+            except MailmergeError as err:
                 raise MailmergeError(
                     "{}: {}".format(
                         self.path, "Unable to write to logfile"
                     )
-                )
+                ) from err
 
     def close(self):
         """Close a log file."""
@@ -58,9 +57,9 @@ class MailmergeLog(object):
             try:
                 self.file.close()
                 self.file = None
-            except MailmergeError:
+            except MailmergeError as err:
                 raise MailmergeError(
                     "{}: {}".format(
                         self.path, "Unable to close logfile"
                     )
-                )
+                ) from err

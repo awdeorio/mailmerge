@@ -298,7 +298,7 @@ def read_csv_database(database_path):
         except csv.Error as err:
             raise MailmergeError(
                 "{}:{}: {}".format(database_path, reader.line_num, err)
-            )
+            ) from err
 
 
 def enumerate_range(iterable, start=0, stop=None):
