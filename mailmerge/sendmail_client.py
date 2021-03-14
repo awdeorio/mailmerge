@@ -7,6 +7,7 @@ import socket
 import smtplib
 import configparser
 import getpass
+import datetime
 from . import exceptions
 from . import utils
 
@@ -16,6 +17,10 @@ class SendmailClient(object):
 
     # This class is pretty simple.  We don't need more than one public method.
     # pylint: disable=too-few-public-methods
+
+    # For the internal state and rate limiting we need more then 7 attributes
+    # pylint: disable=too-many-instance-attributes
+
     #
     # We need to inherit from object for Python 2 compantibility
     # https://python-future.org/compatible_idioms.html#custom-class-behaviour
@@ -27,6 +32,9 @@ class SendmailClient(object):
         self.dry_run = dry_run
         self.username = None
         self.password = None
+        now = datetime.datetime.now()
+        self.rate_time = now.hour*100+now.minute
+        self.rate_count = 0
         try:
             config = configparser.RawConfigParser()
             config.read(str(config_path))
@@ -40,6 +48,9 @@ class SendmailClient(object):
             if self.security is not None:
                 # Read username only if needed
                 self.username = config.get("smtp_server", "username")
+            self.rate = int(config.get("smtp_server", "rate", fallback=0))
+            if self.rate:
+                self.rate_budget = self.rate
         except configparser.Error as err:
             raise exceptions.MailmergeError(
                 "{}: {}".format(self.config_path, err)
@@ -59,8 +70,22 @@ class SendmailClient(object):
         Python 2 doesn't support it.  Both Python 2 and Python 3 support
         smtp.sendmail(sender, recipients, flattened_message_str).
         """
+        if self.rate:
+            now = datetime.datetime.now()
+            now_time = now.hour*100+now.minute
+            # Is it a new minute?
+            if now_time != self.rate_time:
+                self.rate_budget = self.rate
+                self.rate_time = now_time
+
+            self.rate_budget = self.rate_budget - 1
+            if self.rate_budget < 0:
+                # We don't have any budget anymore this minute, return
+                # the number of seconds to wait
+                return 60 - now.second
+
         if self.dry_run:
-            return
+            return 0
 
         # Ask for password if necessary
         if self.security is not None and self.password is None:
@@ -100,3 +125,5 @@ class SendmailClient(object):
                 "{}:{} failed to connect to server: {}"
                 .format(self.host, self.port, err)
             )
+        # All ok, return nothing
+        return 0

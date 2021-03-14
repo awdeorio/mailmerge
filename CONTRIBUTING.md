@@ -31,7 +31,7 @@ $ pytest
 
 Measure unit test case coverage
 ```console
-$ pytest --cov ./mailmerge
+$ pytest --cov ./mailmerge --cov-report term-missing
 ```
 
 Test code style

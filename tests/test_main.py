@@ -129,43 +129,6 @@ def test_bad_limit(tmpdir):
     assert "Error: Invalid value" in stderr
 
 
-def test_rate_limit(tmpdir):
-    """Verify --limit with bad value."""
-    # Simple template
-    template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
-        TO: {{email}}
-        FROM: from@test.com
-
-        Hello world
-    """))
-
-    # Simple database with two entries
-    database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
-        email
-        one@test.com
-        two@test.com
-    """))
-
-    # Simple unsecure server config
-    config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
-        [smtp_server]
-        host = open-smtp.example.com
-        port = 25
-    """))
-
-    # Run mailmerge
-    with tmpdir.as_cwd():
-        output = sh.mailmerge("--no-limit", "--rate", "1")
-    assert output.stderr.decode("utf-8") == ""
-    assert "message 1 sent" in output
-    assert "Rate limit of 1 message per minute hit" in output
-    assert "message 2 sent" in output
-    assert "This was a dry run" in output
-
-
 def test_limit_combo(tmpdir):
     """Verify --limit 1 --no-limit results in no limit."""
     # Simple template

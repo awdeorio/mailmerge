@@ -6,7 +6,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 from __future__ import print_function
 import sys
 import time
-import datetime
 import codecs
 import textwrap
 import click
@@ -58,11 +57,6 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     help="Start on message number INTEGER",
 )
 @click.option(
-    "--rate", is_flag=False, default=None,
-    type=click.IntRange(0, None),
-    help="Send no more then INTEGER messages per minute",
-)
-@click.option(
     "--template", "template_path",
     default="mailmerge_template.txt",
     type=click.Path(),
@@ -86,7 +80,7 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
-def main(sample, dry_run, limit, no_limit, resume, rate,
+def main(sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
          output_format):
     """
@@ -120,41 +114,26 @@ def main(sample, dry_run, limit, no_limit, resume, rate,
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
 
-        # Setup rate limit if needed
-        if rate:
-            now = datetime.datetime.now()
-            rate_time = now.hour*100+now.minute
-            rate_count = 0
-
         for _, row in enumerate_range(csv_database, start, stop):
-            # Rate limiting
-            if rate:
-                now = datetime.datetime.now()
-                now_time = now.hour*100+now.minute
-                # Still te same minute?
-                if rate_time == now_time:
-                    rate_count = rate_count + 1
-                else:
-                    rate_count = 0
-                if rate_count > rate:
+            sender, recipients, message = template_message.render(row)
+            sleep_sec = sendmail_client.sendmail(sender, recipients, message)
+            while sleep_sec > 0:
+                while sleep_sec > 0:
                     print(
                         "Rate limit of {} message per "
-                        "minute hit, sleeping..".format(rate),
-                        end=''
+                        "minute hit, sleeping {} seconds"
+                        "........   ".format(
+                            sendmail_client.rate, sleep_sec
+                        ),
+                        end='\r'
                     )
                     sys.stdout.flush()
-                    # Wait till the end of the minute
-                    while rate_time == now_time:
-                        time.sleep(1)
-                        sys.stdout.write(".")
-                        sys.stdout.flush()
-                        now = datetime.datetime.now()
-                        now_time = now.hour*100+now.minute
-                    print("")
-                    rate_time = now_time
-
-            sender, recipients, message = template_message.render(row)
-            sendmail_client.sendmail(sender, recipients, message)
+                    time.sleep(1)
+                    sleep_sec = sleep_sec - 1
+                print("\r\n")
+                sleep_sec = sendmail_client.sendmail(
+                    sender, recipients, message
+                )
             print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
