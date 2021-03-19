@@ -7,5 +7,6 @@ graft tests
 
 # Avoid dev and and binary files
 exclude tox.ini
+exclude .editorconfig
 global-exclude *.pyc
 global-exclude __pycache__
