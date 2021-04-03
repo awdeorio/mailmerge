@@ -276,27 +276,33 @@ def test_markdown(tmp_path):
 
     # Verify message is multipart
     assert message.is_multipart()
+    assert message.get_content_subtype() == "mixed"
 
-    # Make sure there is a plaintext part and an HTML part
-    payload = message.get_payload()
-    assert len(payload) == 2
+    # Make sure there is a single multipart/alternative payload
+    assert len(message.get_payload()) == 1
+    assert message.get_payload()[0].is_multipart()
+    assert message.get_payload()[0].get_content_subtype() == "alternative"
+
+    # And there should be a plaintext part and an HTML part
+    message_payload = message.get_payload()[0].get_payload()
+    assert len(message_payload) == 2
 
     # Ensure that the first part is plaintext and the last part
     # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
+    plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
     plaintext_encoding = str(plaintext_part.get_charset())
     plaintext = plaintext_part.get_payload(decode=True) \
                               .decode(plaintext_encoding)
 
-    html_part = payload[1]
+    html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")
     html_encoding = str(html_part.get_charset())
     htmltext = html_part.get_payload(decode=True) \
                         .decode(html_encoding)
 
     # Verify rendered Markdown
-    rendered = markdown.markdown(plaintext)
+    rendered = markdown.markdown(plaintext, extensions=['nl2br'])
     rendered_document = html5lib.parse(rendered)
 
     # https://stackoverflow.com/a/24349916
@@ -336,7 +342,7 @@ def test_markdown_encoding(tmp_path):
 
     # Message should contain an unrendered Markdown plaintext part and a
     # rendered Markdown HTML part
-    plaintext_part, html_part = message.get_payload()
+    plaintext_part, html_part = message.get_payload()[0].get_payload()
 
     # Verify encodings
     assert str(plaintext_part.get_charset()) == "utf-8"
@@ -348,7 +354,8 @@ def test_markdown_encoding(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     assert plaintext == u"Hi, Myself,\næøå"
-    assert htmltext == u"<html><body><p>Hi, Myself,\næøå</p></body></html>"
+    assert htmltext == \
+        u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
 
 
 Attachment = collections.namedtuple(
@@ -625,7 +632,7 @@ def test_attachment_multiple(tmp_path):
 
 
 def test_attachment_empty(tmp_path):
-    """Errr on empty attachment field."""
+    """Err on empty attachment field."""
     template_path = tmp_path / "template.txt"
     template_path.write_text(textwrap.dedent(u"""\
         TO: to@test.com
@@ -638,6 +645,78 @@ def test_attachment_empty(tmp_path):
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
+
+
+def test_contenttype_attachment_html_body(tmpdir):
+    """
+    Verify that the content-type of the message is correctly retained with an
+    HTML body.
+    """
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # HTML template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+        CONTENT-TYPE: text/html
+
+        Hello world
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        _, _, message = template_message.render({})
+
+    # Verify that the message content type is HTML
+    payload = message.get_payload()
+    assert len(payload) == 2
+    assert payload[0].get_content_type() == 'text/html'
+
+
+def test_contenttype_attachment_markdown_body(tmpdir):
+    """
+    Verify that the content-types of the MarkDown message are correct when
+    attachments are included.
+    """
+    # Simple attachment
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # HTML template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+        CONTENT-TYPE: text/markdown
+
+        Hello **world**
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        _, _, message = template_message.render({})
+
+    payload = message.get_payload()
+    assert len(payload) == 2
+
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    message_payload = payload[0].get_payload()
+    assert len(message_payload) == 2
+
+    # Ensure that the first part is plaintext and the second part
+    # is HTML (as per RFC 2046)
+    plaintext_part = message_payload[0]
+    assert plaintext_part['Content-Type'].startswith("text/plain")
+
+    html_part = message_payload[1]
+    assert html_part['Content-Type'].startswith("text/html")
 
 
 def test_duplicate_headers_attachment(tmp_path):

@@ -1,3 +1,5 @@
+# coding=utf-8
+# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Represent a templated email message.
 
@@ -17,7 +19,7 @@ import markdown
 import jinja2
 import uuid
 from xml.etree import ElementTree
-from .exceptions import MailmergeError
+from . import exceptions
 
 # Python 2 pathlib support requires backport
 try:
@@ -66,7 +68,7 @@ class TemplateMessage(object):
         try:
             raw_message = self.template.render(context)
         except jinja2.exceptions.TemplateError as err:
-            raise MailmergeError(
+            raise exceptions.MailmergeError(
                 "{}: {}".format(self.template_path, err)
             )
         self._message = email.message_from_string(raw_message)
@@ -122,13 +124,19 @@ class TemplateMessage(object):
         self._sender = self._message["from"]
 
     def _make_message_multipart(self):
-        """Convert a message into a multipart message."""
+        """
+        Convert self._message into a multipart message.
+
+        Specifically, if the message's content-type is not multipart, this
+        method will create a new `multipart/mixed` message, copy message
+        headers and re-attach the original payload.
+        """
         # Do nothing if message already multipart
         if self._message.is_multipart():
             return
 
         # Create empty multipart message
-        multipart_message = email.mime.multipart.MIMEMultipart('alternative')
+        multipart_message = email.mime.multipart.MIMEMultipart('mixed')
 
         # Copy headers.  Avoid duplicate Content-Type and MIME-Version headers,
         # which we set explicitely.  MIME-Version was set when we created an
@@ -143,9 +151,11 @@ class TemplateMessage(object):
 
         # Copy text, preserving original encoding
         original_text = self._message.get_payload(decode=True)
+        original_subtype = self._message.get_content_subtype()
         original_encoding = str(self._message.get_charset())
         multipart_message.attach(email.mime.text.MIMEText(
             original_text,
+            _subtype=original_subtype,
             _charset=original_encoding,
         ))
 
@@ -153,7 +163,20 @@ class TemplateMessage(object):
         self._message = multipart_message
 
     def _transform_markdown(self):
-        """Convert markdown in message text to HTML."""
+        """
+        Convert markdown in message text to HTML.
+
+        Specifically, if the message's content-type is `text/markdown`, we
+        transform `self._message` to have the following structure:
+
+        multipart/mixed
+         └── multipart/alternative
+             ├── text/plain (original markdown plaintext)
+             └── text/html (converted markdown)
+
+        Attachments should be added as subsequent payload items of the
+        top-level `multipart/mixed` message.
+        """
         # Do nothing if Content-Type is not text/markdown
         if not self._message['Content-Type'].startswith("text/markdown"):
             return
@@ -169,29 +192,64 @@ class TemplateMessage(object):
         # plaintext payload is formatted with Markdown.
         for mimetext in self._message.get_payload():
             if mimetext['Content-Type'].startswith('text/plain'):
+                original_text_payload = mimetext
                 encoding = str(mimetext.get_charset())
                 text = mimetext.get_payload(decode=True).decode(encoding)
                 break
+        assert original_text_payload
         assert encoding
         assert text
+        # Remove the original text payload.
+        self._message.set_payload(
+            self._message.get_payload().remove(original_text_payload))
 
+        # Add a multipart/alternative part to the message. Email clients can
+        # choose which payload-part they wish to render.
+        #
         # Render Markdown to HTML and add the HTML as the last part of the
-        # multipart message as per RFC 2046.
+        # multipart/alternative message as per RFC 2046.
         #
         # Note: We need to use u"..." to ensure that unicode string
         # substitution works properly in Python 2.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
-        html = markdown.markdown(text)
-        payload = future.backports.email.mime.text.MIMEText(
+        html = markdown.markdown(text, extensions=['nl2br'])
+        html_payload = future.backports.email.mime.text.MIMEText(
             u"<html><body>{}</body></html>".format(html),
             _subtype="html",
             _charset=encoding,
         )
-        self._message.attach(payload)
+
+        message_payload = email.mime.multipart.MIMEMultipart('alternative')
+        message_payload.attach(original_text_payload)
+        message_payload.attach(html_payload)
+
+        self._message.attach(message_payload)
 
     def _transform_attachments(self):
-        """Parse Attachment headers and add attachments."""
+        """
+        Parse Attachment headers and add attachments.
+
+        Attachments are added to the payload of a `multipart/mixed` message.
+        For instance, a plaintext message with attachments would have the
+        following structure:
+
+        multipart/mixed
+         ├── text/plain
+         ├── attachment1
+         └── attachment2
+
+        Another example: If the original message contained `text/markdown`,
+        then the message would have the following structure after transforming
+        markdown and attachments:
+
+        multipart/mixed
+         ├── multipart/alternative
+         │   ├── text/plain
+         │   └── text/html
+         ├── attachment1
+         └── attachment2
+        """
         # Do nothing if message has no attachment header
         if 'attachment' not in self._message:
             return
@@ -262,7 +320,7 @@ class TemplateMessage(object):
         """Find attachment file or raise MailmergeError."""
         # Error on empty path
         if not path.strip():
-            raise MailmergeError("Empty attachment header.")
+            raise exceptions.MailmergeError("Empty attachment header.")
 
         # Create a Path object and handle home directory (tilde ~) notation
         path = Path(path.strip())
@@ -277,7 +335,9 @@ class TemplateMessage(object):
 
         # Check that the attachment exists
         if not path.exists():
-            raise MailmergeError("Attachment not found: {}".format(path))
+            raise exceptions.MailmergeError(
+                "Attachment not found: {}".format(path)
+            )
 
         return path
 
