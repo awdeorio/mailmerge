@@ -6,6 +6,8 @@ Represent a templated email message.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 
+import re
+from xml.etree import ElementTree
 import future.backports.email as email
 import future.backports.email.mime
 import future.backports.email.mime.application
@@ -17,8 +19,6 @@ import future.backports.email.generator
 import html5lib
 import markdown
 import jinja2
-import uuid
-from xml.etree import ElementTree
 from . import exceptions
 
 # Python 2 pathlib support requires backport
@@ -83,27 +83,20 @@ class TemplateMessage(object):
         assert self._message
         return self._sender, self._recipients, self._message
 
-    def _make_msgid(self, filepath):
+    def _make_attachment_content_id_header(self, filepath):
         """
         Returns a string suitable for RFC 2822 compliant Message-ID, e.g:
-        <794e9da8-1a3c-4962-9417-d8cd71b921bd@mailmerge.invalid>
-        filepath is the path of the file being used
-        Adapted from the Python defined one:
-        https://github.com/python/cpython/blob/68b352a6982f51e19bf9b9f4ae61b34f5864d131/Lib/email/utils.py#L174-L194
-        But doesn't leak the hostname, and doesn't rely on time/pid
+        <20020201195627.33539.96671@mailmerge.invalid>
+        `filepath` is the normalized path of the attachment
         """
-        guid = uuid.uuid4()
-        # Using .invalid for privacy protection
-        # has been done before: https://en.wikipedia.org/wiki/.invalid
-
-        domain = 'anonymous.invalid'
-        cid = '%s@%s' % (guid, domain)
-
-        # save it for lookups
+        # Using domain '.invalid' to prevent leaking the hostname. The TLD is
+        # reserved, see: https://en.wikipedia.org/wiki/.invalid
+        cid_header = email.utils.make_msgid(domain="mailmerge.invalid")
+        # The cid_header is of format `<cid>`. We need to extract the cid for
+        # later lookup.
+        cid = re.search('<(.*)>', cid_header).group(1)
         self._attachment_content_ids[str(filepath)] = cid
-        # The header format is `<[addr-spec]>`, and references
-        # elsewhere must use `cid:[addr-spec]`.
-        return "<%s>" % cid
+        return cid_header
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
@@ -260,10 +253,7 @@ class TemplateMessage(object):
 
         # Add each attachment to the message
         for path in self._message.get_all('attachment', failobj=[]):
-
-            cid_header = self._make_msgid(path)
             path = self._resolve_attachment_path(path)
-
             with path.open("rb") as attachment:
                 content = attachment.read()
             basename = path.parts[-1]
@@ -275,6 +265,10 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
+            # When processing inline images in the email body, we will
+            # reference the Content-ID for an attachment with the same path
+            # using 'cid:[content-id]'.
+            cid_header = self._make_attachment_content_id_header(path)
             part.add_header('Content-Id', cid_header)
             self._message.attach(part)
 
