@@ -827,9 +827,9 @@ def test_attachment_image_in_markdown(tmp_path):
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
     assert htmltext.strip() == \
-        '<html><head />\
-        <body><p><img src="cid:{cid}" alt="" /></p></body>\
-        </html>'.format(cid=cid)
+        '<html><head />'\
+        '<body><p><img src="cid:{cid}" alt="" /></p></body>'\
+        '</html>'.format(cid=cid)
 
 
 def test_content_id_header_for_attachments(tmpdir):
