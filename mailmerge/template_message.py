@@ -254,6 +254,11 @@ class TemplateMessage(object):
 
         # Add each attachment to the message
         for path in self._message.get_all('attachment', failobj=[]):
+            # When processing inline images in the email body, we will
+            # reference the Content-ID for an attachment with the same path
+            # using 'cid:[content-id]'.
+            cid_header = self._make_attachment_content_id_header(path)
+
             path = self._resolve_attachment_path(path)
             with path.open("rb") as attachment:
                 content = attachment.read()
@@ -266,10 +271,6 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
-            # When processing inline images in the email body, we will
-            # reference the Content-ID for an attachment with the same path
-            # using 'cid:[content-id]'.
-            cid_header = self._make_attachment_content_id_header(path)
             part.add_header('Content-Id', cid_header)
             self._message.attach(part)
 

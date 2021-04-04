@@ -13,9 +13,8 @@ import collections
 import pytest
 import markdown
 import html5lib
-from uuid import UUID
-from . import utils
 from mailmerge import TemplateMessage, MailmergeError
+from . import utils
 
 # Python 2 pathlib support requires backport
 try:
@@ -798,21 +797,22 @@ def test_attachment_image_in_markdown(tmp_path):
     # Verify message is multipart
     assert message.is_multipart()
 
-    # Make sure there is a plaintext part and an HTML part
+    # Make sure there is a message body and the attachment
     payload = message.get_payload()
-    assert len(payload) == 3
+    assert len(payload) == 2
 
-    # Ensure that the first part is plaintext and the last part
-    # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    message_payload = payload[0].get_payload()
+    assert len(message_payload) == 2
+    
+    plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
     plaintext_encoding = str(plaintext_part.get_charset())
     plaintext = plaintext_part.get_payload(decode=True) \
                               .decode(plaintext_encoding)
-
     assert plaintext.strip() == "![](attachment_3.jpg)"
 
-    html_part = payload[1]
+    html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")
     html_encoding = str(html_part.get_charset())
     htmltext = html_part.get_payload(decode=True) \
@@ -855,4 +855,4 @@ def test_content_id_header_for_attachments(tmpdir):
     filename, content, cid_header = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
-    assert re.match('<[0-9a-fA-F]{8}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{4}-[0-9a-fA-F]{12}@anonymous.invalid>', cid_header)
+    assert re.match(r'<[\d\w]+(\.[\d\w]+)*@mailmerge\.invalid>', cid_header)
