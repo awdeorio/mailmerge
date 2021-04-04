@@ -221,7 +221,8 @@ class TemplateMessage(object):
 
     def _transform_attachments(self):
         """
-        Parse Attachment headers and add attachments.
+        Parse Attachment headers, add attachments and generate content-id
+        headers for each.
 
         Attachments are added to the payload of a `multipart/mixed` message.
         For instance, a plaintext message with attachments would have the
@@ -276,39 +277,49 @@ class TemplateMessage(object):
         del self._message['attachment']
 
     def _transform_attachment_references(self):
+        """
+        Replace references to inline-images in the email body's HTML content
+        with content-ids matching image attachments.
+        """
         if not self._message.is_multipart():
             return
 
-        for message in self._message.get_payload():
-            if message['Content-Type'].startswith('text/html'):
+        for part in self._message.walk():
+            if not part['Content-Type'].startswith('text/html'):
+                continue
 
-                html = message.get_payload(decode=True).decode('utf-8')
-                document = html5lib.parse(html, namespaceHTMLElements=False)
-                images = document.findall('.//img')
+            html = part.get_payload(decode=True).decode('utf-8')
+            document = html5lib.parse(html, namespaceHTMLElements=False)
+            images = document.findall('.//img')
+            if len(images) == 0:
+                continue
 
-                if len(images) == 0:
-                    continue
+            for img in document.findall('.//img'):
+                src = img.get('src')
+                if src in self._attachment_content_ids:
+                    cid = self._attachment_content_ids[src]
+                    url = "cid:{}".format(cid)
+                    img.set('src', url)
+                    # Only clear the header if we are transforming an
+                    # attachment reference. See comment below for context.
+                    del part['Content-Transfer-Encoding']
 
-                for img in document.findall('.//img'):
-                    src = img.get('src')
-                    if src in self._attachment_content_ids:
-                        # We only clear the header if we are using an image
-                        del message['Content-Transfer-Encoding']
-                        cid = self._attachment_content_ids[src]
-                        url = "cid:%s" % (cid)
-                        img.set('src', url)
-
-                # Unless the _charset argument is explicitly set to None, the MIMEText object created will have both a Content-Type header with a charset parameter, and a Content-Transfer-Encoding header.
-                # This means that a subsequent set_payload call will not result in an encoded payload, even if a charset is passed in the set_payload command.
-                # You can “reset” this behavior by deleting the Content-Transfer-Encoding header, after which a set_payload call will automatically encode the new payload (and add a new Content-Transfer-Encoding header).
-
-                # We only update the message if we cleared the header
-                # which only happens in the case of transforming an attachment reference
-                if not 'Content-Transfer-Encoding' in message:
-                    newhtml = ElementTree.tostring(document).decode('utf-8')
-                    message.set_payload(newhtml)
-
-
+            # Unless the _charset argument is explicitly set to None, the
+            # MIMEText object created will have both a Content-Type header with
+            # a charset parameter, and a Content-Transfer-Encoding header.
+            # This means that a subsequent set_payload call will not result in
+            # an encoded payload, even if a charset is passed in the
+            # set_payload() command.
+            # We “reset” this behavior by deleting the
+            # Content-Transfer-Encoding header, after which a set_payload()
+            # call automatically encodes the new payload (and adds a new
+            # Content-Transfer-Encoding header).
+            #
+            # We only need to update the message if we cleared the header,
+            # which only happens if we transformed an attachment reference.
+            if not 'Content-Transfer-Encoding' in part:
+                new_html = ElementTree.tostring(document).decode('utf-8')
+                part.set_payload(new_html)
 
     def _resolve_attachment_path(self, path):
         """Find attachment file or raise MailmergeError."""
