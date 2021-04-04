@@ -783,7 +783,7 @@ def test_attachment_image_in_markdown(tmp_path):
         ATTACHMENT: attachment_3.jpg
         CONTENT-TYPE: text/markdown
 
-        ![](attachment_3.jpg)
+        ![](./attachment_3.jpg)
     """))
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
@@ -804,13 +804,13 @@ def test_attachment_image_in_markdown(tmp_path):
     # Markdown: Make sure there is a plaintext part and an HTML part
     message_payload = payload[0].get_payload()
     assert len(message_payload) == 2
-    
+
     plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
     plaintext_encoding = str(plaintext_part.get_charset())
     plaintext = plaintext_part.get_payload(decode=True) \
                               .decode(plaintext_encoding)
-    assert plaintext.strip() == "![](attachment_3.jpg)"
+    assert plaintext.strip() == "![](./attachment_3.jpg)"
 
     html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")

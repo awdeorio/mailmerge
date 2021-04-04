@@ -254,11 +254,6 @@ class TemplateMessage(object):
 
         # Add each attachment to the message
         for path in self._message.get_all('attachment', failobj=[]):
-            # When processing inline images in the email body, we will
-            # reference the Content-ID for an attachment with the same path
-            # using 'cid:[content-id]'.
-            cid_header = self._make_attachment_content_id_header(path)
-
             path = self._resolve_attachment_path(path)
             with path.open("rb") as attachment:
                 content = attachment.read()
@@ -271,7 +266,13 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
+
+            # When processing inline images in the email body, we will
+            # reference the Content-ID for an attachment with the same path
+            # using 'cid:[content-id]'.
+            cid_header = self._make_attachment_content_id_header(path)
             part.add_header('Content-Id', cid_header)
+
             self._message.attach(part)
 
         # Remove the attachment header, it's non-standard for email
@@ -297,6 +298,13 @@ class TemplateMessage(object):
 
             for img in document.findall('.//img'):
                 src = img.get('src')
+                try:
+                    src = str(self._resolve_attachment_path(src))
+                except exceptions.MailmergeError:
+                    # The src is not a valid filesystem path, so it could not
+                    # have been attached to the email.
+                    continue
+
                 if src in self._attachment_content_ids:
                     cid = self._attachment_content_ids[src]
                     url = "cid:{}".format(cid)
