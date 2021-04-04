@@ -85,8 +85,9 @@ class TemplateMessage(object):
 
     def _make_attachment_content_id_header(self, filepath):
         """
-        Returns a string suitable for RFC 2822 compliant Message-ID, e.g:
-        <20020201195627.33539.96671@mailmerge.invalid>
+        Return a string suitable for RFC 2822 compliant Message-ID.
+
+        For instance: <20020201195627.33539.96671@mailmerge.invalid>
         `filepath` is the normalized path of the attachment
         """
         # Using domain '.invalid' to prevent leaking the hostname. The TLD is
@@ -221,8 +222,7 @@ class TemplateMessage(object):
 
     def _transform_attachments(self):
         """
-        Parse Attachment headers, add attachments and generate content-id
-        headers for each.
+        Parse attachment headers and generate content-id headers for each.
 
         Attachments are added to the payload of a `multipart/mixed` message.
         For instance, a plaintext message with attachments would have the
@@ -280,8 +280,10 @@ class TemplateMessage(object):
 
     def _transform_attachment_references(self):
         """
-        Replace references to inline-images in the email body's HTML content
-        with content-ids matching image attachments.
+        Replace references to inline-images in the email body's HTML content.
+
+        Specifically, match inline-image src attributes with content-ids from
+        image attachments, if available.
         """
         if not self._message.is_multipart():
             return
@@ -326,7 +328,7 @@ class TemplateMessage(object):
             #
             # We only need to update the message if we cleared the header,
             # which only happens if we transformed an attachment reference.
-            if not 'Content-Transfer-Encoding' in part:
+            if 'Content-Transfer-Encoding' not in part:
                 new_html = ElementTree.tostring(document).decode('utf-8')
                 part.set_payload(new_html)
 
