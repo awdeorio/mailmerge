@@ -126,6 +126,29 @@ def test_cc_bcc(tmp_path):
     assert "Secret" not in plaintext
 
 
+def are_strings_equal(s_1, s_2):
+    """Compare strings ignoring trailing whitespace."""
+    s_1 = s_1.strip() if s_1 else ''
+    s_2 = s_2.strip() if s_2 else ''
+    return s_1 == s_2
+
+
+def are_html_docs_equal(e_1, e_2):
+    """Assert that two HTML trees are equivalent."""
+    # Based on: https://stackoverflow.com/a/24349916
+    if not are_strings_equal(e_1.tag, e_2.tag):
+        return False
+    if not are_strings_equal(e_1.text, e_2.text):
+        return False
+    if not are_strings_equal(e_1.tail, e_2.tail):
+        return False
+    if e_1.attrib != e_2.attrib:
+        return False
+    if len(e_1) != len(e_2):
+        return False
+    return all(are_html_docs_equal(c_1, c_2) for c_1, c_2 in zip(e_1, e_2))
+
+
 def test_html(tmp_path):
     """Verify HTML template results in a simple rendered message."""
     template_path = tmp_path / "template.txt"
@@ -159,9 +182,9 @@ def test_html(tmp_path):
     assert message.get_content_type() == "text/html"
 
     # Verify content
-    htmltext = message.get_payload()
-    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+    htmltext = html5lib.parse(message.get_payload())
+    expected = html5lib.parse("<html><body><p>Hello world</p></body></html>")
+    assert are_html_docs_equal(htmltext, expected)
 
 
 def test_html_plaintext(tmp_path):
@@ -218,9 +241,9 @@ def test_html_plaintext(tmp_path):
     assert html_part.get_charset() == "us-ascii"
     assert html_part.get_content_charset() == "us-ascii"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload()
-    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+    htmltext = html5lib.parse(html_part.get_payload())
+    expected = html5lib.parse("<html><body><p>Hello world</p></body></html>")
+    assert are_html_docs_equal(htmltext, expected)
 
 
 def extract_text_from_markdown_payload(plaintext_part, mime_type):
@@ -304,24 +327,10 @@ def test_markdown(tmp_path):
 
     # Verify rendered Markdown
     rendered = markdown.markdown(plaintext, extensions=['nl2br'])
-    rendered_document = html5lib.parse(rendered)
-
-    # https://stackoverflow.com/a/24349916
-    def elements_equal(e_1, e_2):
-        if e_1.tag != e_2.tag:
-            return False
-        if e_1.text != e_2.text:
-            return False
-        if e_1.tail != e_2.tail:
-            return False
-        if e_1.attrib != e_2.attrib:
-            return False
-        if len(e_1) != len(e_2):
-            return False
-        return all(elements_equal(c_1, c_2) for c_1, c_2 in zip(e_1, e_2))
+    expected = html5lib.parse(rendered)
 
     htmltext_document = html5lib.parse(htmltext)
-    assert elements_equal(htmltext_document, rendered_document)
+    assert are_html_docs_equal(htmltext_document, expected)
 
 
 def test_markdown_encoding(tmp_path):
@@ -360,8 +369,12 @@ def test_markdown_encoding(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     assert plaintext == u"Hi, Myself,\næøå"
-    assert htmltext == \
-        u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
+    assert are_html_docs_equal(
+        html5lib.parse(htmltext),
+        html5lib.parse(
+            u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
+        )
+    )
 
 
 Attachment = collections.namedtuple(
@@ -822,14 +835,16 @@ def test_attachment_image_in_markdown(tmp_path):
 
     attachments = extract_attachments(message)
     assert len(attachments) == 1
-    filename, content, cid_header = attachments[0]
-    cid = cid_header[1:-1]
+    filename, content, cid = attachments[0]
+    cid = cid[1:-1]
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
-    assert htmltext.strip() == \
-        '<html><head />'\
-        '<body><p><img src="cid:{cid}" alt="" /></p></body>'\
-        '</html>'.format(cid=cid)
+
+    expected = html5lib.parse(
+        '<html><head />'
+        '<body><p><img src="cid:{cid}" alt="" /></p></body>'
+        '</html>'.format(cid=cid))
+    assert are_html_docs_equal(html5lib.parse(htmltext), expected)
 
 
 def test_content_id_header_for_attachments(tmpdir):
