@@ -378,24 +378,9 @@ Pro-tip: Use Jinja to customize the attachments based on your database!
 
 ## Inline Image Attachments
 
-This example shows how to add inline-image-attachments, so the images are rendered directly from the attachment.
+This example shows how to add inline-image-attachments so that the images are rendered directly in the email body. You **must** add the inline-image as an attachment before referencing it in the body.
 
-#### Template `mailmerge_template.txt`
-```
-TO: {{email}}
-SUBJECT: Testing mailmerge
-FROM: My Self <myself@mydomain.com>
-ATTACHMENT: image.jpg
-CONTENT-TYPE: text/markdown
-
-Hi, {{name}},
-
-![image](image.jpg)
-```
-
-You can do the same with HTML templates as well:
-
-#### Template `mailmerge_template.txt`
+#### HTML Example: Template `mailmerge_template.txt`
 
 ```
 TO: {{email}}
@@ -420,7 +405,18 @@ The second image: <img alt="second" src="second/image.jpg">
 </html>
 ```
 
-In case you have a local image referenced via `<img src=?>`, it must be added as an attachment. This is true for both markdown/html formatting.
+#### Markdown Example: Template `mailmerge_template.txt`
+```
+TO: {{email}}
+SUBJECT: Testing mailmerge
+FROM: My Self <myself@mydomain.com>
+ATTACHMENT: image.jpg
+CONTENT-TYPE: text/markdown
+
+Hi, {{name}},
+
+![image alt-description](image.jpg)
+```
 
 ## Contributing
 Contributions from the community are welcome! Check out the [guide for contributing](CONTRIBUTING.md).
