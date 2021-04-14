@@ -83,22 +83,6 @@ class TemplateMessage(object):
         assert self._message
         return self._sender, self._recipients, self._message
 
-    def _make_attachment_content_id_header(self, filepath):
-        """
-        Return a string suitable for RFC 2822 compliant Message-ID.
-
-        For instance: <20020201195627.33539.96671@mailmerge.invalid>
-        `filepath` is the normalized path of the attachment
-        """
-        # Using domain '.invalid' to prevent leaking the hostname. The TLD is
-        # reserved, see: https://en.wikipedia.org/wiki/.invalid
-        cid_header = email.utils.make_msgid(domain="mailmerge.invalid")
-        # The cid_header is of format `<cid>`. We need to extract the cid for
-        # later lookup.
-        cid = re.search('<(.*)>', cid_header).group(1)
-        self._attachment_content_ids[str(filepath)] = cid
-        return cid_header
-
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
         encoding = "us-ascii" if is_ascii(raw_message) else "utf-8"
@@ -270,8 +254,9 @@ class TemplateMessage(object):
             # When processing inline images in the email body, we will
             # reference the Content-ID for an attachment with the same path
             # using 'cid:[content-id]'.
-            cid_header = self._make_attachment_content_id_header(path)
-            part.add_header('Content-Id', cid_header)
+            cid, cid_header_value = make_attachment_content_id()
+            self._attachment_content_ids[str(path)] = cid
+            part.add_header('Content-Id', cid_header_value)
 
             self._message.attach(part)
 
@@ -363,3 +348,18 @@ def is_ascii(string):
     def is_ascii_char(char):
         return 0 <= ord(char) <= 127
     return all(is_ascii_char(char) for char in string)
+
+
+def make_attachment_content_id():
+    """
+    Return an RFC 2822 compliant Message-ID and corresponding header.
+
+    For instance: `20020201195627.33539.96671@mailmerge.invalid`
+    """
+    # Using domain '.invalid' to prevent leaking the hostname. The TLD is
+    # reserved, see: https://en.wikipedia.org/wiki/.invalid
+    cid_header = email.utils.make_msgid(domain="mailmerge.invalid")
+    # The cid_header is of format `<cid>`. We need to extract the cid for
+    # later lookup.
+    cid = re.search('<(.*)>', cid_header).group(1)
+    return cid, cid_header
