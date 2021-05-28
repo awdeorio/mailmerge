@@ -248,7 +248,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             #   port       # SMTP server port
             #   security   # Security protocol: "SSL/TLS", "STARTTLS", or omit
             #   username   # Username for SSL/TLS or STARTTLS security
-            #   ratelimit  # Rate limit in messages per minute
+            #   ratelimit  # Rate limit in messages per minute, 0 for unlimited
 
             # Example: GMail
             [smtp_server]
