@@ -9,6 +9,7 @@ pytest tmpdir docs:
 http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
 import textwrap
+import time
 import sh
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
@@ -37,7 +38,7 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-        ratelimit = 1
+        ratelimit = 60
     """))
     sendmail_client = SendmailClient(
         config_path,
@@ -66,6 +67,17 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         message=message,
     )
     assert retval == 1
+
+    # Retry the second message after 1 s because the rate limit is 60 messages
+    # per minute
+    # FIXME a better way to do this is to mock datetime.datetime.now()
+    time.sleep(1.1)
+    retval = sendmail_client.sendmail(
+        sender="from@test.com",
+        recipients=["to@test.com"],
+        message=message,
+    )
+    assert retval == 0
 
 
 def test_rate_limit(tmpdir):

@@ -70,9 +70,9 @@ class SendmailClient(object):
         # to wait
         waittime = datetime.timedelta(minutes=1 / self.ratelimit)
         now = datetime.datetime.now()
-        if (self.ratelimit and self.lastsent and
-            self.lastsent - now < waittime):
-            return 1  # FIXME
+        if self.ratelimit and self.lastsent:
+            if now - self.lastsent < waittime:
+                return 1  # FIXME
 
         # Ask for password if necessary
         if self.security is not None and self.password is None:
