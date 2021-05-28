@@ -128,6 +128,8 @@ def test_stdout_ratelimit(mock_SMTP, tmpdir):
         )
     after = datetime.datetime.now()
     assert after - before > datetime.timedelta(seconds=1)
+    smtp = mock_SMTP.return_value.__enter__.return_value
+    assert smtp.sendmail.call_count == 2
     assert result.exit_code == 0
     assert result.stderr == ""
     assert ">>> message 1 sent" in result.stdout
