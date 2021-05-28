@@ -90,7 +90,7 @@ class SendmailClient(object):
         # Check if we've hit the rate limit
         now = datetime.datetime.now()
         if self.config.ratelimit and self.lastsent:
-            waittime = datetime.timedelta(minutes=1 / self.config.ratelimit)
+            waittime = datetime.timedelta(minutes=1.0 / self.config.ratelimit)
             if now - self.lastsent < waittime:
                 raise exceptions.MailmergeRateLimitError()
 
