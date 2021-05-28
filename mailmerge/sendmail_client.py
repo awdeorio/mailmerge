@@ -81,9 +81,6 @@ class SendmailClient(object):
         Python 2 doesn't support it.  Both Python 2 and Python 3 support
         smtp.sendmail(sender, recipients, flattened_message_str).
         """
-        # no-member errors are endemic to the socket library
-        # pylint: disable=no-member
-
         if self.dry_run:
             return
 
