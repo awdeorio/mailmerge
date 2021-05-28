@@ -1,12 +1,9 @@
 # coding=utf-8
 # Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
-System tests.
+Tests for SMTP server rate limit feature.
 
 Andrew DeOrio <awdeorio@umich.edu>
-
-pytest tmpdir docs:
-http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
 import textwrap
 import time
