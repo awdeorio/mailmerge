@@ -58,7 +58,7 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         message=message,
     )
     assert retval == 0
-    
+
     # Second message exceeds the rate limit
     retval = sendmail_client.sendmail(
         sender="from@test.com",
