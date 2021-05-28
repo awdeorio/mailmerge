@@ -8,13 +8,12 @@ Andrew DeOrio <awdeorio@umich.edu>
 import textwrap
 import datetime
 import time
-import sh
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
 import pytest
 import click
 import click.testing
-from mailmerge import SendmailClient, MailmergeError, MailmergeRateLimitError
+from mailmerge import SendmailClient, MailmergeRateLimitError
 from mailmerge.__main__ import main
 
 try:
@@ -30,6 +29,9 @@ except ImportError:
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member
+
+# We're going to use mock_SMTP because it mimics the real SMTP library
+# pylint: disable=invalid-name
 
 
 @mock.patch('smtplib.SMTP')
@@ -60,14 +62,17 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         recipients=["to@test.com"],
         message=message,
     )
+    smtp = mock_SMTP.return_value.__enter__.return_value
+    assert smtp.sendmail.call_count == 1
 
-    # Second message exceeds the rate limit
+    # Second message exceeds the rate limit, doesn't try to send a message
     with pytest.raises(MailmergeRateLimitError):
         sendmail_client.sendmail(
             sender="from@test.com",
             recipients=["to@test.com"],
             message=message,
         )
+    assert smtp.sendmail.call_count == 1
 
     # Retry the second message after 1 s because the rate limit is 60 messages
     # per minute
@@ -78,6 +83,7 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         recipients=["to@test.com"],
         message=message,
     )
+    assert smtp.sendmail.call_count == 2
 
 
 @mock.patch('smtplib.SMTP')
