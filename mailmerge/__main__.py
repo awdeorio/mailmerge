@@ -116,24 +116,12 @@ def main(sample, dry_run, limit, no_limit, resume,
 
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
-            sleep_sec = sendmail_client.sendmail(sender, recipients, message)
-            while sleep_sec > 0:
-                while sleep_sec > 0:
-                    print(
-                        "Rate limit of {} message per "
-                        "minute hit, sleeping {} seconds"
-                        "........   ".format(
-                            sendmail_client.rate, sleep_sec
-                        ),
-                        end='\r'
-                    )
-                    sys.stdout.flush()
-                    time.sleep(1)
-                    sleep_sec = sleep_sec - 1
-                print("\r\n")
-                sleep_sec = sendmail_client.sendmail(
-                    sender, recipients, message
+            while sendmail_client.sendmail(sender, recipients, message) > 0:
+                print_bright_white_on_cyan(
+                    ">>> rate limit exceeded, waiting ...",
+                    output_format,
                 )
+                time.sleep(1)
             print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
