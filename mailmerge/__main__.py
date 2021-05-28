@@ -116,11 +116,16 @@ def main(sample, dry_run, limit, no_limit, resume,
 
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
-            while sendmail_client.sendmail(sender, recipients, message) > 0:
-                print_bright_white_on_cyan(
-                    ">>> rate limit exceeded, waiting ...",
-                    output_format,
-                )
+            while True:
+                try:
+                    sendmail_client.sendmail(sender, recipients, message)
+                except exceptions.MailmergeRateLimitError:
+                    print_bright_white_on_cyan(
+                        ">>> rate limit exceeded, waiting ...",
+                        output_format,
+                    )
+                else:
+                    break
                 time.sleep(1)
             print_bright_white_on_cyan(
                 ">>> message {message_num}"

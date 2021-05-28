@@ -64,15 +64,14 @@ class SendmailClient(object):
         smtp.sendmail(sender, recipients, flattened_message_str).
         """
         if self.dry_run:
-            return 0
+            return
 
-        # Check if we've hit the rate limit and return the number of seconds
-        # to wait
+        # Check if we've hit the rate limit
         waittime = datetime.timedelta(minutes=1 / self.ratelimit)
         now = datetime.datetime.now()
         if self.ratelimit and self.lastsent:
             if now - self.lastsent < waittime:
-                return 1  # FIXME
+                raise exceptions.MailmergeRateLimitError()
 
         # Ask for password if necessary
         if self.security is not None and self.password is None:
@@ -113,5 +112,6 @@ class SendmailClient(object):
                 .format(self.host, self.port, err)
             )
 
+        # Update timestamp of last sent message
         self.lastsent = now
-        return 0
+        return

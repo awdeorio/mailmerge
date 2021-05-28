@@ -11,9 +11,10 @@ import time
 import sh
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
+import pytest
 import click
 import click.testing
-from mailmerge import SendmailClient, MailmergeError
+from mailmerge import SendmailClient, MailmergeError, MailmergeRateLimitError
 from mailmerge.__main__ import main
 
 try:
@@ -54,31 +55,29 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
     """)
 
     # First message
-    retval = sendmail_client.sendmail(
+    sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
         message=message,
     )
-    assert retval == 0
 
     # Second message exceeds the rate limit
-    retval = sendmail_client.sendmail(
-        sender="from@test.com",
-        recipients=["to@test.com"],
-        message=message,
-    )
-    assert retval == 1
+    with pytest.raises(MailmergeRateLimitError):
+        sendmail_client.sendmail(
+            sender="from@test.com",
+            recipients=["to@test.com"],
+            message=message,
+        )
 
     # Retry the second message after 1 s because the rate limit is 60 messages
     # per minute
     # FIXME a better way to do this is to mock datetime.datetime.now()
     time.sleep(1.1)
-    retval = sendmail_client.sendmail(
+    sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
         message=message,
     )
-    assert retval == 0
 
 
 @mock.patch('smtplib.SMTP')
