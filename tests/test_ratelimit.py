@@ -6,11 +6,15 @@ Tests for SMTP server rate limit feature.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
+import datetime
 import time
 import sh
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
+import click
+import click.testing
 from mailmerge import SendmailClient, MailmergeError
+from mailmerge.__main__ import main
 
 try:
     from unittest import mock  # Python 3
@@ -77,7 +81,8 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
     assert retval == 0
 
 
-def test_rate_limit(tmpdir):
+@mock.patch('smtplib.SMTP')
+def test_stdout_ratelimit(mock_SMTP, tmpdir):
     """Verify SMTP server ratelimit parameter."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -102,14 +107,24 @@ def test_rate_limit(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-        ratelimit = 1
+        ratelimit = 60
     """))
 
     # Run mailmerge
+    before = datetime.datetime.now()
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--no-limit")
-    assert output.stderr.decode("utf-8") == ""
-    assert "message 1 sent" in output
-    assert "Rate limit of 1 message per minute hit" in output
-    assert "message 2 sent" in output
-    assert "This was a dry run" in output
+        runner = click.testing.CliRunner(mix_stderr=False)
+        result = runner.invoke(
+            main, [
+                "--no-limit",
+                "--no-dry-run",
+                "--output-format", "text",
+            ]
+        )
+    after = datetime.datetime.now()
+    assert after - before > datetime.timedelta(seconds=1)
+    assert result.exit_code == 0
+    assert result.stderr == ""
+    assert ">>> message 1 sent" in result.stdout
+    assert ">>> rate limit exceeded, waiting ..." in result.stdout
+    assert ">>> message 2 sent" in result.stdout
