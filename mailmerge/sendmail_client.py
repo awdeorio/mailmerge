@@ -23,22 +23,24 @@ MailmergeConfig = collections.namedtuple(
 class SendmailClient(object):
     """Represent a client connection to an SMTP server."""
 
-    # This class is pretty simple.  We don't need more than one public method.
-    # pylint: disable=too-few-public-methods
-    #
     # We need to inherit from object for Python 2 compantibility
     # https://python-future.org/compatible_idioms.html#custom-class-behaviour
     # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, config_path, dry_run=False):
         """Read configuration from server configuration file."""
-        self.dry_run = dry_run
-        self.password = None
-        self.ratelimit = None
-        self.lastsent = None
+        self.config_path = config_path
+        self.dry_run = dry_run  # Do not send real messages
+        self.config = None      # Config read from config_path by read_config()
+        self.password = None    # Password read from stdin
+        self.lastsent = None    # Timestamp of last successful send
+        self.read_config()
+
+    def read_config(self):
+        """Read configuration file and return a MailmergeConfig object."""
         try:
             parser = configparser.RawConfigParser()
-            parser.read(str(config_path))
+            parser.read(str(self.config_path))
             host = parser.get("smtp_server", "host")
             port = parser.getint("smtp_server", "port")
             security = parser.get("smtp_server", "security", fallback=None)
@@ -46,7 +48,7 @@ class SendmailClient(object):
             ratelimit = parser.getint("smtp_server", "ratelimit", fallback=0)
         except (configparser.Error, ValueError) as err:
             raise exceptions.MailmergeError(
-                "{}: {}".format(config_path, err)
+                "{}: {}".format(self.config_path, err)
             )
 
         # Coerce legacy option "security = Never"
@@ -57,11 +59,13 @@ class SendmailClient(object):
         if security not in [None, "SSL/TLS", "STARTTLS"]:
             raise exceptions.MailmergeError(
                 "{}: unrecognized security type: '{}'"
-                .format(config_path, security)
+                .format(self.config_path, security)
             )
 
         # Save validated configuration
-        self.config = MailmergeConfig(username, host, port, security, ratelimit)
+        self.config = MailmergeConfig(
+            username, host, port, security, ratelimit,
+        )
 
     def sendmail(self, sender, recipients, message):
         """Send email message.
