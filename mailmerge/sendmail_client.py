@@ -51,7 +51,7 @@ class SendmailClient(object):
             self.rate = int(config.get("smtp_server", "rate", fallback=0))
             if self.rate:
                 self.rate_budget = self.rate
-        except configparser.Error as err:
+        except (configparser.Error, ValueError) as err:
             raise exceptions.MailmergeError(
                 "{}: {}".format(self.config_path, err)
             )
