@@ -62,6 +62,13 @@ class SendmailClient(object):
                 .format(self.config_path, security)
             )
 
+        # Verify username
+        if security is not None and username is None:
+            raise exceptions.MailmergeError(
+                "{}: username is required for security type '{}'"
+                .format(self.config_path, security)
+            )
+
         # Save validated configuration
         self.config = MailmergeConfig(
             username, host, port, security, ratelimit,
