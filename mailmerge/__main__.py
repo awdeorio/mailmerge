@@ -237,8 +237,18 @@ def create_sample_input_files(template_path, database_path, config_path):
         """))
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
+            # Mailmerge SMTP Server Config
+            # https://github.com/awdeorio/mailmerge
+            #
             # Pro-tip: SSH or VPN into your network first to avoid spam
             # filters and server throttling.
+            #
+            # Parameters
+            #   host       # SMTP server hostname or IP
+            #   port       # SMTP server port
+            #   security   # Security protocol: "SSL/TLS", "STARTTLS", or omit
+            #   username   # Username for SSL/TLS or STARTTLS security
+            #   ratelimit  # Rate limit in messages per minute
 
             # Example: GMail
             [smtp_server]
@@ -246,6 +256,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             port = 465
             security = SSL/TLS
             username = YOUR_USERNAME_HERE
+            ratelimit = 0
 
             # Example: SSL/TLS
             # [smtp_server]
@@ -253,6 +264,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 465
             # security = SSL/TLS
             # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
 
             # Example: STARTTLS security
             # [smtp_server]
@@ -260,11 +272,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 25
             # security = STARTTLS
             # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
 
             # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
             # port = 25
+            # ratelimit = 0
         """))
     print(textwrap.dedent(u"""\
         Created sample template email "{template_path}"
