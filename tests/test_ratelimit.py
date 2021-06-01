@@ -7,9 +7,9 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import datetime
-import time
 import future.backports.email as email
 import future.backports.email.parser  # pylint: disable=unused-import
+import freezegun
 import pytest
 import click
 import click.testing
@@ -76,13 +76,16 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
 
     # Retry the second message after 1 s because the rate limit is 60 messages
     # per minute
-    # FIXME a better way to do this is to mock datetime.datetime.now()
-    time.sleep(1.1)
-    sendmail_client.sendmail(
-        sender="from@test.com",
-        recipients=["to@test.com"],
-        message=message,
-    )
+    #
+    # Mock the time to be 1.1 s in the future
+    # Ref: https://github.com/spulec/freezegun
+    now = datetime.datetime.now()
+    with freezegun.freeze_time(now + datetime.timedelta(seconds=1)):
+        sendmail_client.sendmail(
+            sender="from@test.com",
+            recipients=["to@test.com"],
+            message=message,
+        )
     assert smtp.sendmail.call_count == 2
 
 
