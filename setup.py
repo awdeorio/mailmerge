@@ -36,16 +36,16 @@ setuptools.setup(
         "mock;python_version<'3.0'",
         "pathlib2;python_version<'3.6'",
         "sh",
+
+        # Work around a dependency bug (I think) in pytest + python3.4
+        "typing;python_version=='3.4'",
+
         "html5"
     ],
     extras_require={
         'dev': [
             'check-manifest',
             'codecov>=1.4.0',
-
-            # Work around a dependency bug (I think) in pytest + python3.4
-            "typing;python_version=='3.4'",
-
             'pdbpp',
             'pycodestyle',
             'pydocstyle',
