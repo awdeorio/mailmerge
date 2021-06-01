@@ -27,6 +27,9 @@ setuptools.setup(
         "click",
         "configparser;python_version<'3.6'",
 
+        # We mock the time when testing the rate limit feature
+        "freezegun",
+
         # The attachments feature relies on a bug fix in the future library
         # https://github.com/awdeorio/mailmerge/pull/56
         "future>0.18.0",
