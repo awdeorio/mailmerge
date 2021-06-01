@@ -42,6 +42,7 @@ setuptools.setup(
         'dev': [
             'check-manifest',
             'codecov>=1.4.0',
+            "typing;python_version=='3.4'",
             'pdbpp',
             'pycodestyle',
             'pydocstyle',
