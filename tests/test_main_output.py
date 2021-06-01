@@ -242,7 +242,6 @@ def test_output_format_bad(tmpdir):
     stderr = stderr.replace('"', "")
     stderr = stderr.replace("'", "")
     assert 'Invalid value for --output-format' in stderr
-    assert "invalid choice: bad." in stderr
 
 
 def test_output_format_raw(tmpdir):
