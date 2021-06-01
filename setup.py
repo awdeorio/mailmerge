@@ -36,6 +36,7 @@ setuptools.setup(
         "mock;python_version<'3.0'",
         "pathlib2;python_version<'3.6'",
         "sh",
+        "html5"
     ],
     extras_require={
         'dev': [
