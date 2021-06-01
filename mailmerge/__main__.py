@@ -100,6 +100,8 @@ def main(sample, dry_run, limit, no_limit, resume,
     # of local variables.
     # pylint: disable=too-many-arguments, too-many-locals
 
+    # FIXME: should we rotate logs?  Overwrite?  Append?
+
     # Configure logging
     logging.basicConfig(
         filename="mailmerge.log",
@@ -108,6 +110,10 @@ def main(sample, dry_run, limit, no_limit, resume,
     )
     logging.debug("mailmerge version %s", VERSION)
     logging.debug(" ".join(sys.argv))
+
+    # FIXME: is there a way to dump all click options?  What if a new option
+    # is added in the future and we forget to log it?
+    # FIXME: log SendmailClient member variables
     logging.debug("sample %s", sample)
     logging.debug("dry_run %s", dry_run)
     logging.debug("limit %s", limit)
@@ -237,6 +243,11 @@ def check_input_files(template_path, database_path, config_path, sample):
     file_to_log(config_path)
 
 
+# FIXME: what if the file changes after it is logged?  Example:
+# 1. Mailmerge prints file to log
+# 2. User modifies file
+# 3. Mailmerge reads file a second time, now uses the new content to generate
+#    messages.
 def file_to_log(path):
     """Log a file name, content, mtime and hash."""
     with path.open("rb") as file:
