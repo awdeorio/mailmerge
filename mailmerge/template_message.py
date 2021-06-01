@@ -6,6 +6,8 @@ Represent a templated email message.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 
+import re
+from xml.etree import ElementTree
 import future.backports.email as email
 import future.backports.email.mime
 import future.backports.email.mime.application
@@ -13,6 +15,8 @@ import future.backports.email.mime.multipart
 import future.backports.email.mime.text
 import future.backports.email.parser
 import future.backports.email.utils
+import future.backports.email.generator
+import html5lib
 import markdown
 import jinja2
 from . import exceptions
@@ -45,6 +49,7 @@ class TemplateMessage(object):
         self._message = None
         self._sender = None
         self._recipients = None
+        self._attachment_content_ids = {}
 
         # Configure Jinja2 template engine with the template dirname as root.
         #
@@ -71,6 +76,7 @@ class TemplateMessage(object):
         self._transform_recipients()
         self._transform_markdown()
         self._transform_attachments()
+        self._transform_attachment_references()
         self._message.__setitem__('Date', email.utils.formatdate())
         assert self._sender
         assert self._recipients
@@ -200,7 +206,7 @@ class TemplateMessage(object):
 
     def _transform_attachments(self):
         """
-        Parse Attachment headers and add attachments.
+        Parse attachment headers and generate content-id headers for each.
 
         Attachments are added to the payload of a `multipart/mixed` message.
         For instance, a plaintext message with attachments would have the
@@ -244,10 +250,72 @@ class TemplateMessage(object):
                 'Content-Disposition',
                 'attachment; filename="{}"'.format(basename),
             )
+
+            # When processing inline images in the email body, we will
+            # reference the Content-ID for an attachment with the same path
+            # using 'cid:[content-id]'.
+            cid, cid_header_value = make_attachment_content_id()
+            self._attachment_content_ids[str(path)] = cid
+            part.add_header('Content-Id', cid_header_value)
+
             self._message.attach(part)
 
         # Remove the attachment header, it's non-standard for email
         del self._message['attachment']
+
+    def _transform_attachment_references(self):
+        """
+        Replace references to inline-images in the email body's HTML content.
+
+        Specifically, match inline-image src attributes with content-ids from
+        image attachments, if available.
+        """
+        if not self._message.is_multipart():
+            return
+
+        for part in self._message.walk():
+            if not part['Content-Type'].startswith('text/html'):
+                continue
+
+            html = part.get_payload(decode=True).decode('utf-8')
+            document = html5lib.parse(html, namespaceHTMLElements=False)
+            images = document.findall('.//img')
+            if len(images) == 0:
+                continue
+
+            for img in document.findall('.//img'):
+                src = img.get('src')
+                try:
+                    src = str(self._resolve_attachment_path(src))
+                except exceptions.MailmergeError:
+                    # The src is not a valid filesystem path, so it could not
+                    # have been attached to the email.
+                    continue
+
+                if src in self._attachment_content_ids:
+                    cid = self._attachment_content_ids[src]
+                    url = "cid:{}".format(cid)
+                    img.set('src', url)
+                    # Only clear the header if we are transforming an
+                    # attachment reference. See comment below for context.
+                    del part['Content-Transfer-Encoding']
+
+            # Unless the _charset argument is explicitly set to None, the
+            # MIMEText object created will have both a Content-Type header with
+            # a charset parameter, and a Content-Transfer-Encoding header.
+            # This means that a subsequent set_payload call will not result in
+            # an encoded payload, even if a charset is passed in the
+            # set_payload() command.
+            # We “reset” this behavior by deleting the
+            # Content-Transfer-Encoding header, after which a set_payload()
+            # call automatically encodes the new payload (and adds a new
+            # Content-Transfer-Encoding header).
+            #
+            # We only need to update the message if we cleared the header,
+            # which only happens if we transformed an attachment reference.
+            if 'Content-Transfer-Encoding' not in part:
+                new_html = ElementTree.tostring(document).decode('utf-8')
+                part.set_payload(new_html)
 
     def _resolve_attachment_path(self, path):
         """Find attachment file or raise MailmergeError."""
@@ -280,3 +348,18 @@ def is_ascii(string):
     def is_ascii_char(char):
         return 0 <= ord(char) <= 127
     return all(is_ascii_char(char) for char in string)
+
+
+def make_attachment_content_id():
+    """
+    Return an RFC 2822 compliant Message-ID and corresponding header.
+
+    For instance: `20020201195627.33539.96671@mailmerge.invalid`
+    """
+    # Using domain '.invalid' to prevent leaking the hostname. The TLD is
+    # reserved, see: https://en.wikipedia.org/wiki/.invalid
+    cid_header = email.utils.make_msgid(domain="mailmerge.invalid")
+    # The cid_header is of format `<cid>`. We need to extract the cid for
+    # later lookup.
+    cid = re.search('<(.*)>', cid_header).group(1)
+    return cid, cid_header
