@@ -40,6 +40,7 @@ setuptools.setup(
         "dev": [
             "pdbpp",
             "twine",
+            "tox",
         ],
         "test": [
             "check-manifest",
@@ -55,7 +56,6 @@ setuptools.setup(
             "typing;python_version=='3.4'",
 
             "sh",
-            "tox",
         ],
     },
 
