@@ -637,6 +637,7 @@ def test_complicated(tmpdir):
     )
     stdout = stdout.replace('Hello, "world"\n\n\n\n', 'Hello, "world"\n\n\n')
     stdout = stdout.replace('</html>\n\n\n', '</html>\n\n')
+    stdout = re.sub(r'Content-Id:.*', '', stdout)
 
     # Verify stdout and stderr after above corrections
     assert stderr == ""
@@ -677,6 +678,7 @@ def test_complicated(tmpdir):
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment1.txt"
 
+
         SGVsbG8gd29ybGQK
 
         --boundary
@@ -684,6 +686,7 @@ def test_complicated(tmpdir):
         MIME-Version: 1.0
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment2.csv"
+
 
         aGVsbG8sbWFpbG1lcmdlCg==
 
@@ -721,6 +724,7 @@ def test_complicated(tmpdir):
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment1.txt"
 
+
         SGVsbG8gd29ybGQK
 
         --boundary
@@ -728,6 +732,7 @@ def test_complicated(tmpdir):
         MIME-Version: 1.0
         Content-Transfer-Encoding: base64
         Content-Disposition: attachment; filename="attachment2.csv"
+
 
         aGVsbG8sbWFpbG1lcmdlCg==
 

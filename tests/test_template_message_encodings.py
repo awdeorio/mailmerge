@@ -191,7 +191,8 @@ def test_emoji_markdown(tmp_path):
 
     # Message should contain an unrendered Markdown plaintext part and a
     # rendered Markdown HTML part
-    plaintext_part, html_part = message.get_payload()
+    message_payload = message.get_payload()[0]
+    plaintext_part, html_part = message_payload.get_payload()
 
     # Verify encodings
     assert str(plaintext_part.get_charset()) == "utf-8"

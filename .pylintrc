@@ -11,3 +11,9 @@ ignore-docstrings=yes
 
 # Ignore imports when computing similarities.
 ignore-imports=yes
+
+
+[TYPECHECK]
+
+# Avoid no-member errors that are endemic to some libraries
+ignored-classes=socket

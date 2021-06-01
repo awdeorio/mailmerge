@@ -5,6 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 from __future__ import print_function
 import sys
+import time
 import codecs
 import textwrap
 import logging
@@ -135,9 +136,20 @@ def main(sample, dry_run, limit, no_limit, resume,
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
+
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
-            sendmail_client.sendmail(sender, recipients, message)
+            while True:
+                try:
+                    sendmail_client.sendmail(sender, recipients, message)
+                except exceptions.MailmergeRateLimitError:
+                    print_bright_white_on_cyan(
+                        ">>> rate limit exceeded, waiting ...",
+                        output_format,
+                    )
+                else:
+                    break
+                time.sleep(1)
             print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
@@ -150,6 +162,7 @@ def main(sample, dry_run, limit, no_limit, resume,
                 output_format,
             )
             message_num += 1
+
     except exceptions.MailmergeError as error:
         hint_text = '\nHint: "--resume {}"'.format(message_num)
         sys.exit(
@@ -261,8 +274,18 @@ def create_sample_input_files(template_path, database_path, config_path):
         """))
     with config_path.open("w") as config_file:
         config_file.write(textwrap.dedent(u"""\
+            # Mailmerge SMTP Server Config
+            # https://github.com/awdeorio/mailmerge
+            #
             # Pro-tip: SSH or VPN into your network first to avoid spam
             # filters and server throttling.
+            #
+            # Parameters
+            #   host       # SMTP server hostname or IP
+            #   port       # SMTP server port
+            #   security   # Security protocol: "SSL/TLS", "STARTTLS", or omit
+            #   username   # Username for SSL/TLS or STARTTLS security
+            #   ratelimit  # Rate limit in messages per minute, 0 for unlimited
 
             # Example: GMail
             [smtp_server]
@@ -270,6 +293,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             port = 465
             security = SSL/TLS
             username = YOUR_USERNAME_HERE
+            ratelimit = 0
 
             # Example: SSL/TLS
             # [smtp_server]
@@ -277,6 +301,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 465
             # security = SSL/TLS
             # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
 
             # Example: STARTTLS security
             # [smtp_server]
@@ -284,11 +309,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 25
             # security = STARTTLS
             # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
 
             # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
             # port = 25
+            # ratelimit = 0
         """))
     print(textwrap.dedent(u"""\
         Created sample template email "{template_path}"

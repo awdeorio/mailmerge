@@ -12,6 +12,7 @@ import textwrap
 import collections
 import pytest
 import markdown
+import html5lib
 from mailmerge import TemplateMessage, MailmergeError
 from . import utils
 
@@ -125,6 +126,29 @@ def test_cc_bcc(tmp_path):
     assert "Secret" not in plaintext
 
 
+def stripped_strings_equal(s_1, s_2):
+    """Compare strings ignoring trailing whitespace."""
+    s_1 = s_1.strip() if s_1 else ''
+    s_2 = s_2.strip() if s_2 else ''
+    return s_1 == s_2
+
+
+def html_docs_equal(e_1, e_2):
+    """Return true if two HTML trees are equivalent."""
+    # Based on: https://stackoverflow.com/a/24349916
+    if not stripped_strings_equal(e_1.tag, e_2.tag):
+        return False
+    if not stripped_strings_equal(e_1.text, e_2.text):
+        return False
+    if not stripped_strings_equal(e_1.tail, e_2.tail):
+        return False
+    if e_1.attrib != e_2.attrib:
+        return False
+    if len(e_1) != len(e_2):
+        return False
+    return all(html_docs_equal(c_1, c_2) for c_1, c_2 in zip(e_1, e_2))
+
+
 def test_html(tmp_path):
     """Verify HTML template results in a simple rendered message."""
     template_path = tmp_path / "template.txt"
@@ -158,9 +182,9 @@ def test_html(tmp_path):
     assert message.get_content_type() == "text/html"
 
     # Verify content
-    htmltext = message.get_payload()
-    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+    htmltext = html5lib.parse(message.get_payload())
+    expected = html5lib.parse("<html><body><p>Hello world</p></body></html>")
+    assert html_docs_equal(htmltext, expected)
 
 
 def test_html_plaintext(tmp_path):
@@ -217,9 +241,18 @@ def test_html_plaintext(tmp_path):
     assert html_part.get_charset() == "us-ascii"
     assert html_part.get_content_charset() == "us-ascii"
     assert html_part.get_content_type() == "text/html"
-    htmltext = html_part.get_payload()
-    htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == "<html><body><p>Helloworld</p></body></html>"
+    htmltext = html5lib.parse(html_part.get_payload())
+    expected = html5lib.parse("<html><body><p>Hello world</p></body></html>")
+    assert html_docs_equal(htmltext, expected)
+
+
+def extract_text_from_markdown_payload(plaintext_part, mime_type):
+    """Decode text from the given message part."""
+    assert plaintext_part['Content-Type'].startswith(mime_type)
+    plaintext_encoding = str(plaintext_part.get_charset())
+    plaintext = plaintext_part.get_payload(decode=True) \
+                              .decode(plaintext_encoding)
+    return plaintext
 
 
 def test_markdown(tmp_path):
@@ -274,29 +307,30 @@ def test_markdown(tmp_path):
 
     # Verify message is multipart
     assert message.is_multipart()
+    assert message.get_content_subtype() == "mixed"
 
-    # Make sure there is a plaintext part and an HTML part
-    payload = message.get_payload()
-    assert len(payload) == 2
+    # Make sure there is a single multipart/alternative payload
+    assert len(message.get_payload()) == 1
+    assert message.get_payload()[0].is_multipart()
+    assert message.get_payload()[0].get_content_subtype() == "alternative"
+
+    # And there should be a plaintext part and an HTML part
+    message_payload = message.get_payload()[0].get_payload()
+    assert len(message_payload) == 2
 
     # Ensure that the first part is plaintext and the last part
     # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
-    assert plaintext_part['Content-Type'].startswith("text/plain")
-    plaintext_encoding = str(plaintext_part.get_charset())
-    plaintext = plaintext_part.get_payload(decode=True) \
-                              .decode(plaintext_encoding)
-
-    html_part = payload[1]
-    assert html_part['Content-Type'].startswith("text/html")
-    html_encoding = str(html_part.get_charset())
-    htmltext = html_part.get_payload(decode=True) \
-                        .decode(html_encoding)
+    plaintext = extract_text_from_markdown_payload(message_payload[0],
+                                                   'text/plain')
+    htmltext = extract_text_from_markdown_payload(message_payload[1],
+                                                  'text/html')
 
     # Verify rendered Markdown
-    rendered = markdown.markdown(plaintext)
-    htmltext_correct = "<html><body>{}</body></html>".format(rendered)
-    assert htmltext.strip() == htmltext_correct.strip()
+    rendered = markdown.markdown(plaintext, extensions=['nl2br'])
+    expected = html5lib.parse(rendered)
+
+    htmltext_document = html5lib.parse(htmltext)
+    assert html_docs_equal(htmltext_document, expected)
 
 
 def test_markdown_encoding(tmp_path):
@@ -323,7 +357,7 @@ def test_markdown_encoding(tmp_path):
 
     # Message should contain an unrendered Markdown plaintext part and a
     # rendered Markdown HTML part
-    plaintext_part, html_part = message.get_payload()
+    plaintext_part, html_part = message.get_payload()[0].get_payload()
 
     # Verify encodings
     assert str(plaintext_part.get_charset()) == "utf-8"
@@ -335,12 +369,17 @@ def test_markdown_encoding(tmp_path):
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     assert plaintext == u"Hi, Myself,\næøå"
-    assert htmltext == u"<html><body><p>Hi, Myself,\næøå</p></body></html>"
+    assert html_docs_equal(
+        html5lib.parse(htmltext),
+        html5lib.parse(
+            u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
+        )
+    )
 
 
 Attachment = collections.namedtuple(
     "Attachment",
-    ["filename", "content"],
+    ["filename", "content", "content_id"],
 )
 
 
@@ -360,6 +399,7 @@ def extract_attachments(message):
             attachments.append(Attachment(
                 filename=part.get_param('name'),
                 content=part.get_payload(decode=True),
+                content_id=part.get("Content-Id")
             ))
     return attachments
 
@@ -395,7 +435,7 @@ def test_attachment_simple(tmpdir):
     assert len(attachments) == 1
 
     # Verify attachment
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -425,7 +465,7 @@ def test_attachment_relative(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -454,7 +494,7 @@ def test_attachment_absolute(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -485,7 +525,7 @@ def test_attachment_template(tmpdir):
 
     # Verify attachment
     attachments = extract_attachments(message)
-    filename, content = attachments[0]
+    filename, content, _ = attachments[0]
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
 
@@ -682,16 +722,19 @@ def test_contenttype_attachment_markdown_body(tmpdir):
         template_message = TemplateMessage(template_path)
         _, _, message = template_message.render({})
 
-    # Markdown: Make sure there is a plaintext part and an HTML part
     payload = message.get_payload()
-    assert len(payload) == 3
+    assert len(payload) == 2
+
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    message_payload = payload[0].get_payload()
+    assert len(message_payload) == 2
 
     # Ensure that the first part is plaintext and the second part
     # is HTML (as per RFC 2046)
-    plaintext_part = payload[0]
+    plaintext_part = message_payload[0]
     assert plaintext_part['Content-Type'].startswith("text/plain")
 
-    html_part = payload[1]
+    html_part = message_payload[1]
     assert html_part['Content-Type'].startswith("text/html")
 
 
@@ -746,3 +789,91 @@ def test_duplicate_headers_markdown(tmp_path):
 
     # Verifty no duplicate headers
     assert len(message.keys()) == len(set(message.keys()))
+
+
+def test_attachment_image_in_markdown(tmp_path):
+    """Images sent as attachments should get linked correctly in images"""
+    shutil.copy(str(utils.TESTDATA/"attachment_3.jpg"), str(tmp_path))
+
+    # Create template .txt file
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        SUBJECT: Testing mailmerge
+        FROM: My Self <myself@mydomain.com>
+        ATTACHMENT: attachment_3.jpg
+        CONTENT-TYPE: text/markdown
+
+        ![](./attachment_3.jpg)
+    """))
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({
+        "email": "myself@mydomain.com"
+    })
+
+    # Verify sender and recipients
+    assert sender == "My Self <myself@mydomain.com>"
+    assert recipients == ["myself@mydomain.com"]
+
+    # Verify message is multipart
+    assert message.is_multipart()
+
+    # Make sure there is a message body and the attachment
+    payload = message.get_payload()
+    assert len(payload) == 2
+
+    # Markdown: Make sure there is a plaintext part and an HTML part
+    message_payload = payload[0].get_payload()
+    assert len(message_payload) == 2
+
+    plaintext = extract_text_from_markdown_payload(message_payload[0],
+                                                   'text/plain')
+    htmltext = extract_text_from_markdown_payload(message_payload[1],
+                                                  'text/html')
+
+    assert plaintext.strip() == "![](./attachment_3.jpg)"
+
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+    filename, content, cid = attachments[0]
+    cid = cid[1:-1]
+    assert filename == "attachment_3.jpg"
+    assert len(content) == 697
+
+    expected = html5lib.parse(
+        '<html><head />'
+        '<body><p><img src="cid:{cid}" alt="" /></p></body>'
+        '</html>'.format(cid=cid))
+    assert html_docs_equal(html5lib.parse(htmltext), expected)
+
+
+def test_content_id_header_for_attachments(tmpdir):
+    """All attachments should get a content-id header"""
+    attachment_path = Path(tmpdir/"attachment.txt")
+    attachment_path.write_text(u"Hello world\n")
+
+    # Simple template
+    template_path = Path(tmpdir/"template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: to@test.com
+        FROM: from@test.com
+        ATTACHMENT: attachment.txt
+
+        Hello world
+    """))
+
+    # Render in tmpdir
+    with tmpdir.as_cwd():
+        template_message = TemplateMessage(template_path)
+        _, _, message = template_message.render({})
+
+    # Verify message is multipart and contains attachment
+    assert message.is_multipart()
+    attachments = extract_attachments(message)
+    assert len(attachments) == 1
+
+    # Verify attachment
+    filename, content, cid_header = attachments[0]
+    assert filename == "attachment.txt"
+    assert content == b"Hello world\n"
+    assert re.match(r'<[\d\w]+(\.[\d\w]+)*@mailmerge\.invalid>', cid_header)
