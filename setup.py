@@ -6,7 +6,7 @@ import setuptools
 
 # Read the contents of README file
 PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(PROJECT_DIR, 'README.md'), encoding='utf-8') as f:
+with io.open(os.path.join(PROJECT_DIR, "README.md"), encoding="utf-8") as f:
     LONG_DESCRIPTION = f.read()
 
 
@@ -36,34 +36,36 @@ setuptools.setup(
 
         "jinja2",
         "markdown",
-        "mock;python_version<'3.0'",
         "pathlib2;python_version<'3.6'",
-        "sh",
-
-        # Work around a dependency bug (I think) in pytest + python3.4
-        "typing;python_version=='3.4'",
-
         "html5"
     ],
     extras_require={
-        'dev': [
-            'check-manifest',
-            'codecov>=1.4.0',
-            'pdbpp',
-            'pycodestyle',
-            'pydocstyle',
-            'pylint',
-            'pytest',
-            'pytest-cov',
-            'tox',
-            'twine',
-        ]
+        "dev": [
+            "pdbpp",
+            "twine",
+            "tox",
+        ],
+        "test": [
+            "check-manifest",
+            "codecov>=1.4.0",
+            "mock;python_version<'3.0'",
+            "pycodestyle",
+            "pydocstyle",
+            "pylint",
+            "pytest",
+            "pytest-cov",
+
+            # Work around a dependency bug (I think) in pytest + python3.4
+            "typing;python_version=='3.4'",
+
+            "sh",
+        ],
     },
 
     # Python command line utilities will be installed in a PATH-accessible bin/
     entry_points={
-        'console_scripts': [
-            'mailmerge = mailmerge.__main__:main',
+        "console_scripts": [
+            "mailmerge = mailmerge.__main__:main",
         ]
     },
 )
