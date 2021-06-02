@@ -52,6 +52,10 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     help="Limit the number of messages (1)",
 )
 @click.option(
+    "--fail-on-error/--no-fail-on-error", default=True,
+    help="Do (not) break of the run if there is an error",
+)
+@click.option(
     "--resume", is_flag=False, default=1,
     type=click.IntRange(1, None),
     help="Start on message number INTEGER",
@@ -80,7 +84,7 @@ if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
-def main(sample, dry_run, limit, no_limit, resume,
+def main(sample, dry_run, limit, no_limit, fail_on_error, resume,
          template_path, database_path, config_path,
          output_format):
     """
@@ -124,9 +128,23 @@ def main(sample, dry_run, limit, no_limit, resume,
                         ">>> rate limit exceeded, waiting ...",
                         output_format,
                     )
+                    time.sleep(1)
+                except exceptions.MailmergeError as error:
+                    if fail_on_error:
+                        raise exceptions.MailmergeError(error)
+                    else:
+                        print_bright_white_on_cyan(
+                            ">>> Error on message {message_num}\n"
+                            "{error}"
+                            .format(
+                                message_num=message_num,
+                                error=error,
+                            ),
+                            output_format,
+                        )
+                        break
                 else:
                     break
-                time.sleep(1)
             print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
