@@ -130,6 +130,10 @@ class SendmailClient(object):
                 "{}:{} failed to connect to server: {}"
                 .format(host, port, err)
             )
+        except Exception as e:
+            raise exceptions.MailmergeError(
+                    e
+                )
 
         # Update timestamp of last sent message
         self.lastsent = now

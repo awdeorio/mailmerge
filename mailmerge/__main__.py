@@ -120,6 +120,7 @@ def main(sample, dry_run, limit, no_limit, fail_on_error, resume,
 
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
+            sent=False
             while True:
                 try:
                     sendmail_client.sendmail(sender, recipients, message)
@@ -144,18 +145,26 @@ def main(sample, dry_run, limit, no_limit, fail_on_error, resume,
                         )
                         break
                 else:
+                    sent=True
                     break
             print_bright_white_on_cyan(
                 ">>> message {message_num}"
                 .format(message_num=message_num),
                 output_format,
             )
-            print_message(message, output_format)
-            print_bright_white_on_cyan(
-                ">>> message {message_num} sent"
-                .format(message_num=message_num),
-                output_format,
-            )
+            if sent:
+                print_message(message, output_format)
+                print_bright_white_on_cyan(
+                    ">>> message {message_num} sent"
+                    .format(message_num=message_num),
+                    output_format,
+                )
+            else:
+                print_bright_white_on_cyan(
+                    "!!! message {message_num} NOT sent"
+                    .format(message_num=message_num),
+                    output_format,
+                )
             message_num += 1
 
     except exceptions.MailmergeError as error:
