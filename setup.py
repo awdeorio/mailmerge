@@ -57,8 +57,6 @@ setuptools.setup(
 
             # Work around a dependency bug (I think) in pytest + python3.4
             "typing;python_version=='3.4'",
-
-            "sh",
         ],
     },
 

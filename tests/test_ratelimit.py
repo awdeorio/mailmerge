@@ -11,7 +11,6 @@ from future.backports import email
 import future.backports.email.parser  # pylint: disable=unused-import
 import freezegun
 import pytest
-import click
 import click.testing
 from mailmerge import SendmailClient, MailmergeRateLimitError
 from mailmerge.__main__ import main
@@ -21,9 +20,6 @@ try:
     from pathlib2 import Path
 except ImportError:
     from pathlib import Path
-
-# The sh library triggers lot of false no-member errors
-# pylint: disable=no-member
 
 
 def test_sendmail_ratelimit(mocker, tmp_path):
