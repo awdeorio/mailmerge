@@ -7,7 +7,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import datetime
-import future.backports.email as email
+from future.backports import email
 import future.backports.email.parser  # pylint: disable=unused-import
 import freezegun
 import pytest
@@ -24,6 +24,7 @@ except ImportError:
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member
+
 
 def test_sendmail_ratelimit(mocker, tmp_path):
     """Verify SMTP library calls."""

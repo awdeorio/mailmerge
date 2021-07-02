@@ -5,7 +5,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import io
 import base64
-import future.backports.email as email
+from future.backports import email
 import future.backports.email.base64mime
 import future.backports.email.generator  # pylint: disable=unused-import
 import future.builtins
