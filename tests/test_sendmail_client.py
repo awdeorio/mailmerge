@@ -7,22 +7,12 @@ import textwrap
 import socket
 import smtplib
 import pytest
-import future.backports.email as email
+from future.backports import email
 import future.backports.email.parser  # pylint: disable=unused-import
 from mailmerge import SendmailClient, MailmergeError
 
-try:
-    from unittest import mock  # Python 3
-except ImportError:
-    import mock  # Python 2
 
-
-# We're going to use mock_SMTP because it mimics the real SMTP library
-# pylint: disable=invalid-name
-
-
-@mock.patch('smtplib.SMTP')
-def test_smtp(mock_SMTP, tmp_path):
+def test_smtp(mocker, tmp_path):
     """Verify SMTP library calls."""
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
@@ -42,6 +32,8 @@ def test_smtp(mock_SMTP, tmp_path):
         Hello world
     """)
 
+    # Execute sendmail with mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
     sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
@@ -49,13 +41,11 @@ def test_smtp(mock_SMTP, tmp_path):
     )
 
     # Mock smtp object with function calls recorded
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
-@mock.patch('smtplib.SMTP')
-@mock.patch('getpass.getpass')
-def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
+def test_dry_run(mocker, tmp_path):
     """Verify no sendmail() calls when dry_run=True."""
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
@@ -76,6 +66,9 @@ def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
         Hello world
     """)
 
+    # Execute sendmail with mock SMTP and getpass
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_getpass = mocker.patch('getpass.getpass')
     sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
@@ -84,13 +77,11 @@ def test_dry_run(mock_getpass, mock_SMTP, tmp_path):
 
     # Verify SMTP wasn't called and password wasn't used
     assert mock_getpass.call_count == 0
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 0
 
 
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
+def test_no_dry_run(mocker, tmp_path):
     """Verify --no-dry-run calls SMTP sendmail()."""
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent(u"""\
@@ -109,10 +100,12 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
         Hello world
     """)
 
-    # Mock the password entry
+    # Mock the password entry and SMTP
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
-    # Send a message
+    # Execute sendmail
     sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
@@ -121,7 +114,7 @@ def test_no_dry_run(mock_getpass, mock_SMTP_SSL, tmp_path):
 
     # Verify function calls for password and sendmail()
     assert mock_getpass.call_count == 1
-    smtp = mock_SMTP_SSL.return_value.__enter__.return_value
+    smtp = mock_smtp_ssl.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
@@ -150,10 +143,7 @@ def test_security_error(tmp_path):
         SendmailClient(config_path, dry_run=False)
 
 
-@mock.patch('smtplib.SMTP')
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+def test_security_open(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for no security SMTP server
     config_path = tmp_path/"server.conf"
@@ -167,6 +157,11 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP and getpass
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+    mock_getpass = mocker.patch('getpass.getpass')
+
     # Send a message
     sendmail_client.sendmail(
         sender="test@test.com",
@@ -176,15 +171,14 @@ def test_security_open(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 
     # Verify SMTP library calls
     assert mock_getpass.call_count == 0
-    assert mock_SMTP.call_count == 1
-    assert mock_SMTP_SSL.call_count == 0
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    assert mock_smtp.call_count == 1
+    assert mock_smtp_ssl.call_count == 0
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
     assert smtp.login.call_count == 0
 
 
-@mock.patch('smtplib.SMTP')
-def test_security_open_legacy(mock_SMTP, tmp_path):
+def test_security_open_legacy(mocker, tmp_path):
     """Verify legacy "security = Never" configuration."""
     # Config SMTP server with "security = Never" legacy option
     config_path = tmp_path/"server.conf"
@@ -199,6 +193,9 @@ def test_security_open_legacy(mock_SMTP, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+
     # Send a message
     sendmail_client.sendmail(
         sender="test@test.com",
@@ -207,14 +204,11 @@ def test_security_open_legacy(mock_SMTP, tmp_path):
     )
 
     # Verify SMTP library calls
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
 
-@mock.patch('smtplib.SMTP')
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+def test_security_starttls(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for STARTTLS SMTP server
     config_path = tmp_path/"server.conf"
@@ -230,7 +224,12 @@ def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
     # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
     # Send a message
@@ -242,19 +241,16 @@ def test_security_starttls(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 
     # Verify SMTP library calls
     assert mock_getpass.call_count == 1
-    assert mock_SMTP.call_count == 1
-    assert mock_SMTP_SSL.call_count == 0
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    assert mock_smtp.call_count == 1
+    assert mock_smtp_ssl.call_count == 0
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.ehlo.call_count == 2
     assert smtp.starttls.call_count == 1
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
 
 
-@mock.patch('smtplib.SMTP')
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
+def test_security_ssl(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
@@ -270,7 +266,12 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
     # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
     # Send a message
@@ -282,9 +283,9 @@ def test_security_ssl(mock_getpass, mock_SMTP_SSL, mock_SMTP, tmp_path):
 
     # Verify SMTP library calls
     assert mock_getpass.call_count == 1
-    assert mock_SMTP.call_count == 0
-    assert mock_SMTP_SSL.call_count == 1
-    smtp = mock_SMTP_SSL.return_value.__enter__.return_value
+    assert mock_smtp.call_count == 0
+    assert mock_smtp_ssl.call_count == 1
+    smtp = mock_smtp_ssl.return_value.__enter__.return_value
     assert smtp.ehlo.call_count == 0
     assert smtp.starttls.call_count == 0
     assert smtp.login.call_count == 1
@@ -304,9 +305,7 @@ def test_missing_username(tmp_path):
         SendmailClient(config_path, dry_run=False)
 
 
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_smtp_login_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+def test_smtp_login_error(mocker, tmp_path):
     """Login failure."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
@@ -322,11 +321,15 @@ def test_smtp_login_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP and getpass
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
     # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
     # Configure SMTP login() to raise an exception
-    mock_SMTP_SSL.return_value.__enter__.return_value.login = mock.Mock(
+    mock_smtp_ssl.return_value.__enter__.return_value.login = mocker.Mock(
         side_effect=smtplib.SMTPAuthenticationError(
             code=535,
             msg=(
@@ -356,9 +359,7 @@ def test_smtp_login_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     ) in str(err.value)
 
 
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_smtp_sendmail_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+def test_smtp_sendmail_error(mocker, tmp_path):
     """Failure during SMTP protocol."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
@@ -374,11 +375,15 @@ def test_smtp_sendmail_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
     # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
     # Configure SMTP sendmail() to raise an exception
-    mock_SMTP_SSL.return_value.__enter__.return_value.sendmail = mock.Mock(
+    mock_smtp_ssl.return_value.__enter__.return_value.sendmail = mocker.Mock(
         side_effect=smtplib.SMTPException("Dummy error message")
     )
 
@@ -394,9 +399,7 @@ def test_smtp_sendmail_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     assert "Dummy error message" in str(err.value)
 
 
-@mock.patch('smtplib.SMTP_SSL')
-@mock.patch('getpass.getpass')
-def test_socket_error(mock_getpass, mock_SMTP_SSL, tmp_path):
+def test_socket_error(mocker, tmp_path):
     """Failed socket connection."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
@@ -412,11 +415,15 @@ def test_socket_error(mock_getpass, mock_SMTP_SSL, tmp_path):
     sendmail_client = SendmailClient(config_path, dry_run=False)
     message = email.message_from_string(u"Hello world")
 
+    # Mock SMTP
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
     # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
 
     # Configure SMTP_SSL constructor to raise an exception
-    mock_SMTP_SSL.return_value.__enter__ = mock.Mock(
+    mock_smtp_ssl.return_value.__enter__ = mocker.Mock(
         side_effect=socket.error("Dummy error message")
     )
 

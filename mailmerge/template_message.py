@@ -8,7 +8,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 import re
 from xml.etree import ElementTree
-import future.backports.email as email
+from future.backports import email
 import future.backports.email.mime
 import future.backports.email.mime.application
 import future.backports.email.mime.multipart

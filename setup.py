@@ -48,12 +48,12 @@ setuptools.setup(
         "test": [
             "check-manifest",
             "codecov>=1.4.0",
-            "mock;python_version<'3.0'",
             "pycodestyle",
             "pydocstyle",
             "pylint",
             "pytest",
             "pytest-cov",
+            "pytest-mock",
 
             # Work around a dependency bug (I think) in pytest + python3.4
             "typing;python_version=='3.4'",
