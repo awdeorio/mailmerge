@@ -248,7 +248,8 @@ def test_bad_template(tmpdir):
     assert result.exit_code == 1
 
     # Verify output
-    assert "template.txt: 'error_not_in_database' is undefined" in result.output
+    assert "template.txt: 'error_not_in_database' is undefined" in \
+        result.output
 
 
 def test_bad_database(tmpdir):
@@ -317,7 +318,8 @@ def test_bad_config(tmpdir):
     assert result.exit_code == 1
 
     # Verify output
-    assert "server.conf: No option 'host' in section: 'smtp_server'" in result.output
+    assert "server.conf: No option 'host' in section: 'smtp_server'" in \
+        result.output
 
 
 def test_attachment(tmpdir):
