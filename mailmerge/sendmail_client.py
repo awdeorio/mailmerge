@@ -10,7 +10,6 @@ import configparser
 import getpass
 import datetime
 from . import exceptions
-from . import utils
 
 
 # Type to store info read from config file
@@ -95,7 +94,7 @@ class SendmailClient:
 
         # Send
         try:
-            message_flattened = utils.flatten_message(message)
+            message_flattened = str(message)
             host, port = self.config.host, self.config.port
             if self.config.security == "SSL/TLS":
                 with smtplib.SMTP_SSL(host, port) as smtp:

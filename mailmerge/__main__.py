@@ -12,7 +12,6 @@ import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from . import exceptions
-from . import utils
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -326,7 +325,7 @@ def print_message(message, output_format):
     assert output_format in ["colorized", "text", "raw"]
 
     if output_format == "raw":
-        print(utils.flatten_message(message))
+        print(message)
         return
 
     for header, value in message.items():
