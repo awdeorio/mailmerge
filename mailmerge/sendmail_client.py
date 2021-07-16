@@ -20,12 +20,8 @@ MailmergeConfig = collections.namedtuple(
 )
 
 
-class SendmailClient(object):
+class SendmailClient:
     """Represent a client connection to an SMTP server."""
-
-    # We need to inherit from object for Python 2 compantibility
-    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
-    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, config_path, dry_run=False):
         """Read configuration from server configuration file."""
