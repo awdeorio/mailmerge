@@ -621,22 +621,8 @@ def test_complicated(tmpdir):
     stdout = output.stdout.decode("utf-8")
     stderr = output.stderr.decode("utf-8")
 
-    # Remove the Date string, which will be different each time
+    # Remove the Date and Content-ID strings, which will be different each time
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
-
-    # The long output string below is the correct answer with Python 3.  With
-    # Python 2, we get a few differences in newlines.  We'll just query-replace
-    # those known mismatches so that the equality test passes.
-    stdout = stdout.replace(
-        "TGHInWFtb24g8J+YgCBrbMOid2VuCgoK",
-        "TGHInWFtb24g8J+YgCBrbMOid2VuCgo=",
-    )
-    stdout = stdout.replace(
-        "Pgo8L2h0bWw+Cgo=",
-        "Pgo8L2h0bWw+Cg==",
-    )
-    stdout = stdout.replace('Hello, "world"\n\n\n\n', 'Hello, "world"\n\n\n')
-    stdout = stdout.replace('</html>\n\n\n', '</html>\n\n')
     stdout = re.sub(r'Content-Id:.*', '', stdout)
 
     # Verify stdout and stderr after above corrections
@@ -691,6 +677,7 @@ def test_complicated(tmpdir):
         aGVsbG8sbWFpbG1lcmdlCg==
 
         --boundary--
+
         >>> message 1 sent
         >>> message 2
         TO: Lazamon<two@test.com>
@@ -737,6 +724,7 @@ def test_complicated(tmpdir):
         aGVsbG8sbWFpbG1lcmdlCg==
 
         --boundary--
+
         >>> message 2 sent
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
