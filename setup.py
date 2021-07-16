@@ -50,8 +50,7 @@ setuptools.setup(
             "typing;python_version=='3.4'",
         ],
     },
-
-    # Python command line utilities will be installed in a PATH-accessible bin/
+    python_requires='>=3.4',
     entry_points={
         "console_scripts": [
             "mailmerge = mailmerge.__main__:main",
