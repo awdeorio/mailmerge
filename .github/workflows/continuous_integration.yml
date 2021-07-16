@@ -1,0 +1,48 @@
+# GitHub Continuous Integration Configuration
+name: Regression
+
+# Define conditions for when to run this action
+on:
+  pull_request: # Run on all pull requests
+  push: # Run on all pushes to master
+    branches:
+      - main
+      - develop
+
+# A workflow run is made up of one or more jobs.  Each job has an id, for
+# example, one of our jobs is "lint"
+jobs:
+  test:
+    name: Tests ${{ matrix.python-version }}
+    runs-on: ${{ matrix.os }}
+    strategy:
+      # Define OS and Python versions to use. 3.x is the latest minor version.
+      matrix:
+        python-version: ["3.6", "3.7", "3.8", "3.9", "3.x"]
+        os: [ubuntu-latest]
+
+    # Sequence of tasks for this job
+    steps:
+      # Check out latest code using a pre-existing GH action
+      # Docs: https://github.com/actions/checkout
+      - name: Checkout code
+        uses: actions/checkout@v2
+
+      # Set up Python using a pre-existing GH action
+      # Docs: https://github.com/actions/setup-python
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # Install dependencies
+      # tox-gh-actions docs
+      # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
+      - name: Install dependencies
+        run: |
+          python -m pip install --upgrade pip
+          pip install tox tox-gh-actions
+
+      # Run tests
+      - name: Run linters, unit tests, and system tests
+        run: tox
