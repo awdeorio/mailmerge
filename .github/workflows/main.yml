@@ -43,7 +43,7 @@ jobs:
       - name: Install dependencies
         run: |
           python -m pip install --upgrade pip
-          pip install tox tox-gh-actions
+          pip install coverage tox tox-gh-actions
 
       # Run tests
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
