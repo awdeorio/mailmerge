@@ -6,9 +6,9 @@ Andrew DeOrio <awdeorio@umich.edu>
 import textwrap
 import socket
 import smtplib
-import pytest
 import email
 import email.parser
+import pytest
 from mailmerge import SendmailClient, MailmergeError
 
 
