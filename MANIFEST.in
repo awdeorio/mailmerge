@@ -3,6 +3,7 @@ include LICENSE
 include MANIFEST.in
 include README.md
 include .pylintrc
+include test
 graft tests
 
 # Avoid dev and and binary files
