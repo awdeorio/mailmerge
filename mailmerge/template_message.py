@@ -175,13 +175,13 @@ class TemplateMessage:
         # Render Markdown to HTML and add the HTML as the last part of the
         # multipart/alternative message as per RFC 2046.
         #
-        # Note: We need to use u"..." to ensure that unicode string
+        # Note: We need to use "..." to ensure that unicode string
         # substitution works properly in Python 2.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text, extensions=['nl2br'])
         html_payload = email.mime.text.MIMEText(
-            u"<html><body>{}</body></html>".format(html),
+            "<html><body>{}</body></html>".format(html),
             _subtype="html",
             _charset=encoding,
         )

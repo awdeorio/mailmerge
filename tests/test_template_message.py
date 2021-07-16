@@ -21,7 +21,7 @@ from . import utils
 def test_simple(tmp_path):
     """Render a simple template."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -41,7 +41,7 @@ def test_simple(tmp_path):
 def test_no_substitutions(tmp_path):
     """Render a template with an empty context."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -59,7 +59,7 @@ def test_no_substitutions(tmp_path):
 def test_multiple_substitutions(tmp_path):
     """Render a template with multiple context variables."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
@@ -83,7 +83,7 @@ def test_multiple_substitutions(tmp_path):
 def test_bad_jinja(tmp_path):
     """Bad jinja template should produce an error."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(u"TO: {{error_not_in_database}}")
+    template_path.write_text("TO: {{error_not_in_database}}")
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({"name": "Bob", "number": 17})
@@ -92,7 +92,7 @@ def test_bad_jinja(tmp_path):
 def test_cc_bcc(tmp_path):
     """CC recipients should receive a copy."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -147,7 +147,7 @@ def html_docs_equal(e_1, e_2):
 def test_html(tmp_path):
     """Verify HTML template results in a simple rendered message."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -185,7 +185,7 @@ def test_html(tmp_path):
 def test_html_plaintext(tmp_path):
     """Verify HTML and plaintest multipart template."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -253,7 +253,7 @@ def extract_text_from_markdown_payload(plaintext_part, mime_type):
 def test_markdown(tmp_path):
     """Markdown messages should be converted to HTML."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: Bob <bob@bobdomain.com>
@@ -335,7 +335,7 @@ def test_markdown_encoding(tmp_path):
     https://github.com/awdeorio/mailmerge/issues/59
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: test@example.com
@@ -363,11 +363,11 @@ def test_markdown_encoding(tmp_path):
     # Verify content, which is base64 encoded
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hi, Myself,\næøå"
+    assert plaintext == "Hi, Myself,\næøå"
     assert html_docs_equal(
         html5lib.parse(htmltext),
         html5lib.parse(
-            u"<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
+            "<html><body><p>Hi, Myself,<br />\næøå</p></body></html>"
         )
     )
 
@@ -403,11 +403,11 @@ def test_attachment_simple(tmpdir):
     """Verify a simple attachment."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt
@@ -439,11 +439,11 @@ def test_attachment_relative(tmpdir):
     """Attachment with a relative file path is relative to template dir."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt
@@ -470,11 +470,11 @@ def test_attachment_absolute(tmpdir):
     # Simple attachment lives in sub directory
     attachments_dir = tmpdir.mkdir("attachments")
     attachment_path = Path(attachments_dir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: {filename}
@@ -499,11 +499,11 @@ def test_attachment_template(tmpdir):
     # Simple attachment lives in sub directory
     attachments_dir = tmpdir.mkdir("attachments")
     attachment_path = Path(attachments_dir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: {{filename}}
@@ -529,7 +529,7 @@ def test_attachment_not_found(tmpdir):
     """Attachment file not found."""
     # Template specifying an attachment that doesn't exist
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt
@@ -547,7 +547,7 @@ def test_attachment_not_found(tmpdir):
 def test_attachment_blank(tmpdir):
     """Attachment header without a filename is an error."""
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT:
@@ -564,7 +564,7 @@ def test_attachment_blank(tmpdir):
 def test_attachment_tilde_path(tmpdir):
     """Attachment with home directory tilde notation file path."""
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: ~/attachment.txt
@@ -590,7 +590,7 @@ def test_attachment_multiple(tmp_path):
 
     # Create template .txt file
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -648,7 +648,7 @@ def test_attachment_multiple(tmp_path):
 def test_attachment_empty(tmp_path):
     """Err on empty attachment field."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -668,11 +668,11 @@ def test_contenttype_attachment_html_body(tmpdir):
     """
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # HTML template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt
@@ -699,11 +699,11 @@ def test_contenttype_attachment_markdown_body(tmpdir):
     """
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # HTML template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt
@@ -740,11 +740,11 @@ def test_duplicate_headers_attachment(tmp_path):
     """
     # Simple attachment
     attachment_path = Path(tmp_path/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple message
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com>
@@ -767,7 +767,7 @@ def test_duplicate_headers_markdown(tmp_path):
     Duplicate headers are rejected by some SMTP servers.
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -792,7 +792,7 @@ def test_attachment_image_in_markdown(tmp_path):
 
     # Create template .txt file
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         SUBJECT: Testing mailmerge
         FROM: My Self <myself@mydomain.com>
@@ -845,11 +845,11 @@ def test_attachment_image_in_markdown(tmp_path):
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text(u"Hello world\n")
+    attachment_path.write_text("Hello world\n")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         ATTACHMENT: attachment.txt

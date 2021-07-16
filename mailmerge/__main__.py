@@ -171,7 +171,7 @@ def check_input_files(template_path, database_path, config_path, sample):
         sys.exit(0)
 
     if not template_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent("""\
             Error: can't find template "{template_path}".
 
             Create a sample (--sample) or specify a file (--template).
@@ -180,7 +180,7 @@ def check_input_files(template_path, database_path, config_path, sample):
         """.format(template_path=template_path)))
 
     if not database_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent("""\
             Error: can't find database "{database_path}".
 
             Create a sample (--sample) or specify a file (--database).
@@ -189,7 +189,7 @@ def check_input_files(template_path, database_path, config_path, sample):
         """.format(database_path=database_path)))
 
     if not config_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent("""\
             Error: can't find config "{config_path}".
 
             Create a sample (--sample) or specify a file (--config).
@@ -204,7 +204,7 @@ def create_sample_input_files(template_path, database_path, config_path):
         if path.exists():
             sys.exit("Error: file exists: {}".format(path))
     with template_path.open("w") as template_file:
-        template_file.write(textwrap.dedent(u"""\
+        template_file.write(textwrap.dedent("""\
             TO: {{email}}
             SUBJECT: Testing mailmerge
             FROM: My Self <myself@mydomain.com>
@@ -214,13 +214,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             Your number is {{number}}.
         """))
     with database_path.open("w") as database_file:
-        database_file.write(textwrap.dedent(u"""\
+        database_file.write(textwrap.dedent("""\
             email,name,number
             myself@mydomain.com,"Myself",17
             bob@bobdomain.com,"Bob",42
         """))
     with config_path.open("w") as config_file:
-        config_file.write(textwrap.dedent(u"""\
+        config_file.write(textwrap.dedent("""\
             # Mailmerge SMTP Server Config
             # https://github.com/awdeorio/mailmerge
             #
@@ -264,7 +264,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 25
             # ratelimit = 0
         """))
-    print(textwrap.dedent(u"""\
+    print(textwrap.dedent("""\
         Created sample template email "{template_path}"
         Created sample database "{database_path}"
         Created sample config file "{config_path}"
@@ -338,7 +338,7 @@ def print_message(message, output_format):
         return
 
     for header, value in message.items():
-        print(u"{header}: {value}".format(header=header, value=value))
+        print("{header}: {value}".format(header=header, value=value))
     print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":

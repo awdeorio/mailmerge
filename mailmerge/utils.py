@@ -22,7 +22,7 @@ def flatten_message(message):
         stream,
         mangle_from_=False,
         maxheaderlen=78,
-        policy=message.policy.clone(cte_type=u"7bit"),
+        policy=message.policy.clone(cte_type="7bit"),
     )
     generator.flatten(message)
     text = stream.getvalue()

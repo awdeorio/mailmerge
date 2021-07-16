@@ -15,7 +15,7 @@ from mailmerge import SendmailClient, MailmergeError
 def test_smtp(mocker, tmp_path):
     """Verify SMTP library calls."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -24,7 +24,7 @@ def test_smtp(mocker, tmp_path):
         config_path,
         dry_run=False,
     )
-    message = email.message_from_string(u"""
+    message = email.message_from_string("""
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -48,7 +48,7 @@ def test_smtp(mocker, tmp_path):
 def test_dry_run(mocker, tmp_path):
     """Verify no sendmail() calls when dry_run=True."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -58,7 +58,7 @@ def test_dry_run(mocker, tmp_path):
         config_path,
         dry_run=True,
     )
-    message = email.message_from_string(u"""
+    message = email.message_from_string("""
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
@@ -84,7 +84,7 @@ def test_dry_run(mocker, tmp_path):
 def test_no_dry_run(mocker, tmp_path):
     """Verify --no-dry-run calls SMTP sendmail()."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 465
@@ -92,7 +92,7 @@ def test_no_dry_run(mocker, tmp_path):
         username = admin
     """))
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"""
+    message = email.message_from_string("""
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
@@ -121,7 +121,7 @@ def test_no_dry_run(mocker, tmp_path):
 def test_bad_config_key(tmp_path):
     """Verify config file with bad key throws an exception."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         badkey = open-smtp.example.com
     """))
@@ -132,7 +132,7 @@ def test_bad_config_key(tmp_path):
 def test_security_error(tmp_path):
     """Verify config file with bad security type throws an exception."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.mail.umich.edu
         port = 465
@@ -147,7 +147,7 @@ def test_security_open(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for no security SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -155,7 +155,7 @@ def test_security_open(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP and getpass
     mock_smtp = mocker.patch('smtplib.SMTP')
@@ -182,7 +182,7 @@ def test_security_open_legacy(mocker, tmp_path):
     """Verify legacy "security = Never" configuration."""
     # Config SMTP server with "security = Never" legacy option
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -191,7 +191,7 @@ def test_security_open_legacy(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP
     mock_smtp = mocker.patch('smtplib.SMTP')
@@ -212,7 +212,7 @@ def test_security_starttls(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for STARTTLS SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = newman.eecs.umich.edu
         port = 25
@@ -222,7 +222,7 @@ def test_security_starttls(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP
     mock_smtp = mocker.patch('smtplib.SMTP')
@@ -254,7 +254,7 @@ def test_security_ssl(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.mail.umich.edu
         port = 465
@@ -264,7 +264,7 @@ def test_security_ssl(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP
     mock_smtp = mocker.patch('smtplib.SMTP')
@@ -295,7 +295,7 @@ def test_security_ssl(mocker, tmp_path):
 def test_missing_username(tmp_path):
     """Verify exception on missing username."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.mail.umich.edu
         port = 465
@@ -309,7 +309,7 @@ def test_smtp_login_error(mocker, tmp_path):
     """Login failure."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.gmail.com
         port = 465
@@ -319,7 +319,7 @@ def test_smtp_login_error(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP and getpass
     mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
@@ -363,7 +363,7 @@ def test_smtp_sendmail_error(mocker, tmp_path):
     """Failure during SMTP protocol."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.gmail.com
         port = 465
@@ -373,7 +373,7 @@ def test_smtp_sendmail_error(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP
     mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
@@ -403,7 +403,7 @@ def test_socket_error(mocker, tmp_path):
     """Failed socket connection."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = smtp.gmail.com
         port = 465
@@ -413,7 +413,7 @@ def test_socket_error(mocker, tmp_path):
 
     # Simple template
     sendmail_client = SendmailClient(config_path, dry_run=False)
-    message = email.message_from_string(u"Hello world")
+    message = email.message_from_string("Hello world")
 
     # Mock SMTP
     mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')

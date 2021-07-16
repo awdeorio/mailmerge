@@ -95,7 +95,7 @@ def test_bad_limit(tmpdir):
     """Verify --limit with bad value."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
@@ -104,7 +104,7 @@ def test_bad_limit(tmpdir):
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
         two@test.com
@@ -112,7 +112,7 @@ def test_bad_limit(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -129,7 +129,7 @@ def test_limit_combo(tmpdir):
     """Verify --limit 1 --no-limit results in no limit."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
@@ -138,7 +138,7 @@ def test_limit_combo(tmpdir):
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
         two@test.com
@@ -146,7 +146,7 @@ def test_limit_combo(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -216,7 +216,7 @@ def test_bad_template(tmpdir):
     """Template mismatch with database header should produce an error."""
     # Template has a bad key
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{error_not_in_database}}
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -226,14 +226,14 @@ def test_bad_template(tmpdir):
 
     # Normal database
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
     """))
 
     # Normal, unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -254,7 +254,7 @@ def test_bad_database(tmpdir):
     """Database read error should produce a sane error."""
     # Normal template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -263,14 +263,14 @@ def test_bad_database(tmpdir):
 
     # Database with unmatched quote
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         "hello world
     """))
 
     # Normal, unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -291,21 +291,21 @@ def test_bad_config(tmpdir):
     """Config containing an error should produce an error."""
     # Normal template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
     """))
 
     # Normal database
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         dummy
         asdf
     """))
 
     # Server config is missing host
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         port = 25
     """))
@@ -325,15 +325,15 @@ def test_attachment(tmpdir):
     """Verify attachments feature output."""
     # First attachment
     attachment1_path = Path(tmpdir/"attachment1.txt")
-    attachment1_path.write_text(u"Hello world\n")
+    attachment1_path.write_text("Hello world\n")
 
     # Second attachment
     attachment2_path = Path(tmpdir/"attachment2.txt")
-    attachment2_path.write_text(u"Hello mailmerge\n")
+    attachment2_path.write_text("Hello mailmerge\n")
 
     # Template with attachment header
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
         ATTACHMENT: attachment1.txt
@@ -344,14 +344,14 @@ def test_attachment(tmpdir):
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
     """))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -373,7 +373,7 @@ def test_utf8_template(tmpdir):
     """Message is utf-8 encoded when only the template contains utf-8 chars."""
     # Template with UTF-8 characters and emoji
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
@@ -382,14 +382,14 @@ def test_utf8_template(tmpdir):
 
     # Simple database without utf-8 characters
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
     """))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -410,7 +410,7 @@ def test_utf8_template(tmpdir):
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
         FROM: from@test.com
@@ -431,7 +431,7 @@ def test_utf8_database(tmpdir):
     """Message is utf-8 encoded when only the databse contains utf-8 chars."""
     # Simple template without UTF-8 characters
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -440,14 +440,14 @@ def test_utf8_database(tmpdir):
 
     # Database with utf-8 characters and emoji
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         Laȝamon 😀 klâwen
     """))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -463,7 +463,7 @@ def test_utf8_database(tmpdir):
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
         FROM: from@test.com
@@ -484,7 +484,7 @@ def test_utf8_headers(tmpdir):
     """Message is utf-8 encoded when headers contain utf-8 chars."""
     # Template with UTF-8 characters and emoji in headers
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: Laȝamon <to@test.com>
         FROM: klâwen <from@test.com>
         SUBJECT: Laȝamon 😀 klâwen
@@ -494,14 +494,14 @@ def test_utf8_headers(tmpdir):
 
     # Simple database without utf-8 characters
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
     """))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -522,7 +522,7 @@ def test_utf8_headers(tmpdir):
 
     # Verify output
     assert output.stderr.decode("utf-8") == ""
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: =?utf-8?b?TGHInWFtb24gPHRvQHRlc3QuY29tPg==?=
         FROM: =?utf-8?b?a2zDondlbiA8ZnJvbUB0ZXN0LmNvbT4=?=
@@ -549,15 +549,15 @@ def test_complicated(tmpdir):
     """
     # First attachment
     attachment1_path = Path(tmpdir/"attachment1.txt")
-    attachment1_path.write_text(u"Hello world\n")
+    attachment1_path.write_text("Hello world\n")
 
     # Second attachment
     attachment2_path = Path(tmpdir/"attachment2.csv")
-    attachment2_path.write_text(u"hello,mailmerge\n")
+    attachment2_path.write_text("hello,mailmerge\n")
 
     # Template with attachment header
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -600,7 +600,7 @@ def test_complicated(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -623,7 +623,7 @@ def test_complicated(tmpdir):
 
     # Verify stdout and stderr after above corrections
     assert stderr == ""
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: one@test.com
         FROM: from@test.com
@@ -730,7 +730,7 @@ def test_resume(tmpdir):
     """Verify --resume option starts "in the middle" of the database."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -739,7 +739,7 @@ def test_resume(tmpdir):
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
         world
@@ -747,7 +747,7 @@ def test_resume(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -771,7 +771,7 @@ def test_resume_too_small(tmpdir):
     """Verify --resume <= 0 prints an error message."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -780,7 +780,7 @@ def test_resume_too_small(tmpdir):
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
         world
@@ -788,7 +788,7 @@ def test_resume_too_small(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -815,7 +815,7 @@ def test_resume_too_big(tmpdir):
     """Verify --resume > database does nothing."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -824,7 +824,7 @@ def test_resume_too_big(tmpdir):
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
         world
@@ -832,7 +832,7 @@ def test_resume_too_big(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -851,7 +851,7 @@ def test_resume_hint_on_config_error(tmpdir):
     """Verify *no* --resume hint when error is after first message."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -860,7 +860,7 @@ def test_resume_hint_on_config_error(tmpdir):
 
     # Database with error on second entry
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
         "world
@@ -868,7 +868,7 @@ def test_resume_hint_on_config_error(tmpdir):
 
     # Server config missing port
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
     """))
@@ -886,7 +886,7 @@ def test_resume_hint_on_csv_error(tmpdir):
     """Verify --resume hint after CSV error."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -895,7 +895,7 @@ def test_resume_hint_on_csv_error(tmpdir):
 
     # Database with unmatched quote on second entry
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         message
         hello
         "world
@@ -903,7 +903,7 @@ def test_resume_hint_on_csv_error(tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -922,7 +922,7 @@ def test_other_mime_type(tmpdir):
     """Verify output with a MIME type that's not text or an attachment."""
     # Template containing a pdf
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
         MIME-Version: 1.0
@@ -941,14 +941,14 @@ def test_other_mime_type(tmpdir):
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
     """))
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -964,7 +964,7 @@ def test_other_mime_type(tmpdir):
     assert stderr == ""
     stdout = stdout.replace("\n\n\n\n", "\n\n\n")
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
         TO: one@test.com
         FROM: from@test.com
