@@ -1,0 +1,7 @@
+#!/bin/bash
+set -Eeuxo pipefail
+pycodestyle mailmerge tests setup.py
+pydocstyle mailmerge tests setup.py
+pylint mailmerge tests setup.py
+check-manifest
+pytest -vvs
