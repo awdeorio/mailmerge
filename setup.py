@@ -23,7 +23,6 @@ setuptools.setup(
     packages=["mailmerge"],
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
-        "backports.csv;python_version<'3.0'",
         "click",
         "configparser;python_version<'3.6'",
 

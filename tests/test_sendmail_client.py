@@ -7,8 +7,8 @@ import textwrap
 import socket
 import smtplib
 import pytest
-from future.backports import email
-import future.backports.email.parser  # pylint: disable=unused-import
+import email
+import email.parser
 from mailmerge import SendmailClient, MailmergeError
 
 

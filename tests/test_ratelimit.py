@@ -7,8 +7,9 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import datetime
-from future.backports import email
-import future.backports.email.parser  # pylint: disable=unused-import
+from pathlib import Path
+import email
+import email.parser
 import freezegun
 import pytest
 import click
@@ -16,11 +17,6 @@ import click.testing
 from mailmerge import SendmailClient, MailmergeRateLimitError
 from mailmerge.__main__ import main
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member

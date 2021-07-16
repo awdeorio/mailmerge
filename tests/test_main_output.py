@@ -11,14 +11,9 @@ http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 import os
 import re
 import textwrap
+from pathlib import Path
 import sh
 import pytest
-
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member

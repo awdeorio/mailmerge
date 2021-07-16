@@ -9,15 +9,11 @@ pytest tmpdir docs:
 http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
 import re
+from pathlib import Path
 import textwrap
 import sh
 import pytest
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 # The sh library triggers lot of false no-member errors
 # pylint: disable=no-member

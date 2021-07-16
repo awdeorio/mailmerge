@@ -6,15 +6,10 @@ Tests for helper functions.
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
+from pathlib import Path
 import pytest
 from mailmerge.__main__ import enumerate_range, read_csv_database
 from mailmerge import MailmergeError
-
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 # Every test_enumerate_range_* unit test uses a list comprehension to yield all
 # the values from the generator implementation.

@@ -10,17 +10,12 @@ import re
 import shutil
 import textwrap
 import collections
+from pathlib import Path
 import pytest
 import markdown
 import html5lib
 from mailmerge import TemplateMessage, MailmergeError
 from . import utils
-
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 
 def test_simple(tmp_path):

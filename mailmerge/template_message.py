@@ -7,28 +7,20 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 
 import re
+from pathlib import Path
 from xml.etree import ElementTree
-from future.backports import email
-import future.backports.email.mime
-import future.backports.email.mime.application
-import future.backports.email.mime.multipart
-import future.backports.email.mime.text
-import future.backports.email.parser
-import future.backports.email.utils
-import future.backports.email.generator
+import email
+import email.mime
+import email.mime.application
+import email.mime.multipart
+import email.mime.text
 import html5lib
 import markdown
 import jinja2
 from . import exceptions
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
-
-class TemplateMessage(object):
+class TemplateMessage:
     """Represent a templated email message.
 
     This object combines an email.message object with the template abilities of
@@ -38,10 +30,6 @@ class TemplateMessage(object):
     # The external interface to this class is pretty simple.  We don't need
     # more than one public method.
     # pylint: disable=too-few-public-methods
-    #
-    # We need to inherit from object for Python 2 compantibility
-    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
-    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
@@ -192,7 +180,7 @@ class TemplateMessage(object):
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text, extensions=['nl2br'])
-        html_payload = future.backports.email.mime.text.MIMEText(
+        html_payload = email.mime.text.MIMEText(
             u"<html><body>{}</body></html>".format(html),
             _subtype="html",
             _charset=encoding,

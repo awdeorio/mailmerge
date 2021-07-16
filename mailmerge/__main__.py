@@ -8,23 +8,15 @@ import sys
 import time
 import codecs
 import textwrap
+from pathlib import Path
+import csv
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from . import exceptions
 from . import utils
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
-# Python 2 UTF8 support requires csv backport
-try:
-    from backports import csv
-except ImportError:
-    import csv
 
 # Python 2 UTF8 file redirection
 # http://www.macfreek.nl/memory/Encoding_of_Python_stdout
