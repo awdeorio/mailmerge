@@ -4,4 +4,4 @@ pycodestyle mailmerge tests setup.py
 pydocstyle mailmerge tests setup.py
 pylint mailmerge tests setup.py
 check-manifest
-pytest -vvs
+pytest -vvs --cov mailmerge
