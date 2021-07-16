@@ -26,12 +26,12 @@ jobs:
 
     # Sequence of tasks for this job
     steps:
-      # Check out latest code using a pre-existing GH action
+      # Check out latest code
       # Docs: https://github.com/actions/checkout
       - name: Checkout code
         uses: actions/checkout@v2
 
-      # Set up Python using a pre-existing GH action
+      # Set up Python
       # Docs: https://github.com/actions/setup-python
       - name: Set up Python ${{ matrix.python-version }}
         uses: actions/setup-python@v2
@@ -39,7 +39,6 @@ jobs:
           python-version: ${{ matrix.python-version }}
 
       # Install dependencies
-      # tox-gh-actions docs
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
       - name: Install dependencies
         run: |
@@ -47,5 +46,10 @@ jobs:
           pip install tox tox-gh-actions
 
       # Run tests
-      - name: Run linters, unit tests, and system tests
+      - name: Run tests
         run: tox
+
+      # Upload coverage report
+      # https://github.com/codecov/codecov-action
+      - name: Upload coverage report
+        uses: codecov/codecov-action@v1
