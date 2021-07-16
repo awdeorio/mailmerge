@@ -49,6 +49,8 @@ jobs:
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
       - name: Run tests
         run: tox
+      - name: Combine coverage
+        run: coverage xml
 
       # Upload coverage report
       # https://github.com/codecov/codecov-action
