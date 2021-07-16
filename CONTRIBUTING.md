@@ -34,8 +34,7 @@ $ pylint mailmerge tests setup.py
 $ check-manifest
 ```
 
-Test Python 2 and Python 3 compatibility.  This will automatically create virtual environments and run all style and functional tests in each environment.  Use `pyenv` to provide different versions of Python.
+Run linters and tests in a clean environment.  This will automatically create a temporary virtual environment.
 ```console
-$ eval "$(pyenv init -)"
 $ tox
 ```
