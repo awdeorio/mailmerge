@@ -5,7 +5,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import sys
 import time
-import codecs
 import textwrap
 from pathlib import Path
 import csv
@@ -14,13 +13,6 @@ from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from . import exceptions
 from . import utils
-
-
-
-# Python 2 UTF8 file redirection
-# http://www.macfreek.nl/memory/Encoding_of_Python_stdout
-if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
