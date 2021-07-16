@@ -38,11 +38,8 @@ class TemplateMessage:
         self._attachment_content_ids = {}
 
         # Configure Jinja2 template engine with the template dirname as root.
-        #
-        # Note: jinja2's FileSystemLoader does not support pathlib Path objects
-        # in Python 2. https://github.com/pallets/jinja/pull/1064
         template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(str(template_path.parent)),
+            loader=jinja2.FileSystemLoader(template_path.parent),
             undefined=jinja2.StrictUndefined,
         )
         self.template = template_env.get_template(
@@ -172,9 +169,6 @@ class TemplateMessage:
         #
         # Render Markdown to HTML and add the HTML as the last part of the
         # multipart/alternative message as per RFC 2046.
-        #
-        # Note: We need to use "..." to ensure that unicode string
-        # substitution works properly in Python 2.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text, extensions=['nl2br'])
