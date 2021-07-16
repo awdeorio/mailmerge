@@ -281,7 +281,7 @@ def read_csv_database(database_path):
         # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
-    with database_path.open(mode="r", encoding="utf-8") as database_file:
+    with database_path.open() as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         try:
             for row in reader:
