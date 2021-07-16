@@ -23,7 +23,6 @@ setuptools.setup(
     keywords=["mail merge", "mailmerge", "email"],
     install_requires=[
         "click",
-        "configparser;python_version<'3.6'",
         "jinja2",
         "markdown",
         "html5"
@@ -45,12 +44,9 @@ setuptools.setup(
             "pytest-cov",
             "pytest-mock",
             "sh",
-
-            # Work around a dependency bug (I think) in pytest + python3.4
-            "typing;python_version=='3.4'",
         ],
     },
-    python_requires='>=3.4',
+    python_requires='>=3.6',
     entry_points={
         "console_scripts": [
             "mailmerge = mailmerge.__main__:main",
