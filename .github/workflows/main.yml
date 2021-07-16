@@ -41,9 +41,8 @@ jobs:
       # Install dependencies
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
       - name: Install dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install tox tox-gh-actions
+        run: python -m pip install --upgrade pip
+        run: pip install tox tox-gh-actions
 
       # Run tests
       - name: Run tests
