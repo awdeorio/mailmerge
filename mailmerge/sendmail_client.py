@@ -70,12 +70,7 @@ class SendmailClient:
         )
 
     def sendmail(self, sender, recipients, message):
-        """Send email message.
-
-        Note that we can't use the elegant smtp.send_message(message)" because
-        Python 2 doesn't support it.  Both Python 2 and Python 3 support
-        smtp.sendmail(sender, recipients, flattened_message_str).
-        """
+        """Send email message."""
         if self.dry_run:
             return
 
