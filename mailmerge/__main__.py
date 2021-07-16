@@ -3,7 +3,6 @@ Command line interface implementation.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-from __future__ import print_function
 import sys
 import time
 import codecs
