@@ -15,14 +15,6 @@ $ which mailmerge
 /Users/awdeorio/src/mailmerge/env/bin/mailmerge
 ```
 
-### Python2 development environment
-Mailmerge is tested to work in both Python 2 and Python 3.  Set up a Python 2 virtual environment.
-```console
-$ virtualenv -p python2 env2
-$ source env2/bin/activate
-$ pip install -e .[dev,test]
-```
-
 ## Testing and code quality
 Run unit tests
 ```console
