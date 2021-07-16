@@ -203,7 +203,7 @@ def test_emoji_markdown(tmp_path):
     # Verify content, which is base64 encoded grinning face emoji
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u'```\nemoji_string = \U0001f600\n```'
+    assert plaintext == '```\nemoji_string = \U0001f600\n```'
     assert htmltext == (
         u"<html><body><p><code>"
         u"emoji_string = \U0001f600"

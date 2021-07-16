@@ -100,7 +100,7 @@ def test_csv_quotes_commas(tmpdir):
     https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
     """
     database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u'''\
+    database_path.write_text(textwrap.dedent('''\
         email,message
         one@test.com,"Hello, ""world"""
     '''))

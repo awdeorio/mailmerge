@@ -592,7 +592,7 @@ def test_complicated(tmpdir):
     # escaped with double quotes, not backslash.
     # https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u'''\
+    database_path.write_text(textwrap.dedent('''\
         email,message
         one@test.com,"Hello, ""world"""
         Lazamon<two@test.com>,Laȝamon 😀 klâwen
