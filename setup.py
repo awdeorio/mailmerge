@@ -1,13 +1,12 @@
 """Mailmerge build and install configuration."""
-import os
-import io
+from pathlib import Path
 import setuptools
 
 
 # Read the contents of README file
-PROJECT_DIR = os.path.abspath(os.path.dirname(__file__))
-with io.open(os.path.join(PROJECT_DIR, "README.md"), encoding="utf-8") as f:
-    LONG_DESCRIPTION = f.read()
+PROJECT_DIR = Path(__file__).parent
+README = PROJECT_DIR/"README.md"
+LONG_DESCRIPTION = README.open().read()
 
 
 setuptools.setup(
@@ -25,17 +24,8 @@ setuptools.setup(
     install_requires=[
         "click",
         "configparser;python_version<'3.6'",
-
-        # We mock the time when testing the rate limit feature
-        "freezegun",
-
-        # The attachments feature relies on a bug fix in the future library
-        # https://github.com/awdeorio/mailmerge/pull/56
-        "future>0.18.0",
-
         "jinja2",
         "markdown",
-        "pathlib2;python_version<'3.6'",
         "html5"
     ],
     extras_require={
@@ -47,17 +37,17 @@ setuptools.setup(
         "test": [
             "check-manifest",
             "codecov>=1.4.0",
+            "freezegun",
             "pycodestyle",
             "pydocstyle",
             "pylint",
             "pytest",
             "pytest-cov",
             "pytest-mock",
+            "sh",
 
             # Work around a dependency bug (I think) in pytest + python3.4
             "typing;python_version=='3.4'",
-
-            "sh",
         ],
     },
 
