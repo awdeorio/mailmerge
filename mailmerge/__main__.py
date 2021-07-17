@@ -3,33 +3,15 @@ Command line interface implementation.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
-from __future__ import print_function
 import sys
 import time
-import codecs
 import textwrap
+from pathlib import Path
+import csv
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
 from . import exceptions
-from . import utils
-
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
-
-# Python 2 UTF8 support requires csv backport
-try:
-    from backports import csv
-except ImportError:
-    import csv
-
-# Python 2 UTF8 file redirection
-# http://www.macfreek.nl/memory/Encoding_of_Python_stdout
-if sys.stdout.encoding != 'UTF-8' and not hasattr(sys.stdout, "buffer"):
-    sys.stdout = codecs.getwriter('utf-8')(sys.stdout, 'strict')
 
 
 @click.command(context_settings={"help_option_names": ['-h', '--help']})
@@ -128,37 +110,28 @@ def main(sample, dry_run, limit, no_limit, resume,
                     break
                 time.sleep(1)
             print_bright_white_on_cyan(
-                ">>> message {message_num}"
-                .format(message_num=message_num),
+                f">>> message {message_num}",
                 output_format,
             )
             print_message(message, output_format)
             print_bright_white_on_cyan(
-                ">>> message {message_num} sent"
-                .format(message_num=message_num),
+                f">>> message {message_num} sent",
                 output_format,
             )
             message_num += 1
 
     except exceptions.MailmergeError as error:
-        hint_text = '\nHint: "--resume {}"'.format(message_num)
-        sys.exit(
-            "Error on message {message_num}\n"
-            "{error}"
-            "{hint}"
-            .format(
-                message_num=message_num,
-                error=error,
-                hint=(hint_text if message_num > 1 else ""),
-            )
-        )
+        hint_text = ""
+        if message_num > 1:
+            hint_text = f'\nHint: "--resume {message_num}"'
+        sys.exit(f"Error on message {message_num}\n{error}{hint_text}")
 
     # Hints for user
     if not no_limit:
+        pluralizer = "" if limit == 1 else "s"
         print(
-            ">>> Limit was {limit} message{pluralizer}.  "
+            f">>> Limit was {limit} message{pluralizer}.  "
             "To remove the limit, use the --no-limit option."
-            .format(limit=limit, pluralizer=("" if limit == 1 else "s"))
         )
     if dry_run:
         print(
@@ -180,40 +153,40 @@ def check_input_files(template_path, database_path, config_path, sample):
         sys.exit(0)
 
     if not template_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent(f"""\
             Error: can't find template "{template_path}".
 
             Create a sample (--sample) or specify a file (--template).
 
             See https://github.com/awdeorio/mailmerge for examples.\
-        """.format(template_path=template_path)))
+        """))
 
     if not database_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent(f"""\
             Error: can't find database "{database_path}".
 
             Create a sample (--sample) or specify a file (--database).
 
             See https://github.com/awdeorio/mailmerge for examples.\
-        """.format(database_path=database_path)))
+        """))
 
     if not config_path.exists():
-        sys.exit(textwrap.dedent(u"""\
+        sys.exit(textwrap.dedent(f"""\
             Error: can't find config "{config_path}".
 
             Create a sample (--sample) or specify a file (--config).
 
             See https://github.com/awdeorio/mailmerge for examples.\
-        """.format(config_path=config_path)))
+        """))
 
 
 def create_sample_input_files(template_path, database_path, config_path):
     """Create sample template, database and server config."""
     for path in [template_path, database_path, config_path]:
         if path.exists():
-            sys.exit("Error: file exists: {}".format(path))
+            sys.exit(f"Error: file exists: {path}")
     with template_path.open("w") as template_file:
-        template_file.write(textwrap.dedent(u"""\
+        template_file.write(textwrap.dedent("""\
             TO: {{email}}
             SUBJECT: Testing mailmerge
             FROM: My Self <myself@mydomain.com>
@@ -223,13 +196,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             Your number is {{number}}.
         """))
     with database_path.open("w") as database_file:
-        database_file.write(textwrap.dedent(u"""\
+        database_file.write(textwrap.dedent("""\
             email,name,number
             myself@mydomain.com,"Myself",17
             bob@bobdomain.com,"Bob",42
         """))
     with config_path.open("w") as config_file:
-        config_file.write(textwrap.dedent(u"""\
+        config_file.write(textwrap.dedent("""\
             # Mailmerge SMTP Server Config
             # https://github.com/awdeorio/mailmerge
             #
@@ -273,17 +246,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             # port = 25
             # ratelimit = 0
         """))
-    print(textwrap.dedent(u"""\
+    print(textwrap.dedent(f"""\
         Created sample template email "{template_path}"
         Created sample database "{database_path}"
         Created sample config file "{config_path}"
 
         Edit these files, then run mailmerge again.\
-    """.format(
-        template_path=template_path,
-        database_path=database_path,
-        config_path=config_path,
-    )))
+    """))
 
 
 def read_csv_database(database_path):
@@ -298,14 +267,14 @@ def read_csv_database(database_path):
         # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
-    with database_path.open(mode="r", encoding="utf-8") as database_file:
+    with database_path.open() as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         try:
             for row in reader:
                 yield row
         except csv.Error as err:
             raise exceptions.MailmergeError(
-                "{}:{}: {}".format(database_path, reader.line_num, err)
+                f"{database_path}:{reader.line_num}: {err}"
             )
 
 
@@ -343,11 +312,11 @@ def print_message(message, output_format):
     assert output_format in ["colorized", "text", "raw"]
 
     if output_format == "raw":
-        print(utils.flatten_message(message))
+        print(message)
         return
 
     for header, value in message.items():
-        print(u"{header}: {value}".format(header=header, value=value))
+        print(f"{header}: {value}")
     print()
     for part in message.walk():
         if part.get_content_maintype() == "multipart":
@@ -356,8 +325,7 @@ def print_message(message, output_format):
             if message.is_multipart():
                 # Only print message part dividers for multipart messages
                 print_cyan(
-                    ">>> message part: {content_type}"
-                    .format(content_type=part.get_content_type()),
+                    f">>> message part: {part.get_content_type()}",
                     output_format,
                 )
             charset = str(part.get_charset())
@@ -365,14 +333,12 @@ def print_message(message, output_format):
             print()
         elif is_attachment(part):
             print_cyan(
-                ">>> message part: attachment {filename}"
-                .format(filename=part.get_filename()),
+                f">>> message part: attachment {part.get_filename()}",
                 output_format,
             )
         else:
             print_cyan(
-                ">>> message part: {content_type}"
-                .format(content_type=part.get_content_type()),
+                f">>> message part: {part.get_content_type()}",
                 output_format,
             )
 

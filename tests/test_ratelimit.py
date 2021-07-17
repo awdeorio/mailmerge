@@ -1,5 +1,3 @@
-# coding=utf-8
-# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for SMTP server rate limit feature.
 
@@ -7,25 +5,20 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import datetime
-from future.backports import email
-import future.backports.email.parser  # pylint: disable=unused-import
+from pathlib import Path
+import email
+import email.parser
 import freezegun
 import pytest
 import click.testing
 from mailmerge import SendmailClient, MailmergeRateLimitError
 from mailmerge.__main__ import main
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
-
 
 def test_sendmail_ratelimit(mocker, tmp_path):
     """Verify SMTP library calls."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
@@ -35,7 +28,7 @@ def test_sendmail_ratelimit(mocker, tmp_path):
         config_path,
         dry_run=False,
     )
-    message = email.message_from_string(u"""
+    message = email.message_from_string("""
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -83,7 +76,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
     """Verify SMTP server ratelimit parameter."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
@@ -92,7 +85,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
         two@test.com
@@ -100,7 +93,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25

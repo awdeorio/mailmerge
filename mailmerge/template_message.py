@@ -1,5 +1,3 @@
-# coding=utf-8
-# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Represent a templated email message.
 
@@ -7,28 +5,20 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 
 import re
+from pathlib import Path
 from xml.etree import ElementTree
-from future.backports import email
-import future.backports.email.mime
-import future.backports.email.mime.application
-import future.backports.email.mime.multipart
-import future.backports.email.mime.text
-import future.backports.email.parser
-import future.backports.email.utils
-import future.backports.email.generator
+import email
+import email.mime
+import email.mime.application
+import email.mime.multipart
+import email.mime.text
 import html5lib
 import markdown
 import jinja2
 from . import exceptions
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
-
-class TemplateMessage(object):
+class TemplateMessage:
     """Represent a templated email message.
 
     This object combines an email.message object with the template abilities of
@@ -38,10 +28,6 @@ class TemplateMessage(object):
     # The external interface to this class is pretty simple.  We don't need
     # more than one public method.
     # pylint: disable=too-few-public-methods
-    #
-    # We need to inherit from object for Python 2 compantibility
-    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
-    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, template_path):
         """Initialize variables and Jinja2 template."""
@@ -52,11 +38,8 @@ class TemplateMessage(object):
         self._attachment_content_ids = {}
 
         # Configure Jinja2 template engine with the template dirname as root.
-        #
-        # Note: jinja2's FileSystemLoader does not support pathlib Path objects
-        # in Python 2. https://github.com/pallets/jinja/pull/1064
         template_env = jinja2.Environment(
-            loader=jinja2.FileSystemLoader(str(template_path.parent)),
+            loader=jinja2.FileSystemLoader(template_path.parent),
             undefined=jinja2.StrictUndefined,
         )
         self.template = template_env.get_template(
@@ -68,9 +51,7 @@ class TemplateMessage(object):
         try:
             raw_message = self.template.render(context)
         except jinja2.exceptions.TemplateError as err:
-            raise exceptions.MailmergeError(
-                "{}: {}".format(self.template_path, err)
-            )
+            raise exceptions.MailmergeError(f"{self.template_path}: {err}")
         self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()
@@ -187,13 +168,10 @@ class TemplateMessage(object):
         # Render Markdown to HTML and add the HTML as the last part of the
         # multipart/alternative message as per RFC 2046.
         #
-        # Note: We need to use u"..." to ensure that unicode string
-        # substitution works properly in Python 2.
-        #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text, extensions=['nl2br'])
-        html_payload = future.backports.email.mime.text.MIMEText(
-            u"<html><body>{}</body></html>".format(html),
+        html_payload = email.mime.text.MIMEText(
+            f"<html><body>{html}</body></html>",
             _subtype="html",
             _charset=encoding,
         )
@@ -248,7 +226,7 @@ class TemplateMessage(object):
             )
             part.add_header(
                 'Content-Disposition',
-                'attachment; filename="{}"'.format(basename),
+                f'attachment; filename="{basename}"'
             )
 
             # When processing inline images in the email body, we will
@@ -294,7 +272,7 @@ class TemplateMessage(object):
 
                 if src in self._attachment_content_ids:
                     cid = self._attachment_content_ids[src]
-                    url = "cid:{}".format(cid)
+                    url = f"cid:{cid}"
                     img.set('src', url)
                     # Only clear the header if we are transforming an
                     # attachment reference. See comment below for context.
@@ -336,9 +314,7 @@ class TemplateMessage(object):
 
         # Check that the attachment exists
         if not path.exists():
-            raise exceptions.MailmergeError(
-                "Attachment not found: {}".format(path)
-            )
+            raise exceptions.MailmergeError(f"Attachment not found: {path}")
 
         return path
 
