@@ -27,3 +27,4 @@ build/
 /tmp/
 /.coverage*
 *,cover
+coverage.xml
