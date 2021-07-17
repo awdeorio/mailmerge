@@ -35,7 +35,6 @@ setuptools.setup(
         ],
         "test": [
             "check-manifest",
-            "codecov>=1.4.0",
             "freezegun",
             "pycodestyle",
             "pydocstyle",
