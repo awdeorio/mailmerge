@@ -42,9 +42,7 @@ class SendmailClient:
             username = parser.get("smtp_server", "username", fallback=None)
             ratelimit = parser.getint("smtp_server", "ratelimit", fallback=0)
         except (configparser.Error, ValueError) as err:
-            raise exceptions.MailmergeError(
-                "{}: {}".format(self.config_path, err)
-            )
+            raise exceptions.MailmergeError(f"{self.config_path}: {err}")
 
         # Coerce legacy option "security = Never"
         if security == "Never":
@@ -53,15 +51,14 @@ class SendmailClient:
         # Verify security type
         if security not in [None, "SSL/TLS", "STARTTLS"]:
             raise exceptions.MailmergeError(
-                "{}: unrecognized security type: '{}'"
-                .format(self.config_path, security)
+                f"{self.config_path}: unrecognized security type: '{security}'"
             )
 
         # Verify username
         if security is not None and username is None:
             raise exceptions.MailmergeError(
-                "{}: username is required for security type '{}'"
-                .format(self.config_path, security)
+                f"{self.config_path}: username is required for "
+                f"security type '{security}'"
             )
 
         # Save validated configuration
@@ -83,9 +80,10 @@ class SendmailClient:
 
         # Ask for password if necessary
         if self.config.security is not None and self.password is None:
-            prompt = ">>> password for {} on {}: ".format(
-                self.config.username, self.config.host)
-            self.password = getpass.getpass(prompt)
+            self.password = getpass.getpass(
+                f">>> password for {self.config.username} on "
+                f"{self.config.host}: "
+            )
 
         # Send
         try:
@@ -107,18 +105,16 @@ class SendmailClient:
                     smtp.sendmail(sender, recipients, message_flattened)
         except smtplib.SMTPAuthenticationError as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to authenticate user '{}': {}"
-                .format(host, port, self.config.username, err)
+                f"{host}:{port} failed to authenticate "
+                f"user '{self.config.username}': {err}"
             )
         except smtplib.SMTPException as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to send message: {}"
-                .format(host, port, err)
+                f"{host}:{port} failed to send message: {err}"
             )
         except socket.error as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to connect to server: {}"
-                .format(host, port, err)
+                f"{host}:{port} failed to connect to server: {err}"
             )
 
         # Update timestamp of last sent message

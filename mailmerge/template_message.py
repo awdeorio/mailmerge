@@ -51,9 +51,7 @@ class TemplateMessage:
         try:
             raw_message = self.template.render(context)
         except jinja2.exceptions.TemplateError as err:
-            raise exceptions.MailmergeError(
-                "{}: {}".format(self.template_path, err)
-            )
+            raise exceptions.MailmergeError(f"{self.template_path}: {err}")
         self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()
@@ -173,7 +171,7 @@ class TemplateMessage:
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(text, extensions=['nl2br'])
         html_payload = email.mime.text.MIMEText(
-            "<html><body>{}</body></html>".format(html),
+            f"<html><body>{html}</body></html>",
             _subtype="html",
             _charset=encoding,
         )
@@ -228,7 +226,7 @@ class TemplateMessage:
             )
             part.add_header(
                 'Content-Disposition',
-                'attachment; filename="{}"'.format(basename),
+                f'attachment; filename="{basename}"'
             )
 
             # When processing inline images in the email body, we will
@@ -274,7 +272,7 @@ class TemplateMessage:
 
                 if src in self._attachment_content_ids:
                     cid = self._attachment_content_ids[src]
-                    url = "cid:{}".format(cid)
+                    url = f"cid:{cid}"
                     img.set('src', url)
                     # Only clear the header if we are transforming an
                     # attachment reference. See comment below for context.
@@ -316,9 +314,7 @@ class TemplateMessage:
 
         # Check that the attachment exists
         if not path.exists():
-            raise exceptions.MailmergeError(
-                "Attachment not found: {}".format(path)
-            )
+            raise exceptions.MailmergeError(f"Attachment not found: {path}")
 
         return path
 

@@ -472,13 +472,13 @@ def test_attachment_absolute(tmpdir):
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
-    template_path.write_text(textwrap.dedent("""\
+    template_path.write_text(textwrap.dedent(f"""\
         TO: to@test.com
         FROM: from@test.com
-        ATTACHMENT: {filename}
+        ATTACHMENT: {attachment_path}
 
         Hello world
-    """.format(filename=attachment_path)))
+    """))
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -833,10 +833,11 @@ def test_attachment_image_in_markdown(tmp_path):
     assert filename == "attachment_3.jpg"
     assert len(content) == 697
 
-    expected = html5lib.parse(
-        '<html><head />'
-        '<body><p><img src="cid:{cid}" alt="" /></p></body>'
-        '</html>'.format(cid=cid))
+    expected = html5lib.parse(textwrap.dedent(f"""\
+        <html><head />
+        <body><p><img src="cid:{cid}" alt="" /></p></body>
+        </html>
+    """))
     assert html_docs_equal(html5lib.parse(htmltext), expected)
 
 
