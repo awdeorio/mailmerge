@@ -1,20 +1,13 @@
-# coding=utf-8
-# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for helper functions.
 
 Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
+from pathlib import Path
 import pytest
 from mailmerge.__main__ import enumerate_range, read_csv_database
 from mailmerge import MailmergeError
-
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
 
 # Every test_enumerate_range_* unit test uses a list comprehension to yield all
 # the values from the generator implementation.
@@ -90,7 +83,7 @@ def test_enumerate_range_start_stop():
 def test_csv_bad(tmpdir):
     """CSV with unmatched quote."""
     database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         a,b
         1,"2
     """))
@@ -105,22 +98,22 @@ def test_csv_quotes_commas(tmpdir):
     https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
     """
     database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u'''\
+    database_path.write_text(textwrap.dedent('''\
         email,message
         one@test.com,"Hello, ""world"""
     '''))
     row = next(read_csv_database(database_path))
-    assert row["email"] == u"one@test.com"
+    assert row["email"] == "one@test.com"
     assert row["message"] == 'Hello, "world"'
 
 
 def test_csv_utf8(tmpdir):
     """CSV with quotes and commas."""
     database_path = Path(tmpdir/"database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email,message
         Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
     """))
     row = next(read_csv_database(database_path))
-    assert row["email"] == u"Laȝamon <lam@test.com>"
-    assert row["message"] == u"Laȝamon emoji \xf0\x9f\x98\x80 klâwen"
+    assert row["email"] == "Laȝamon <lam@test.com>"
+    assert row["message"] == "Laȝamon emoji \xf0\x9f\x98\x80 klâwen"
