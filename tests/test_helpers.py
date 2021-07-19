@@ -9,74 +9,70 @@ import pytest
 from mailmerge.__main__ import enumerate_range, read_csv_database
 from mailmerge import MailmergeError
 
-# Every test_enumerate_range_* unit test uses a list comprehension to yield all
-# the values from the generator implementation.
-# pylint: disable=unnecessary-comprehension
-
 
 def test_enumerate_range_default():
     """Verify default start and stop."""
-    output = [i for i in enumerate_range(["a", "b", "c"])]
+    output = list(enumerate_range(["a", "b", "c"]))
     assert output == [(0, "a"), (1, "b"), (2, "c")]
 
 
 def test_enumerate_range_stop_none():
     """Verify stop=None."""
-    output = [i for i in enumerate_range(["a", "b", "c"], stop=None)]
+    output = list(enumerate_range(["a", "b", "c"], stop=None))
     assert output == [(0, "a"), (1, "b"), (2, "c")]
 
 
 def test_enumerate_range_stop_value():
     """Verify stop=value."""
-    output = [i for i in enumerate_range(["a", "b", "c"], stop=1)]
+    output = list(enumerate_range(["a", "b", "c"], stop=1))
     assert output == [(0, "a")]
 
 
 def test_enumerate_range_stop_zero():
     """Verify stop=0."""
-    output = [i for i in enumerate_range(["a", "b", "c"], stop=0)]
+    output = list(enumerate_range(["a", "b", "c"], stop=0))
     assert output == []
 
 
 def test_enumerate_range_stop_too_big():
     """Verify stop when value is greater than length."""
-    output = [i for i in enumerate_range(["a", "b", "c"], stop=10)]
+    output = list(enumerate_range(["a", "b", "c"], stop=10))
     assert output == [(0, "a"), (1, "b"), (2, "c")]
 
 
 def test_enumerate_range_start_zero():
     """Verify start=0."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=0)]
+    output = list(enumerate_range(["a", "b", "c"], start=0))
     assert output == [(0, "a"), (1, "b"), (2, "c")]
 
 
 def test_enumerate_range_start_value():
     """Verify start=1."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=1)]
+    output = list(enumerate_range(["a", "b", "c"], start=1))
     assert output == [(1, "b"), (2, "c")]
 
 
 def test_enumerate_range_start_last_one():
     """Verify start=length - 1."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=2)]
+    output = list(enumerate_range(["a", "b", "c"], start=2))
     assert output == [(2, "c")]
 
 
 def test_enumerate_range_start_length():
     """Verify start=length."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=3)]
+    output = list(enumerate_range(["a", "b", "c"], start=3))
     assert output == []
 
 
 def test_enumerate_range_start_too_big():
     """Verify start past the end."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=10)]
+    output = list(enumerate_range(["a", "b", "c"], start=10))
     assert output == []
 
 
 def test_enumerate_range_start_stop():
     """Verify start and stop together."""
-    output = [i for i in enumerate_range(["a", "b", "c"], start=1, stop=2)]
+    output = list(enumerate_range(["a", "b", "c"], start=1, stop=2))
     assert output == [(1, "b")]
 
 
