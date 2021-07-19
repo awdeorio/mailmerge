@@ -6,15 +6,13 @@ Andrew DeOrio <awdeorio@umich.edu>
 pytest tmpdir docs:
 http://doc.pytest.org/en/latest/tmpdir.html#the-tmpdir-fixture
 """
+import copy
 import os
 import re
 import textwrap
 from pathlib import Path
-import sh
-import pytest
-
-# The sh library triggers lot of false no-member errors
-# pylint: disable=no-member
+import click.testing
+from mailmerge.__main__ import main
 
 
 def test_stdout(tmpdir):
@@ -48,21 +46,23 @@ def test_stdout(tmpdir):
     """))
 
     # Run mailmerge
-    output = sh.mailmerge(
+    runner = click.testing.CliRunner(mix_stderr=False)
+    result = runner.invoke(main, [
         "--template", template_path,
         "--database", database_path,
         "--config", config_path,
         "--no-limit",
         "--dry-run",
         "--output-format", "text",
-    )
+    ])
+    assert not result.exception
+    assert result.exit_code == 0
 
     # Verify mailmerge output.  We'll filter out the Date header because it
     # won't match exactly.
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
-    assert stderr == ""
-    assert "Date:" in stdout
+    assert result.stderr == ""
+    assert "Date:" in result.stdout
+    stdout = copy.deepcopy(result.stdout)
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent("""\
         >>> message 1
@@ -122,14 +122,16 @@ def test_stdout_utf8(tmpdir):
     """))
 
     # Run mailmerge with defaults, which includes dry-run
+    runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--output-format", "text")
+        result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
+    assert result.exit_code == 0
 
     # Verify mailmerge output.  We'll filter out the Date header because it
     # won't match exactly.
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
-    assert stderr == ""
+    assert result.stderr == ""
+    stdout = copy.deepcopy(result.stdout)
     assert "Date:" in stdout
     stdout = re.sub(r"Date.*\n", "", stdout)
     assert stdout == textwrap.dedent("""\
@@ -179,9 +181,9 @@ def test_stdout_utf8_redirect(tmpdir):
     """))
 
     # Run mailmerge.  We only care that no exceptions occur.  Note that we
-    # can't use the sh.mailmerge() here, even with its redirection utility,
-    # because it doesn't accurately recreate the conditions of the bug where
-    # the redirect destination lacks utf-8 encoding.
+    # can't use the click test runner here because it doesn't accurately
+    # recreate the conditions of the bug where the redirect destination lacks
+    # utf-8 encoding.
     with tmpdir.as_cwd():
         exit_code = os.system("mailmerge > mailmerge.out")
     assert exit_code == 0
@@ -213,25 +215,35 @@ def test_english(tmpdir):
     """))
 
     # Run mailmerge with several limits
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--limit", "0")
-        assert "Limit was 0 messages." in output
-        output = sh.mailmerge("--limit", "1")
-        assert "Limit was 1 message." in output
-        output = sh.mailmerge("--limit", "2")
-        assert "Limit was 2 messages." in output
+        result = runner.invoke(main, ["--limit", "0"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 0 messages." in result.output
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--limit", "1"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 1 message." in result.output
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--limit", "2"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 2 messages." in result.output
 
 
 def test_output_format_bad(tmpdir):
     """Verify bad output format."""
-    with tmpdir.as_cwd(), pytest.raises(sh.ErrorReturnCode_2) as error:
-        sh.mailmerge("--output-format", "bad")
-    stdout = error.value.stdout.decode("utf-8")
-    stderr = error.value.stderr.decode("utf-8")
-    assert stdout == ""
+    runner = click.testing.CliRunner(mix_stderr=False)
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--output-format", "bad"])
+    assert result.exit_code == 2
+    assert result.stdout == ""
 
     # Remove single and double quotes from error message.  Different versions
     # of the click library use different formats.
+    stderr = copy.deepcopy(result.stderr)
     stderr = stderr.replace('"', "")
     stderr = stderr.replace("'", "")
     assert 'Invalid value for --output-format' in stderr
@@ -268,16 +280,18 @@ def test_output_format_raw(tmpdir):
     """))
 
     # Run mailmerge
+    runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--output-format", "raw")
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        result = runner.invoke(main, ["--output-format", "raw"])
+    assert not result.exception
+    assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
 
     # Verify output
-    assert stderr == ""
+    assert result.stderr == ""
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -326,16 +340,18 @@ def test_output_format_text(tmpdir):
     """))
 
     # Run mailmerge
+    runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--output-format", "text")
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
+    assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
 
     # Verify output
-    assert stderr == ""
+    assert result.stderr == ""
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -401,16 +417,18 @@ def test_output_format_colorized(tmpdir):
     """))
 
     # Run mailmerge
+    runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
-        output = sh.mailmerge("--output-format", "colorized")
-    stdout = output.stdout.decode("utf-8")
-    stderr = output.stderr.decode("utf-8")
+        result = runner.invoke(main, ["--output-format", "colorized"])
+    assert not result.exception
+    assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
 
     # Verify output.  The funny looking character sequences are colors.
-    assert stderr == ""
+    assert result.stderr == ""
     assert stdout == textwrap.dedent("""\
         \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
         TO: to@test.com
@@ -434,3 +452,189 @@ def test_output_format_colorized(tmpdir):
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
+
+
+def test_complicated(tmpdir):
+    """Complicated end-to-end test.
+
+    Includes templating, TO, CC, BCC, UTF8 characters, emoji, attachments,
+    encoding mismatch (header is us-ascii, characters used are utf-8).  Also,
+    multipart message in plaintext and HTML.
+    """
+    # First attachment
+    attachment1_path = Path(tmpdir/"attachment1.txt")
+    attachment1_path.write_text(u"Hello world\n")
+
+    # Second attachment
+    attachment2_path = Path(tmpdir/"attachment2.csv")
+    attachment2_path.write_text(u"hello,mailmerge\n")
+
+    # Template with attachment header
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent(u"""\
+        TO: {{email}}
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
+        BCC: bcc1@test.com, bcc2@test.com
+        ATTACHMENT: attachment1.txt
+        ATTACHMENT: attachment2.csv
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        Content-Type: text/plain; charset=us-ascii
+
+        {{message}}
+
+
+        --boundary
+        Content-Type: text/html; charset=us-ascii
+
+        <html>
+          <body>
+            <p>{{message}}</p>
+          </body>
+        </html>
+
+
+    """))
+
+    # Database with utf-8, emoji, quotes, and commas.  Note that quotes are
+    # escaped with double quotes, not backslash.
+    # https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent(u'''\
+        email,message
+        one@test.com,"Hello, ""world"""
+        Lazamon<two@test.com>,Laȝamon 😀 klâwen
+    '''))
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent(u"""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """))
+
+    # Run mailmerge in tmpdir with defaults, which includes dry run
+    runner = click.testing.CliRunner(mix_stderr=False)
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, [
+            "--no-limit",
+            "--output-format", "raw",
+        ])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # Remove the Date and Content-ID strings, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r'Content-Id:.*', '', stdout)
+
+    # Verify stdout and stderr after above corrections
+    assert result.stderr == ""
+    assert stdout == textwrap.dedent(u"""\
+        >>> message 1
+        TO: one@test.com
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="us-ascii"
+        Content-Transfer-Encoding: 7bit
+
+        Hello, "world"
+
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/html; charset="us-ascii"
+        Content-Transfer-Encoding: 7bit
+
+        <html>
+          <body>
+            <p>Hello, "world"</p>
+          </body>
+        </html>
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment1.txt"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment1.txt"
+
+
+        SGVsbG8gd29ybGQK
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment2.csv"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment2.csv"
+
+
+        aGVsbG8sbWFpbG1lcmdlCg==
+
+        --boundary--
+
+        >>> message 1 sent
+        >>> message 2
+        TO: Lazamon<two@test.com>
+        FROM: from@test.com
+        CC: cc1@test.com, cc2@test.com
+        MIME-Version: 1.0
+        Content-Type: multipart/alternative; boundary="boundary"
+        Date: REDACTED
+
+        This is a MIME-encoded message. If you are seeing this, your mail
+        reader is old.
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        TGHInWFtb24g8J+YgCBrbMOid2VuCgo=
+
+        --boundary
+        MIME-Version: 1.0
+        Content-Type: text/html; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        PGh0bWw+CiAgPGJvZHk+CiAgICA8cD5MYcidYW1vbiDwn5iAIGtsw6J3ZW48L3A+CiAgPC9ib2R5
+        Pgo8L2h0bWw+Cg==
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment1.txt"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment1.txt"
+
+
+        SGVsbG8gd29ybGQK
+
+        --boundary
+        Content-Type: application/octet-stream; Name="attachment2.csv"
+        MIME-Version: 1.0
+        Content-Transfer-Encoding: base64
+        Content-Disposition: attachment; filename="attachment2.csv"
+
+
+        aGVsbG8sbWFpbG1lcmdlCg==
+
+        --boundary--
+
+        >>> message 2 sent
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)
