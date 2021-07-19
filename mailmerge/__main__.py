@@ -261,13 +261,18 @@ def read_csv_database(database_path):
     We'll use a class to modify the csv library's default dialect ('excel') to
     enable strict syntax checking.  This will trigger errors for things like
     unclosed quotes.
+
+    We open the file with the utf-8-sig encoding, which skips a byte order mark
+    (BOM), if any.  Sometimes Excel will save CSV files with a BOM.  See Issue
+    #93 https://github.com/awdeorio/mailmerge/issues/93
+
     """
     class StrictExcel(csv.excel):
         # Our helper class is really simple
         # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
-    with database_path.open() as database_file:
+    with database_path.open(encoding="utf-8-sig") as database_file:
         reader = csv.DictReader(database_file, dialect=StrictExcel)
         try:
             for row in reader:
