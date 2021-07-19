@@ -119,7 +119,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
     smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 2
     assert result.exit_code == 0
-    # assert result.stderr == ""  # replace when we drop Python 3.4 support
+    assert result.stderr == ""
     assert ">>> message 1 sent" in result.stdout
     assert ">>> rate limit exceeded, waiting ..." in result.stdout
     assert ">>> message 2 sent" in result.stdout
