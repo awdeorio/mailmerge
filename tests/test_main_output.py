@@ -55,6 +55,7 @@ def test_stdout(tmpdir):
         "--dry-run",
         "--output-format", "text",
     ])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Verify mailmerge output.  We'll filter out the Date header because it
@@ -124,6 +125,7 @@ def test_stdout_utf8(tmpdir):
     runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Verify mailmerge output.  We'll filter out the Date header because it
@@ -216,14 +218,19 @@ def test_english(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--limit", "0"])
-        assert result.exit_code == 0
-        assert "Limit was 0 messages." in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 0 messages." in result.output
+    with tmpdir.as_cwd():
         result = runner.invoke(main, ["--limit", "1"])
-        assert result.exit_code == 0
-        assert "Limit was 1 message." in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 1 message." in result.output
+    with tmpdir.as_cwd():
         result = runner.invoke(main, ["--limit", "2"])
-        assert result.exit_code == 0
-        assert "Limit was 2 messages." in result.output
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Limit was 2 messages." in result.output
 
 
 def test_output_format_bad(tmpdir):
@@ -276,6 +283,7 @@ def test_output_format_raw(tmpdir):
     runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "raw"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -335,6 +343,7 @@ def test_output_format_text(tmpdir):
     runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -411,6 +420,7 @@ def test_output_format_colorized(tmpdir):
     runner = click.testing.CliRunner(mix_stderr=False)
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "colorized"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -517,6 +527,7 @@ def test_complicated(tmpdir):
             "--no-limit",
             "--output-format", "raw",
         ])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date and Content-ID strings, which will be different each time

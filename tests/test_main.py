@@ -34,6 +34,7 @@ def test_sample(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--sample"])
+    assert not result.exception
     assert result.exit_code == 0
     assert Path(tmpdir/"mailmerge_template.txt").exists()
     assert Path(tmpdir/"mailmerge_database.csv").exists()
@@ -78,8 +79,11 @@ def test_defaults(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--sample"])
-        assert result.exit_code == 0
+    assert not result.exception
+    assert result.exit_code == 0
+    with tmpdir.as_cwd():
         result = runner.invoke(main, [])
+    assert not result.exception
     assert result.exit_code == 0
     assert "message 1 sent" in result.output
     assert "Limit was 1 message" in result.output
@@ -152,6 +156,7 @@ def test_limit_combo(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--no-limit", "--limit", "1"])
+    assert not result.exception
     assert result.exit_code == 0
     assert "message 1 sent" in result.output
     assert "message 2 sent" in result.output
@@ -203,6 +208,7 @@ def test_version():
     """Verify --version produces a version."""
     runner = click.testing.CliRunner()
     result = runner.invoke(main, ["--version"])
+    assert not result.exception
     assert result.exit_code == 0
     assert "version" in result.output
 
@@ -355,6 +361,7 @@ def test_attachment(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Verify output
@@ -399,6 +406,7 @@ def test_utf8_template(tmpdir):
         "--dry-run",
         "--output-format", "text",
     ])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -453,6 +461,7 @@ def test_utf8_database(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -514,6 +523,7 @@ def test_utf8_headers(tmpdir):
             "--dry-run",
             "--output-format", "raw",
         ])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Remove the Date string, which will be different each time
@@ -570,6 +580,7 @@ def test_resume(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--resume", "2", "--no-limit"])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Verify only second message was sent
@@ -651,6 +662,7 @@ def test_resume_too_big(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--resume", "3", "--no-limit"])
+    assert not result.exception
     assert result.exit_code == 0
     assert "sent message" not in result.output
 
@@ -764,6 +776,7 @@ def test_other_mime_type(tmpdir):
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, [])
+    assert not result.exception
     assert result.exit_code == 0
 
     # Verify output
