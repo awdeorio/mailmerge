@@ -858,4 +858,4 @@ def test_database_bom(tmpdir):
         >>> message 1 sent
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
-    """)
+    """)  # noqa: E501
