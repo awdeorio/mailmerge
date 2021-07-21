@@ -1,9 +1,9 @@
 Mailmerge
 =========
 
-[![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
-[![Build Status](https://travis-ci.com/awdeorio/mailmerge.svg?branch=develop)](https://travis-ci.com/awdeorio/mailmerge)
+[![CI main](https://github.com/awdeorio/mailmerge/workflows/CI/badge.svg?branch=develop)](https://github.com/awdeorio/mailmerge/actions?query=branch%3Adevelop)
 [![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/develop/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
+[![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
 
 A simple, command line mail merge tool.
 
