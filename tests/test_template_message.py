@@ -25,7 +25,7 @@ def test_simple(tmp_path):
         FROM: from@test.com
 
         Hello {{name}}!
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "name": "world",
@@ -45,7 +45,7 @@ def test_no_substitutions(tmp_path):
         FROM: from@test.com
 
         Hello world!
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({})
     assert sender == "from@test.com"
@@ -64,7 +64,7 @@ def test_multiple_substitutions(tmp_path):
         Hi, {{name}},
 
         Your number is {{number}}.
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
@@ -98,7 +98,7 @@ def test_cc_bcc(tmp_path):
         BCC: Secret <secret@mydomain.com>
 
         Hello world
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
@@ -156,7 +156,7 @@ def test_html(tmp_path):
             <p>{{message}}</p>
           </body>
         </html>
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "message": "Hello world"
@@ -206,7 +206,7 @@ def test_html_plaintext(tmp_path):
             <p>{{message}}</p>
           </body>
         </html>
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "message": "Hello world"
@@ -286,7 +286,7 @@ def test_markdown(tmp_path):
         Here's an image not attached with the email:
         ![python logo not attached](
             http://pluspng.com/img-png/python-logo-png-open-2000.png)
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
@@ -341,7 +341,7 @@ def test_markdown_encoding(tmp_path):
 
         Hi, {{name}},
         æøå
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "email": "myself@mydomain.com",
@@ -401,7 +401,7 @@ def test_attachment_simple(tmpdir):
     """Verify a simple attachment."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
@@ -411,7 +411,7 @@ def test_attachment_simple(tmpdir):
         ATTACHMENT: attachment.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -437,7 +437,7 @@ def test_attachment_relative(tmpdir):
     """Attachment with a relative file path is relative to template dir."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
@@ -447,7 +447,7 @@ def test_attachment_relative(tmpdir):
         ATTACHMENT: attachment.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render
     template_message = TemplateMessage(template_path)
@@ -468,7 +468,7 @@ def test_attachment_absolute(tmpdir):
     # Simple attachment lives in sub directory
     attachments_dir = tmpdir.mkdir("attachments")
     attachment_path = Path(attachments_dir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
@@ -478,7 +478,7 @@ def test_attachment_absolute(tmpdir):
         ATTACHMENT: {attachment_path}
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -497,7 +497,7 @@ def test_attachment_template(tmpdir):
     # Simple attachment lives in sub directory
     attachments_dir = tmpdir.mkdir("attachments")
     attachment_path = Path(attachments_dir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
@@ -507,7 +507,7 @@ def test_attachment_template(tmpdir):
         ATTACHMENT: {{filename}}
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -533,7 +533,7 @@ def test_attachment_not_found(tmpdir):
         ATTACHMENT: attachment.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir, which lacks attachment.txt
     template_message = TemplateMessage(template_path)
@@ -551,7 +551,7 @@ def test_attachment_blank(tmpdir):
         ATTACHMENT:
 
         Hello world
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError) as err:
         with tmpdir.as_cwd():
@@ -568,7 +568,7 @@ def test_attachment_tilde_path(tmpdir):
         ATTACHMENT: ~/attachment.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render will throw an error because we didn't create a file in the
     # user's home directory.  We'll just check the filename.
@@ -599,7 +599,7 @@ def test_attachment_multiple(tmp_path):
         Hi, {{name}},
 
         Your number is {{number}}.
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com",
@@ -653,7 +653,7 @@ def test_attachment_empty(tmp_path):
         ATTACHMENT:
 
         Hello world
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     with pytest.raises(MailmergeError):
         template_message.render({})
@@ -666,7 +666,7 @@ def test_contenttype_attachment_html_body(tmpdir):
     """
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # HTML template
     template_path = Path(tmpdir/"template.txt")
@@ -677,7 +677,7 @@ def test_contenttype_attachment_html_body(tmpdir):
         CONTENT-TYPE: text/html
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -697,7 +697,7 @@ def test_contenttype_attachment_markdown_body(tmpdir):
     """
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # HTML template
     template_path = Path(tmpdir/"template.txt")
@@ -708,7 +708,7 @@ def test_contenttype_attachment_markdown_body(tmpdir):
         CONTENT-TYPE: text/markdown
 
         Hello **world**
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
@@ -738,7 +738,7 @@ def test_duplicate_headers_attachment(tmp_path):
     """
     # Simple attachment
     attachment_path = Path(tmp_path/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple message
     template_path = tmp_path / "template.txt"
@@ -749,7 +749,7 @@ def test_duplicate_headers_attachment(tmp_path):
         ATTACHMENT: attachment.txt
 
         {{message}}
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "message": "Hello world"
@@ -774,7 +774,7 @@ def test_duplicate_headers_markdown(tmp_path):
         ```
         Message as code block: {{message}}
         ```
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
         "message": "hello world",
@@ -798,7 +798,7 @@ def test_attachment_image_in_markdown(tmp_path):
         CONTENT-TYPE: text/markdown
 
         ![](./attachment_3.jpg)
-    """))
+    """), encoding="utf8")
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
         "email": "myself@mydomain.com"
@@ -844,7 +844,7 @@ def test_attachment_image_in_markdown(tmp_path):
 def test_content_id_header_for_attachments(tmpdir):
     """All attachments should get a content-id header"""
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"template.txt")
@@ -854,7 +854,7 @@ def test_content_id_header_for_attachments(tmpdir):
         ATTACHMENT: attachment.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Render in tmpdir
     with tmpdir.as_cwd():
