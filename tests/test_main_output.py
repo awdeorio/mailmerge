@@ -27,7 +27,7 @@ def test_stdout(tmpdir):
         Hi, {{name}},
 
         Your number is {{number}}.
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"database.csv")
@@ -35,7 +35,7 @@ def test_stdout(tmpdir):
         email,name,number
         myself@mydomain.com,"Myself",17
         bob@bobdomain.com,"Bob",42
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"server.conf")
@@ -43,7 +43,7 @@ def test_stdout(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -104,14 +104,14 @@ def test_stdout_utf8(tmpdir):
         FROM: from@test.com
 
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         myself@mydomain.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -119,7 +119,7 @@ def test_stdout_utf8(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge with defaults, which includes dry-run
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -163,14 +163,14 @@ def test_stdout_utf8_redirect(tmpdir):
         FROM: from@test.com
 
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         myself@mydomain.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -178,7 +178,7 @@ def test_stdout_utf8_redirect(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge.  We only care that no exceptions occur.  Note that we
     # can't use the click test runner here because it doesn't accurately
@@ -196,7 +196,7 @@ def test_english(tmpdir):
     template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
-    """))
+    """), encoding="utf8")
 
     # Database with 2 entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -204,7 +204,7 @@ def test_english(tmpdir):
         dummy
         1
         2
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -212,7 +212,7 @@ def test_english(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge with several limits
     runner = click.testing.CliRunner()
@@ -253,7 +253,7 @@ def test_output_format_raw(tmpdir):
     """Verify raw output format."""
     # Attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -262,14 +262,14 @@ def test_output_format_raw(tmpdir):
         FROM: from@test.com
 
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -277,7 +277,7 @@ def test_output_format_raw(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -313,7 +313,7 @@ def test_output_format_text(tmpdir):
     """Verify text output format."""
     # Attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -322,14 +322,14 @@ def test_output_format_text(tmpdir):
         FROM: from@test.com
 
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -337,7 +337,7 @@ def test_output_format_text(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -373,7 +373,7 @@ def test_output_format_colorized(tmpdir):
     """Verify colorized output format."""
     # Attachment
     attachment_path = Path(tmpdir/"attachment.txt")
-    attachment_path.write_text("Hello world\n")
+    attachment_path.write_text("Hello world\n", encoding="utf8")
 
     # HTML template
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -399,14 +399,14 @@ def test_output_format_colorized(tmpdir):
             <p>Laȝamon 😀 klâwen</p>
           </body>
         </html>
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -414,7 +414,7 @@ def test_output_format_colorized(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -463,15 +463,15 @@ def test_complicated(tmpdir):
     """
     # First attachment
     attachment1_path = Path(tmpdir/"attachment1.txt")
-    attachment1_path.write_text(u"Hello world\n")
+    attachment1_path.write_text("Hello world\n", encoding="utf8")
 
     # Second attachment
     attachment2_path = Path(tmpdir/"attachment2.csv")
-    attachment2_path.write_text(u"hello,mailmerge\n")
+    attachment2_path.write_text("hello,mailmerge\n", encoding="utf8")
 
     # Template with attachment header
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
         CC: cc1@test.com, cc2@test.com
@@ -500,25 +500,25 @@ def test_complicated(tmpdir):
         </html>
 
 
-    """))
+    """), encoding="utf8")
 
     # Database with utf-8, emoji, quotes, and commas.  Note that quotes are
     # escaped with double quotes, not backslash.
     # https://docs.python.org/3.7/library/csv.html#csv.Dialect.doublequote
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u'''\
+    database_path.write_text(textwrap.dedent('''\
         email,message
         one@test.com,"Hello, ""world"""
         Lazamon<two@test.com>,Laȝamon 😀 klâwen
-    '''))
+    '''), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge in tmpdir with defaults, which includes dry run
     runner = click.testing.CliRunner(mix_stderr=False)
@@ -537,7 +537,7 @@ def test_complicated(tmpdir):
 
     # Verify stdout and stderr after above corrections
     assert result.stderr == ""
-    assert stdout == textwrap.dedent(u"""\
+    assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: one@test.com
         FROM: from@test.com

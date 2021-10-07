@@ -101,7 +101,7 @@ def test_bad_limit(tmpdir):
         FROM: from@test.com
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -109,7 +109,7 @@ def test_bad_limit(tmpdir):
         email
         one@test.com
         two@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -117,7 +117,7 @@ def test_bad_limit(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -136,7 +136,7 @@ def test_limit_combo(tmpdir):
         FROM: from@test.com
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -144,7 +144,7 @@ def test_limit_combo(tmpdir):
         email
         one@test.com
         two@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -152,7 +152,7 @@ def test_limit_combo(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -225,14 +225,14 @@ def test_bad_template(tmpdir):
         FROM: from@test.com
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Normal database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Normal, unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -240,7 +240,7 @@ def test_bad_template(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge, which should exit 1
     runner = click.testing.CliRunner()
@@ -262,14 +262,14 @@ def test_bad_database(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with unmatched quote
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         message
         "hello world
-    """))
+    """), encoding="utf8")
 
     # Normal, unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -277,7 +277,7 @@ def test_bad_database(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge, which should exit 1
     runner = click.testing.CliRunner()
@@ -296,21 +296,21 @@ def test_bad_config(tmpdir):
     template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
-    """))
+    """), encoding="utf8")
 
     # Normal database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         dummy
         asdf
-    """))
+    """), encoding="utf8")
 
     # Server config is missing host
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge, which should exit 1
     runner = click.testing.CliRunner()
@@ -327,11 +327,11 @@ def test_attachment(tmpdir):
     """Verify attachments feature output."""
     # First attachment
     attachment1_path = Path(tmpdir/"attachment1.txt")
-    attachment1_path.write_text("Hello world\n")
+    attachment1_path.write_text("Hello world\n", encoding="utf8")
 
     # Second attachment
     attachment2_path = Path(tmpdir/"attachment2.txt")
-    attachment2_path.write_text("Hello mailmerge\n")
+    attachment2_path.write_text("Hello mailmerge\n", encoding="utf8")
 
     # Template with attachment header
     template_path = Path(tmpdir/"mailmerge_template.txt")
@@ -342,14 +342,14 @@ def test_attachment(tmpdir):
         ATTACHMENT: attachment2.txt
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Simple database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -357,7 +357,7 @@ def test_attachment(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -382,14 +382,14 @@ def test_utf8_template(tmpdir):
         FROM: from@test.com
 
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple database without utf-8 characters
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         to@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -397,7 +397,7 @@ def test_utf8_template(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -442,14 +442,14 @@ def test_utf8_database(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with utf-8 characters and emoji
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         message
         Laȝamon 😀 klâwen
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -457,7 +457,7 @@ def test_utf8_database(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -498,14 +498,14 @@ def test_utf8_headers(tmpdir):
         SUBJECT: Laȝamon 😀 klâwen
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Simple database without utf-8 characters
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         message
         hello
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -513,7 +513,7 @@ def test_utf8_headers(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -560,7 +560,7 @@ def test_resume(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -568,7 +568,7 @@ def test_resume(tmpdir):
         message
         hello
         world
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -576,7 +576,7 @@ def test_resume(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -601,7 +601,7 @@ def test_resume_too_small(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -609,7 +609,7 @@ def test_resume_too_small(tmpdir):
         message
         hello
         world
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -617,7 +617,7 @@ def test_resume_too_small(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run "mailmerge --resume 0" and check output
     runner = click.testing.CliRunner()
@@ -642,7 +642,7 @@ def test_resume_too_big(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -650,7 +650,7 @@ def test_resume_too_big(tmpdir):
         message
         hello
         world
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -658,7 +658,7 @@ def test_resume_too_big(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run and check output
     runner = click.testing.CliRunner()
@@ -678,7 +678,7 @@ def test_resume_hint_on_config_error(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with error on second entry
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -686,14 +686,14 @@ def test_resume_hint_on_config_error(tmpdir):
         message
         hello
         "world
-    """))
+    """), encoding="utf8")
 
     # Server config missing port
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
-    """))
+    """), encoding="utf8")
 
     # Run and check output
     runner = click.testing.CliRunner()
@@ -712,7 +712,7 @@ def test_resume_hint_on_csv_error(tmpdir):
         FROM: from@test.com
 
         {{message}}
-    """))
+    """), encoding="utf8")
 
     # Database with unmatched quote on second entry
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -720,7 +720,7 @@ def test_resume_hint_on_csv_error(tmpdir):
         message
         hello
         "world
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -728,7 +728,7 @@ def test_resume_hint_on_csv_error(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run and check output
     runner = click.testing.CliRunner()
@@ -757,14 +757,14 @@ def test_other_mime_type(tmpdir):
         Content-Type: application/pdf
 
         DUMMY
-    """))
+    """), encoding="utf8")
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -772,7 +772,7 @@ def test_other_mime_type(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
@@ -819,7 +819,7 @@ def test_database_bom(tmpdir):
         FROM: My Self <myself@mydomain.com>
 
         Hello {{name}}
-    """))
+    """), encoding="utf8")
 
     # Copy database containing a BOM
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -832,7 +832,7 @@ def test_database_bom(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """))
+    """), encoding="utf8")
 
     # Run mailmerge
     runner = click.testing.CliRunner()
