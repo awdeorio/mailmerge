@@ -23,7 +23,7 @@ def test_sendmail_ratelimit(mocker, tmp_path):
         host = open-smtp.example.com
         port = 25
         ratelimit = 60
-    """))
+    """), encoding="utf8")
     sendmail_client = SendmailClient(
         config_path,
         dry_run=False,
@@ -81,7 +81,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
         FROM: from@test.com
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
@@ -89,7 +89,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
         email
         one@test.com
         two@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
@@ -98,7 +98,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
         host = open-smtp.example.com
         port = 25
         ratelimit = 60
-    """))
+    """), encoding="utf8")
 
     # Mock SMTP
     mock_smtp = mocker.patch('smtplib.SMTP')

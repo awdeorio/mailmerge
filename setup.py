@@ -6,7 +6,7 @@ import setuptools
 # Read the contents of README file
 PROJECT_DIR = Path(__file__).parent
 README = PROJECT_DIR/"README.md"
-LONG_DESCRIPTION = README.open().read()
+LONG_DESCRIPTION = README.open(encoding="utf8").read()
 
 
 setuptools.setup(

@@ -82,7 +82,7 @@ def test_csv_bad(tmpdir):
     database_path.write_text(textwrap.dedent("""\
         a,b
         1,"2
-    """))
+    """), encoding="utf8")
     with pytest.raises(MailmergeError):
         next(read_csv_database(database_path))
 
@@ -97,7 +97,7 @@ def test_csv_quotes_commas(tmpdir):
     database_path.write_text(textwrap.dedent('''\
         email,message
         one@test.com,"Hello, ""world"""
-    '''))
+    '''), encoding="utf8")
     row = next(read_csv_database(database_path))
     assert row["email"] == "one@test.com"
     assert row["message"] == 'Hello, "world"'
@@ -109,7 +109,7 @@ def test_csv_utf8(tmpdir):
     database_path.write_text(textwrap.dedent("""\
         email,message
         Laȝamon <lam@test.com>,Laȝamon emoji \xf0\x9f\x98\x80 klâwen
-    """))
+    """), encoding="utf8")
     row = next(read_csv_database(database_path))
     assert row["email"] == "Laȝamon <lam@test.com>"
     assert row["message"] == "Laȝamon emoji \xf0\x9f\x98\x80 klâwen"
