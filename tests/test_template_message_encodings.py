@@ -1,5 +1,3 @@
-# coding=utf-8
-# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for TemplateMessage with different encodings.
 
@@ -13,7 +11,7 @@ from mailmerge import TemplateMessage
 def test_utf8_template(tmp_path):
     """Verify UTF8 support in email template."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -47,7 +45,7 @@ def test_utf8_template(tmp_path):
 
     # Verify content
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == textwrap.dedent(u"""\
+    assert plaintext == textwrap.dedent("""\
         From the Tagelied of Wolfram von Eschenbach (Middle High German):
 
         Sîne klâwen durh die wolken sint geslagen,
@@ -66,7 +64,7 @@ def test_utf8_database(tmp_path):
     """Verify UTF8 support when template is rendered with UTF-8 value."""
     # Simple template
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -76,7 +74,7 @@ def test_utf8_database(tmp_path):
     # Render template with context containing unicode characters
     template_message = TemplateMessage(template_path)
     sender, recipients, message = template_message.render({
-        "name": u"Laȝamon",
+        "name": "Laȝamon",
     })
 
     # Verify sender and recipients
@@ -91,13 +89,13 @@ def test_utf8_database(tmp_path):
 
     # Verify content
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hi Laȝamon"
+    assert plaintext == "Hi Laȝamon"
 
 
 def test_utf8_to(tmp_path):
     """Verify UTF8 support in TO field."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: Laȝamon <to@test.com>
         FROM: from@test.com
 
@@ -110,13 +108,13 @@ def test_utf8_to(tmp_path):
 
     # Verify recipient name and email
     assert recipients == ["to@test.com"]
-    assert message["to"] == u"Laȝamon <to@test.com>"
+    assert message["to"] == "Laȝamon <to@test.com>"
 
 
 def test_utf8_from(tmp_path):
     """Verify UTF8 support in FROM field."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: Laȝamon <from@test.com>
 
@@ -128,14 +126,14 @@ def test_utf8_from(tmp_path):
     })
 
     # Verify sender name and email
-    assert sender == u"Laȝamon <from@test.com>"
-    assert message["from"] == u"Laȝamon <from@test.com>"
+    assert sender == "Laȝamon <from@test.com>"
+    assert message["from"] == "Laȝamon <from@test.com>"
 
 
 def test_utf8_subject(tmp_path):
     """Verify UTF8 support in SUBJECT field."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         SUBJECT: Laȝamon
@@ -148,13 +146,13 @@ def test_utf8_subject(tmp_path):
     })
 
     # Verify subject
-    assert message["subject"] == u"Laȝamon"
+    assert message["subject"] == "Laȝamon"
 
 
 def test_emoji(tmp_path):
     """Verify emoji are encoded."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
@@ -170,13 +168,13 @@ def test_emoji(tmp_path):
 
     # Verify content
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hi 😀"
+    assert plaintext == "Hi 😀"
 
 
 def test_emoji_markdown(tmp_path):
     """Verify emoji are encoded in Markdown formatted messages."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: test@example.com
         SUBJECT: Testing mailmerge
         FROM: test@example.com
@@ -203,11 +201,11 @@ def test_emoji_markdown(tmp_path):
     # Verify content, which is base64 encoded grinning face emoji
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u'```\nemoji_string = \U0001f600\n```'
+    assert plaintext == '```\nemoji_string = \U0001f600\n```'
     assert htmltext == (
-        u"<html><body><p><code>"
-        u"emoji_string = \U0001f600"
-        u"</code></p></body></html>"
+        "<html><body><p><code>"
+        "emoji_string = \U0001f600"
+        "</code></p></body></html>"
     )
 
 
@@ -219,7 +217,7 @@ def test_emoji_database(tmp_path):
     encoded message.
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: test@test.com
         SUBJECT: Testing mailmerge
         FROM: test@test.com
@@ -228,7 +226,7 @@ def test_emoji_database(tmp_path):
     """))
     template_message = TemplateMessage(template_path)
     _, _, message = template_message.render({
-        "emoji": u"😀"  # grinning face
+        "emoji": "😀"  # grinning face
     })
 
     # Verify encoding
@@ -237,13 +235,13 @@ def test_emoji_database(tmp_path):
 
     # Verify content
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hi 😀"
+    assert plaintext == "Hi 😀"
 
 
 def test_encoding_us_ascii(tmp_path):
     """Render a simple template with us-ascii encoding."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -259,7 +257,7 @@ def test_encoding_us_ascii(tmp_path):
 def test_encoding_utf8(tmp_path):
     """Render a simple template with UTF-8 encoding."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -270,7 +268,7 @@ def test_encoding_utf8(tmp_path):
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hello Laȝamon"
+    assert plaintext == "Hello Laȝamon"
 
 
 def test_encoding_is8859_1(tmp_path):
@@ -279,7 +277,7 @@ def test_encoding_is8859_1(tmp_path):
     Mailmerge will coerce the encoding to UTF-8.
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
 
@@ -290,7 +288,7 @@ def test_encoding_is8859_1(tmp_path):
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hello L'Haÿ-les-Roses"
+    assert plaintext == "Hello L'Haÿ-les-Roses"
 
 
 def test_encoding_mismatch(tmp_path):
@@ -299,7 +297,7 @@ def test_encoding_mismatch(tmp_path):
     Header says us-ascii, but it contains utf-8.
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         Content-Type: text/plain; charset="us-ascii"
@@ -311,13 +309,13 @@ def test_encoding_mismatch(tmp_path):
     assert message.get_charset() == "utf-8"
     assert message.get_content_charset() == "utf-8"
     plaintext = message.get_payload(decode=True).decode("utf-8")
-    assert plaintext == u"Hello Laȝamon"
+    assert plaintext == "Hello Laȝamon"
 
 
 def test_encoding_multipart(tmp_path):
     """Render a utf-8 template with multipart encoding."""
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         MIME-Version: 1.0
@@ -359,7 +357,7 @@ def test_encoding_multipart(tmp_path):
     assert plaintext_part.get_content_type() == "text/plain"
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     plaintext = plaintext.strip()
-    assert plaintext == u"Hello Laȝamon"
+    assert plaintext == "Hello Laȝamon"
 
     # Verify html part
     assert html_part.get_charset() == "utf-8"
@@ -367,7 +365,7 @@ def test_encoding_multipart(tmp_path):
     assert html_part.get_content_type() == "text/html"
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
+    assert htmltext == "<html><body><p>HelloLaȝamon</p></body></html>"
 
 
 def test_encoding_multipart_mismatch(tmp_path):
@@ -376,7 +374,7 @@ def test_encoding_multipart_mismatch(tmp_path):
     Content-Type headers say "us-ascii", but the message contains utf-8.
     """
     template_path = tmp_path / "template.txt"
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: to@test.com
         FROM: from@test.com
         MIME-Version: 1.0
@@ -418,7 +416,7 @@ def test_encoding_multipart_mismatch(tmp_path):
     assert plaintext_part.get_content_type() == "text/plain"
     plaintext = plaintext_part.get_payload(decode=True).decode("utf-8")
     plaintext = plaintext.strip()
-    assert plaintext == u"Hello Laȝamon"
+    assert plaintext == "Hello Laȝamon"
 
     # Verify html part
     assert html_part.get_charset() == "utf-8"
@@ -426,4 +424,4 @@ def test_encoding_multipart_mismatch(tmp_path):
     assert html_part.get_content_type() == "text/html"
     htmltext = html_part.get_payload(decode=True).decode("utf-8")
     htmltext = re.sub(r"\s+", "", htmltext)  # Strip whitespace
-    assert htmltext == u"<html><body><p>HelloLaȝamon</p></body></html>"
+    assert htmltext == "<html><body><p>HelloLaȝamon</p></body></html>"

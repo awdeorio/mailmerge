@@ -1,5 +1,3 @@
-# coding=utf-8
-# Python 2 source containing unicode https://www.python.org/dev/peps/pep-0263/
 """
 Tests for SMTP server rate limit feature.
 
@@ -7,48 +5,30 @@ Andrew DeOrio <awdeorio@umich.edu>
 """
 import textwrap
 import datetime
-import future.backports.email as email
-import future.backports.email.parser  # pylint: disable=unused-import
+from pathlib import Path
+import email
+import email.parser
 import freezegun
 import pytest
-import click
 import click.testing
 from mailmerge import SendmailClient, MailmergeRateLimitError
 from mailmerge.__main__ import main
 
-try:
-    from unittest import mock  # Python 3
-except ImportError:
-    import mock  # Python 2
 
-# Python 2 pathlib support requires backport
-try:
-    from pathlib2 import Path
-except ImportError:
-    from pathlib import Path
-
-# The sh library triggers lot of false no-member errors
-# pylint: disable=no-member
-
-# We're going to use mock_SMTP because it mimics the real SMTP library
-# pylint: disable=invalid-name
-
-
-@mock.patch('smtplib.SMTP')
-def test_sendmail_ratelimit(mock_SMTP, tmp_path):
+def test_sendmail_ratelimit(mocker, tmp_path):
     """Verify SMTP library calls."""
     config_path = tmp_path/"server.conf"
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
         ratelimit = 60
-    """))
+    """), encoding="utf8")
     sendmail_client = SendmailClient(
         config_path,
         dry_run=False,
     )
-    message = email.message_from_string(u"""
+    message = email.message_from_string("""
         TO: to@test.com
         SUBJECT: Testing mailmerge
         FROM: from@test.com
@@ -56,13 +36,16 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
         Hello world
     """)
 
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+
     # First message
     sendmail_client.sendmail(
         sender="from@test.com",
         recipients=["to@test.com"],
         message=message,
     )
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 1
 
     # Second message exceeds the rate limit, doesn't try to send a message
@@ -89,34 +72,36 @@ def test_sendmail_ratelimit(mock_SMTP, tmp_path):
     assert smtp.sendmail.call_count == 2
 
 
-@mock.patch('smtplib.SMTP')
-def test_stdout_ratelimit(mock_SMTP, tmpdir):
+def test_stdout_ratelimit(mocker, tmpdir):
     """Verify SMTP server ratelimit parameter."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
-    template_path.write_text(textwrap.dedent(u"""\
+    template_path.write_text(textwrap.dedent("""\
         TO: {{email}}
         FROM: from@test.com
 
         Hello world
-    """))
+    """), encoding="utf8")
 
     # Simple database with two entries
     database_path = Path(tmpdir/"mailmerge_database.csv")
-    database_path.write_text(textwrap.dedent(u"""\
+    database_path.write_text(textwrap.dedent("""\
         email
         one@test.com
         two@test.com
-    """))
+    """), encoding="utf8")
 
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
-    config_path.write_text(textwrap.dedent(u"""\
+    config_path.write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
         ratelimit = 60
-    """))
+    """), encoding="utf8")
+
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
 
     # Run mailmerge
     before = datetime.datetime.now()
@@ -131,10 +116,10 @@ def test_stdout_ratelimit(mock_SMTP, tmpdir):
         )
     after = datetime.datetime.now()
     assert after - before > datetime.timedelta(seconds=1)
-    smtp = mock_SMTP.return_value.__enter__.return_value
+    smtp = mock_smtp.return_value.__enter__.return_value
     assert smtp.sendmail.call_count == 2
     assert result.exit_code == 0
-    # assert result.stderr == ""  # replace when we drop Python 3.4 support
+    assert result.stderr == ""
     assert ">>> message 1 sent" in result.stdout
     assert ">>> rate limit exceeded, waiting ..." in result.stdout
     assert ">>> message 2 sent" in result.stdout

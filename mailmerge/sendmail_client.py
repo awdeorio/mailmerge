@@ -10,7 +10,6 @@ import configparser
 import getpass
 import datetime
 from . import exceptions
-from . import utils
 
 
 # Type to store info read from config file
@@ -20,12 +19,8 @@ MailmergeConfig = collections.namedtuple(
 )
 
 
-class SendmailClient(object):
+class SendmailClient:
     """Represent a client connection to an SMTP server."""
-
-    # We need to inherit from object for Python 2 compantibility
-    # https://python-future.org/compatible_idioms.html#custom-class-behaviour
-    # pylint: disable=bad-option-value,useless-object-inheritance
 
     def __init__(self, config_path, dry_run=False):
         """Read configuration from server configuration file."""
@@ -47,9 +42,7 @@ class SendmailClient(object):
             username = parser.get("smtp_server", "username", fallback=None)
             ratelimit = parser.getint("smtp_server", "ratelimit", fallback=0)
         except (configparser.Error, ValueError) as err:
-            raise exceptions.MailmergeError(
-                "{}: {}".format(self.config_path, err)
-            )
+            raise exceptions.MailmergeError(f"{self.config_path}: {err}")
 
         # Coerce legacy option "security = Never"
         if security == "Never":
@@ -58,15 +51,14 @@ class SendmailClient(object):
         # Verify security type
         if security not in [None, "SSL/TLS", "STARTTLS"]:
             raise exceptions.MailmergeError(
-                "{}: unrecognized security type: '{}'"
-                .format(self.config_path, security)
+                f"{self.config_path}: unrecognized security type: '{security}'"
             )
 
         # Verify username
         if security is not None and username is None:
             raise exceptions.MailmergeError(
-                "{}: username is required for security type '{}'"
-                .format(self.config_path, security)
+                f"{self.config_path}: username is required for "
+                f"security type '{security}'"
             )
 
         # Save validated configuration
@@ -75,12 +67,7 @@ class SendmailClient(object):
         )
 
     def sendmail(self, sender, recipients, message):
-        """Send email message.
-
-        Note that we can't use the elegant smtp.send_message(message)" because
-        Python 2 doesn't support it.  Both Python 2 and Python 3 support
-        smtp.sendmail(sender, recipients, flattened_message_str).
-        """
+        """Send email message."""
         if self.dry_run:
             return
 
@@ -93,13 +80,14 @@ class SendmailClient(object):
 
         # Ask for password if necessary
         if self.config.security is not None and self.password is None:
-            prompt = ">>> password for {} on {}: ".format(
-                self.config.username, self.config.host)
-            self.password = getpass.getpass(prompt)
+            self.password = getpass.getpass(
+                f">>> password for {self.config.username} on "
+                f"{self.config.host}: "
+            )
 
         # Send
         try:
-            message_flattened = utils.flatten_message(message)
+            message_flattened = str(message)
             host, port = self.config.host, self.config.port
             if self.config.security == "SSL/TLS":
                 with smtplib.SMTP_SSL(host, port) as smtp:
@@ -117,18 +105,16 @@ class SendmailClient(object):
                     smtp.sendmail(sender, recipients, message_flattened)
         except smtplib.SMTPAuthenticationError as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to authenticate user '{}': {}"
-                .format(host, port, self.config.username, err)
+                f"{host}:{port} failed to authenticate "
+                f"user '{self.config.username}': {err}"
             )
         except smtplib.SMTPException as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to send message: {}"
-                .format(host, port, err)
+                f"{host}:{port} failed to send message: {err}"
             )
         except socket.error as err:
             raise exceptions.MailmergeError(
-                "{}:{} failed to connect to server: {}"
-                .format(host, port, err)
+                f"{host}:{port} failed to connect to server: {err}"
             )
 
         # Update timestamp of last sent message
