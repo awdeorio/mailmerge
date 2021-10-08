@@ -25,7 +25,7 @@ setuptools.setup(
         "click",
         "jinja2",
         "markdown",
-        "html5"
+        "html5lib"
     ],
     extras_require={
         "dev": [
