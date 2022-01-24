@@ -49,7 +49,7 @@ class SendmailClient:
             security = None
 
         # Verify security type
-        if security not in [None, "SSL/TLS", "STARTTLS"]:
+        if security not in [None, "SSL/TLS", "STARTTLS", "PLAIN"]:
             raise exceptions.MailmergeError(
                 f"{self.config_path}: unrecognized security type: '{security}'"
             )
@@ -98,6 +98,10 @@ class SendmailClient:
                     smtp.ehlo()
                     smtp.starttls()
                     smtp.ehlo()
+                    smtp.login(self.config.username, self.password)
+                    smtp.sendmail(sender, recipients, message_flattened)
+            elif self.config.security == "PLAIN":
+                with smtplib.SMTP(host, port) as smtp:
                     smtp.login(self.config.username, self.password)
                     smtp.sendmail(sender, recipients, message_flattened)
             elif self.config.security is None:
