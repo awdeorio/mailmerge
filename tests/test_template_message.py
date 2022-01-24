@@ -660,10 +660,7 @@ def test_attachment_empty(tmp_path):
 
 
 def test_contenttype_attachment_html_body(tmpdir):
-    """
-    Verify that the content-type of the message is correctly retained with an
-    HTML body.
-    """
+    """Content-type is preserved in HTML body."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
     attachment_path.write_text("Hello world\n", encoding="utf8")
@@ -691,10 +688,7 @@ def test_contenttype_attachment_html_body(tmpdir):
 
 
 def test_contenttype_attachment_markdown_body(tmpdir):
-    """
-    Verify that the content-types of the MarkDown message are correct when
-    attachments are included.
-    """
+    """Content-type for MarkDown messages with attachments."""
     # Simple attachment
     attachment_path = Path(tmpdir/"attachment.txt")
     attachment_path.write_text("Hello world\n", encoding="utf8")
@@ -785,7 +779,7 @@ def test_duplicate_headers_markdown(tmp_path):
 
 
 def test_attachment_image_in_markdown(tmp_path):
-    """Images sent as attachments should get linked correctly in images"""
+    """Images sent as attachments should get linked correctly in images."""
     shutil.copy(str(utils.TESTDATA/"attachment_3.jpg"), str(tmp_path))
 
     # Create template .txt file
@@ -842,7 +836,7 @@ def test_attachment_image_in_markdown(tmp_path):
 
 
 def test_content_id_header_for_attachments(tmpdir):
-    """All attachments should get a content-id header"""
+    """All attachments should get a content-id header."""
     attachment_path = Path(tmpdir/"attachment.txt")
     attachment_path.write_text("Hello world\n", encoding="utf8")
 
