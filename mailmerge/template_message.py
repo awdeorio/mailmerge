@@ -95,7 +95,7 @@ class TemplateMessage:
             return
 
         # Create empty multipart message
-        multipart_message = email.mime.multipart.MIMEMultipart('mixed')
+        multipart_message = email.mime.multipart.MIMEMultipart('related')
 
         # Copy headers.  Avoid duplicate Content-Type and MIME-Version headers,
         # which we set explicitely.  MIME-Version was set when we created an
