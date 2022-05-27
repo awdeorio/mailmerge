@@ -300,7 +300,7 @@ def test_markdown(tmp_path):
 
     # Verify message is multipart
     assert message.is_multipart()
-    assert message.get_content_subtype() == "mixed"
+    assert message.get_content_subtype() == "related"
 
     # Make sure there is a single multipart/alternative payload
     assert len(message.get_payload()) == 1
