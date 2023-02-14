@@ -58,7 +58,7 @@ class TemplateMessage:
         self._transform_markdown()
         self._transform_attachments()
         self._transform_attachment_references()
-        self._message.__setitem__('Date', email.utils.formatdate())
+        self._message.Date = email.utils.formatdate()
         assert self._sender
         assert self._recipients
         assert self._message
@@ -79,7 +79,7 @@ class TemplateMessage:
             email.utils.getaddresses(self._message.get_all("CC", [])) + \
             email.utils.getaddresses(self._message.get_all("BCC", []))
         self._recipients = [x[1] for x in addrs]
-        self._message.__delitem__("bcc")
+        del self._message.bcc
         self._sender = self._message["from"]
 
     def _make_message_multipart(self):
