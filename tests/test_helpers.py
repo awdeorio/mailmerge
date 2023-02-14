@@ -31,7 +31,7 @@ def test_enumerate_range_stop_value():
 def test_enumerate_range_stop_zero():
     """Verify stop=0."""
     output = list(enumerate_range(["a", "b", "c"], stop=0))
-    assert output == []
+    assert not output
 
 
 def test_enumerate_range_stop_too_big():
@@ -61,13 +61,13 @@ def test_enumerate_range_start_last_one():
 def test_enumerate_range_start_length():
     """Verify start=length."""
     output = list(enumerate_range(["a", "b", "c"], start=3))
-    assert output == []
+    assert not output
 
 
 def test_enumerate_range_start_too_big():
     """Verify start past the end."""
     output = list(enumerate_range(["a", "b", "c"], start=10))
-    assert output == []
+    assert not output
 
 
 def test_enumerate_range_start_stop():
