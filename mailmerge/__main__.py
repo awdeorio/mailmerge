@@ -258,9 +258,8 @@ def create_sample_input_files(template_path, database_path, config_path):
 def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time.
 
-    Automatically detect the dialect using the CSV library's sniffer class.
-    For example, comma-delimiter, tab-delimited, etc.
-    https://docs.python.org/3/library/csv.html#csv.Sniffer
+    Automatically detect the format ("dialect") using the CSV library's sniffer
+    class.  For example, comma-delimited, tab-delimited, etc.
 
     Use strict syntax checking, which will trigger errors for things like
     unclosed quotes.
@@ -270,10 +269,9 @@ def read_csv_database(database_path):
     #93 https://github.com/awdeorio/mailmerge/issues/93
 
     """
-
     with database_path.open(encoding="utf-8-sig") as database_file:
-        database_head = database_file.read(1024)
-        csvdialect = csv.Sniffer().sniff(database_head, delimiters=",;\t")
+        sample = database_file.read(1024)
+        csvdialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
         csvdialect.strict = True
         database_file.seek(0)
         reader = csv.DictReader(database_file, dialect=csvdialect)
