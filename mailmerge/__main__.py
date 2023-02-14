@@ -255,11 +255,34 @@ def create_sample_input_files(template_path, database_path, config_path):
     """))
 
 
-def read_csv_database(database_path):
-    """Read database CSV file, providing one line at a time.
+def detect_database_format(database_file):
+    """Automatically detect the database format.
 
     Automatically detect the format ("dialect") using the CSV library's sniffer
-    class.  For example, comma-delimited, tab-delimited, etc.
+    class.  For example, comma-delimited, tab-delimited, etc.  Default to
+    StrictExcel if automatic detection fails.
+
+    """
+    class StrictExcel(csv.excel):
+        # Our helper class is really simple
+        # pylint: disable=too-few-public-methods, missing-class-docstring
+        strict = True
+
+    # Read a sample from database
+    sample = database_file.read(1024)
+    database_file.seek(0)
+
+    # Attempt automatic format detection, fall back on StrictExcel default
+    try:
+        csvdialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
+    except csv.Error:
+        csvdialect = StrictExcel
+
+    return csvdialect
+
+
+def read_csv_database(database_path):
+    """Read database CSV file, providing one line at a time.
 
     Use strict syntax checking, which will trigger errors for things like
     unclosed quotes.
@@ -270,10 +293,8 @@ def read_csv_database(database_path):
 
     """
     with database_path.open(encoding="utf-8-sig") as database_file:
-        sample = database_file.read(1024)
-        csvdialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
+        csvdialect = detect_database_format(database_file)
         csvdialect.strict = True
-        database_file.seek(0)
         reader = csv.DictReader(database_file, dialect=csvdialect)
         try:
             for row in reader:
