@@ -267,13 +267,12 @@ def read_csv_database(database_path):
     #93 https://github.com/awdeorio/mailmerge/issues/93
 
     """
-    class StrictExcel(csv.excel):
-        # Our helper class is really simple
-        # pylint: disable=too-few-public-methods, missing-class-docstring
-        strict = True
 
     with database_path.open(encoding="utf-8-sig") as database_file:
-        reader = csv.DictReader(database_file, dialect=StrictExcel)
+        csvdialect = csv.Sniffer().sniff(database_file.read(), delimiters=",;\t")
+        csvdialect.strict = True
+        database_file.seek(0)
+        reader = csv.DictReader(database_file, dialect=csvdialect)
         try:
             for row in reader:
                 yield row
