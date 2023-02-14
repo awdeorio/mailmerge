@@ -272,7 +272,8 @@ def read_csv_database(database_path):
     """
 
     with database_path.open(encoding="utf-8-sig") as database_file:
-        csvdialect = csv.Sniffer().sniff(database_file.read(), delimiters=",;\t")
+        database_head = database_file.read(1024)
+        csvdialect = csv.Sniffer().sniff(database_head, delimiters=",;\t")
         csvdialect.strict = True
         database_file.seek(0)
         reader = csv.DictReader(database_file, dialect=csvdialect)
