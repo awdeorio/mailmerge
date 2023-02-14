@@ -240,6 +240,14 @@ def create_sample_input_files(template_path, database_path, config_path):
             # username = YOUR_USERNAME_HERE
             # ratelimit = 0
 
+            # Example: Plain security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+            # security = PLAIN
+            # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
+
             # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
