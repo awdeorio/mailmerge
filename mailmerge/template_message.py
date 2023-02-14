@@ -74,11 +74,14 @@ class TemplateMessage:
 
     def _transform_recipients(self):
         """Extract sender and recipients from FROM, TO, CC and BCC fields."""
+        # The docs recommend using __delitem__()
+        # https://docs.python.org/3/library/email.message.html#email.message.EmailMessage.__delitem__
+        # pylint: disable=unnecessary-dunder-call
         addrs = email.utils.getaddresses(self._message.get_all("TO", [])) + \
             email.utils.getaddresses(self._message.get_all("CC", [])) + \
             email.utils.getaddresses(self._message.get_all("BCC", []))
         self._recipients = [x[1] for x in addrs]
-        self._message.__delitem__("bcc")  # pylint: disable=unnecessary-dunder-call
+        self._message.__delitem__("bcc")
         self._sender = self._message["from"]
 
     def _make_message_multipart(self):
