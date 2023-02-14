@@ -250,6 +250,48 @@ def test_security_starttls(mocker, tmp_path):
     assert smtp.sendmail.call_count == 1
 
 
+def test_security_plain(mocker, tmp_path):
+    """Verify plain security configuration."""
+    # Config for Plain SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = newman.eecs.umich.edu
+        port = 25
+        security = PLAIN
+        username = YOUR_USERNAME_HERE
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string("Hello world")
+
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
+    # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    sendmail_client.sendmail(
+        sender="test@test.com",
+        recipients=["test@test.com"],
+        message=message,
+    )
+
+    # Verify SMTP library calls
+    assert mock_getpass.call_count == 1
+    assert mock_smtp.call_count == 1
+    assert mock_smtp_ssl.call_count == 0
+    smtp = mock_smtp.return_value.__enter__.return_value
+    assert smtp.ehlo.call_count == 0
+    assert smtp.starttls.call_count == 0
+    assert smtp.login.call_count == 1
+    assert smtp.sendmail.call_count == 1
+
+
 def test_security_ssl(mocker, tmp_path):
     """Verify open (Never) security configuration."""
     # Config for SSL SMTP server
