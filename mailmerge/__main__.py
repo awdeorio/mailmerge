@@ -258,8 +258,11 @@ def create_sample_input_files(template_path, database_path, config_path):
 def read_csv_database(database_path):
     """Read database CSV file, providing one line at a time.
 
-    We'll use a class to modify the csv library's default dialect ('excel') to
-    enable strict syntax checking.  This will trigger errors for things like
+    Automatically detect the dialect using the CSV library's sniffer class.
+    For example, comma-delimiter, tab-delimited, etc.
+    https://docs.python.org/3/library/csv.html#csv.Sniffer
+
+    Use strict syntax checking, which will trigger errors for things like
     unclosed quotes.
 
     We open the file with the utf-8-sig encoding, which skips a byte order mark
