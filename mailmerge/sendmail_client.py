@@ -10,7 +10,7 @@ import configparser
 import getpass
 import datetime
 from . import exceptions
-
+import base64
 
 # Type to store info read from config file
 MailmergeConfig = collections.namedtuple(
@@ -49,7 +49,7 @@ class SendmailClient:
             security = None
 
         # Verify security type
-        if security not in [None, "SSL/TLS", "STARTTLS", "PLAIN"]:
+        if security not in [None, "SSL/TLS", "STARTTLS", "PLAIN", "XOAUTH"]:
             raise exceptions.MailmergeError(
                 f"{self.config_path}: unrecognized security type: '{security}'"
             )
@@ -103,6 +103,19 @@ class SendmailClient:
             elif self.config.security == "PLAIN":
                 with smtplib.SMTP(host, port) as smtp:
                     smtp.login(self.config.username, self.password)
+                    smtp.sendmail(sender, recipients, message_flattened)
+            elif self.config.security == "XOAUTH":
+                with smtplib.SMTP(host, port) as smtp:
+                    smtp.ehlo()
+                    smtp.starttls()
+                    smtp.ehlo()
+                    access_token = self.password
+                    C_A = b'\x01'
+                    user = ("user=" + self.config.username).encode("ascii")
+                    btoken = ("auth=Bearer " + access_token).encode("ascii")
+                    xoauth2_bytes = user + C_A + btoken + C_A + C_A
+                    smtp.docmd('AUTH XOAUTH2')
+                    smtp.docmd(str(base64.b64encode(xoauth2_bytes).decode("utf-8")))
                     smtp.sendmail(sender, recipients, message_flattened)
             elif self.config.security is None:
                 with smtplib.SMTP(host, port) as smtp:
