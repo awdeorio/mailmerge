@@ -18,8 +18,8 @@ dependencies = [
     "html5lib"
 ]
 
-# [project.scripts]
-# mailmerge = mailmerge.__main__:main
+[project.scripts]
+mailmerge = "mailmerge.__main__:main"
 
 [tool.setuptools]
 packages = ["mailmerge"]
