@@ -58,7 +58,7 @@ class TemplateMessage:
         self._transform_markdown()
         self._transform_attachments()
         self._transform_attachment_references()
-        self._message.__setitem__('Date', email.utils.formatdate())
+        self._message.add_header('Date', email.utils.formatdate())
         assert self._sender
         assert self._recipients
         assert self._message
@@ -74,7 +74,9 @@ class TemplateMessage:
 
     def _transform_recipients(self):
         """Extract sender and recipients from FROM, TO, CC and BCC fields."""
-        # Extract recipients
+        # The docs recommend using __delitem__()
+        # https://docs.python.org/3/library/email.message.html#email.message.EmailMessage.__delitem__
+        # pylint: disable=unnecessary-dunder-call
         addrs = email.utils.getaddresses(self._message.get_all("TO", [])) + \
             email.utils.getaddresses(self._message.get_all("CC", [])) + \
             email.utils.getaddresses(self._message.get_all("BCC", []))
