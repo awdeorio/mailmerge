@@ -21,8 +21,8 @@ dependencies = [
 [project.scripts]
 mailmerge = "mailmerge.__main__:main"
 
+[project.urls]
+homepage = "https://github.com/awdeorio/mailmerge/"
+
 [tool.setuptools]
 packages = ["mailmerge"]
-
-[tool.poetry]
-homepage = "https://github.com/awdeorio/mailmerge/"
