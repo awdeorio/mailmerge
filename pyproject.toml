@@ -18,6 +18,23 @@ dependencies = [
     "html5lib"
 ]
 
+[project.optional-dependencies]
+dev = [
+    "pdbpp",
+    "twine",
+    "tox",
+]
+test = [
+    "check-manifest",
+    "freezegun",
+    "pycodestyle",
+    "pydocstyle",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+]
+
 [project.scripts]
 mailmerge = "mailmerge.__main__:main"
 
