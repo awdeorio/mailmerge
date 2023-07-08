@@ -248,6 +248,13 @@ def create_sample_input_files(template_path, database_path, config_path):
             # username = YOUR_USERNAME_HERE
             # ratelimit = 0
 
+            # Example: XOAUTH
+            # [smtp_server]
+            # host = smtp.office365.com
+            # port = 587
+            # security = XOAUTH
+            # username = username@example.com
+
             # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
