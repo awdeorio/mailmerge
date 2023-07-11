@@ -240,6 +240,14 @@ def create_sample_input_files(template_path, database_path, config_path):
             # username = YOUR_USERNAME_HERE
             # ratelimit = 0
 
+            # Example: Plain security
+            # [smtp_server]
+            # host = newman.eecs.umich.edu
+            # port = 25
+            # security = PLAIN
+            # username = YOUR_USERNAME_HERE
+            # ratelimit = 0
+
             # Example: No security
             # [smtp_server]
             # host = newman.eecs.umich.edu
@@ -255,16 +263,12 @@ def create_sample_input_files(template_path, database_path, config_path):
     """))
 
 
-def read_csv_database(database_path):
-    """Read database CSV file, providing one line at a time.
+def detect_database_format(database_file):
+    """Automatically detect the database format.
 
-    We'll use a class to modify the csv library's default dialect ('excel') to
-    enable strict syntax checking.  This will trigger errors for things like
-    unclosed quotes.
-
-    We open the file with the utf-8-sig encoding, which skips a byte order mark
-    (BOM), if any.  Sometimes Excel will save CSV files with a BOM.  See Issue
-    #93 https://github.com/awdeorio/mailmerge/issues/93
+    Automatically detect the format ("dialect") using the CSV library's sniffer
+    class.  For example, comma-delimited, tab-delimited, etc.  Default to
+    StrictExcel if automatic detection fails.
 
     """
     class StrictExcel(csv.excel):
@@ -272,8 +276,34 @@ def read_csv_database(database_path):
         # pylint: disable=too-few-public-methods, missing-class-docstring
         strict = True
 
+    # Read a sample from database
+    sample = database_file.read(1024)
+    database_file.seek(0)
+
+    # Attempt automatic format detection, fall back on StrictExcel default
+    try:
+        csvdialect = csv.Sniffer().sniff(sample, delimiters=",;\t")
+    except csv.Error:
+        csvdialect = StrictExcel
+
+    return csvdialect
+
+
+def read_csv_database(database_path):
+    """Read database CSV file, providing one line at a time.
+
+    Use strict syntax checking, which will trigger errors for things like
+    unclosed quotes.
+
+    We open the file with the utf-8-sig encoding, which skips a byte order mark
+    (BOM), if any.  Sometimes Excel will save CSV files with a BOM.  See Issue
+    #93 https://github.com/awdeorio/mailmerge/issues/93
+
+    """
     with database_path.open(encoding="utf-8-sig") as database_file:
-        reader = csv.DictReader(database_file, dialect=StrictExcel)
+        csvdialect = detect_database_format(database_file)
+        csvdialect.strict = True
+        reader = csv.DictReader(database_file, dialect=csvdialect)
         try:
             for row in reader:
                 yield row

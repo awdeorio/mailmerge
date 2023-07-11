@@ -58,7 +58,7 @@ class TemplateMessage:
         self._transform_markdown()
         self._transform_attachments()
         self._transform_attachment_references()
-        self._message.__setitem__('Date', email.utils.formatdate())
+        self._message.add_header('Date', email.utils.formatdate())
         assert self._sender
         assert self._recipients
         assert self._message
@@ -74,7 +74,9 @@ class TemplateMessage:
 
     def _transform_recipients(self):
         """Extract sender and recipients from FROM, TO, CC and BCC fields."""
-        # Extract recipients
+        # The docs recommend using __delitem__()
+        # https://docs.python.org/3/library/email.message.html#email.message.EmailMessage.__delitem__
+        # pylint: disable=unnecessary-dunder-call
         addrs = email.utils.getaddresses(self._message.get_all("TO", [])) + \
             email.utils.getaddresses(self._message.get_all("CC", [])) + \
             email.utils.getaddresses(self._message.get_all("BCC", []))
@@ -87,7 +89,7 @@ class TemplateMessage:
         Convert self._message into a multipart message.
 
         Specifically, if the message's content-type is not multipart, this
-        method will create a new `multipart/mixed` message, copy message
+        method will create a new `multipart/related` message, copy message
         headers and re-attach the original payload.
         """
         # Do nothing if message already multipart
@@ -95,7 +97,7 @@ class TemplateMessage:
             return
 
         # Create empty multipart message
-        multipart_message = email.mime.multipart.MIMEMultipart('mixed')
+        multipart_message = email.mime.multipart.MIMEMultipart('related')
 
         # Copy headers.  Avoid duplicate Content-Type and MIME-Version headers,
         # which we set explicitely.  MIME-Version was set when we created an
@@ -128,13 +130,13 @@ class TemplateMessage:
         Specifically, if the message's content-type is `text/markdown`, we
         transform `self._message` to have the following structure:
 
-        multipart/mixed
+        multipart/related
          └── multipart/alternative
              ├── text/plain (original markdown plaintext)
              └── text/html (converted markdown)
 
         Attachments should be added as subsequent payload items of the
-        top-level `multipart/mixed` message.
+        top-level `multipart/related` message.
         """
         # Do nothing if Content-Type is not text/markdown
         if not self._message['Content-Type'].startswith("text/markdown"):
@@ -186,11 +188,11 @@ class TemplateMessage:
         """
         Parse attachment headers and generate content-id headers for each.
 
-        Attachments are added to the payload of a `multipart/mixed` message.
+        Attachments are added to the payload of a `multipart/related` message.
         For instance, a plaintext message with attachments would have the
         following structure:
 
-        multipart/mixed
+        multipart/related
          ├── text/plain
          ├── attachment1
          └── attachment2
@@ -199,7 +201,7 @@ class TemplateMessage:
         then the message would have the following structure after transforming
         markdown and attachments:
 
-        multipart/mixed
+        multipart/related
          ├── multipart/alternative
          │   ├── text/plain
          │   └── text/html
