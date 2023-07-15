@@ -133,6 +133,10 @@ class SendmailClient:
             raise exceptions.MailmergeError(
                 f"{host}:{port} failed to connect to server: {err}"
             )
+        except UnicodeEncodeError as err:
+            raise exceptions.MailmergeError(
+                f"{host}:{port} failed to encode: {err}, username and XOAUTH access token must be ASCII"
+            )
 
         # Update timestamp of last sent message
         self.lastsent = now
