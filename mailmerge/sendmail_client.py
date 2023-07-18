@@ -9,8 +9,8 @@ import smtplib
 import configparser
 import getpass
 import datetime
-from . import exceptions
 import base64
+from . import exceptions
 
 # Type to store info read from config file
 MailmergeConfig = collections.namedtuple(
