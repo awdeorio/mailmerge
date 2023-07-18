@@ -249,6 +249,9 @@ def create_sample_input_files(template_path, database_path, config_path):
             # ratelimit = 0
 
             # Example: XOAUTH
+            # Enter your token at the password prompt.  For Microsoft OAuth
+            # authentication, a token can be obtained with the oauth2ms tool
+            # https://github.com/harishkrupo/oauth2ms
             # [smtp_server]
             # host = smtp.office365.com
             # port = 587
