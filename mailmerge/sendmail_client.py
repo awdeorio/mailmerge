@@ -106,16 +106,15 @@ class SendmailClient:
                     smtp.sendmail(sender, recipients, message_flattened)
             elif self.config.security == "XOAUTH":
                 with smtplib.SMTP(host, port) as smtp:
-                    access_token = self.password
-                    C_A = b'\x01'
-                    user = ("user=" + self.config.username).encode("ascii")
-                    btoken = ("auth=Bearer " + access_token).encode("ascii")
-                    xoauth2_bytes = user + C_A + btoken + C_A + C_A
+                    xoauth2 = (
+                        f"user={self.config.username}\x01"
+                        f"auth=Bearer {self.password}\x01\x01"
+                    ).encode("ascii")
                     smtp.ehlo()
                     smtp.starttls()
                     smtp.ehlo()
                     smtp.docmd('AUTH XOAUTH2')
-                    smtp.docmd(str(base64.b64encode(xoauth2_bytes).decode("utf-8")))
+                    smtp.docmd(str(base64.b64encode(xoauth2).decode("utf-8")))
                     smtp.sendmail(sender, recipients, message_flattened)
             elif self.config.security is None:
                 with smtplib.SMTP(host, port) as smtp:
