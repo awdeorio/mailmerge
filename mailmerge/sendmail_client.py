@@ -114,6 +114,7 @@ class SendmailClient:
                     user = ("user=" + self.config.username).encode("ascii")
                     btoken = ("auth=Bearer " + access_token).encode("ascii")
                     xoauth2_bytes = user + C_A + btoken + C_A + C_A
+                    breakpoint()
                     smtp.docmd('AUTH XOAUTH2')
                     smtp.docmd(str(base64.b64encode(xoauth2_bytes).decode("utf-8")))
                     smtp.sendmail(sender, recipients, message_flattened)
@@ -135,7 +136,8 @@ class SendmailClient:
             )
         except UnicodeEncodeError as err:
             raise exceptions.MailmergeError(
-                f"{host}:{port} failed to encode: {err}, username and XOAUTH access token must be ASCII"
+                f"{host}:{port} failed to encode: {err}, "
+                "username and XOAUTH access token must be ASCII"
             )
 
         # Update timestamp of last sent message
