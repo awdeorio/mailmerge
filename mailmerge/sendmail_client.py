@@ -155,8 +155,8 @@ class SendmailClient:
             xoauth2 = xoauth2.encode("ascii")
         except UnicodeEncodeError as err:
             raise exceptions.MailmergeError(
-                f"Failed to encode: {err}, "
-                "username and XOAUTH access token must be ASCII"
+                f"Username and XOAUTH access token must be ASCII '{xoauth2}'. "
+                f"{err}, "
             )
         message_flattened = str(message)
         with smtplib.SMTP(self.config.host, self.config.port) as smtp:

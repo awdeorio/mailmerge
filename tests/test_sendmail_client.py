@@ -303,6 +303,38 @@ def test_security_xoauth(mocker, tmp_path):
         b'user=username@example.com\x01auth=Bearer password\x01\x01'
 
 
+def test_security_xoauth_bad_username(mocker, tmp_path):
+    """Verify exception is thrown for UTF-8 username."""
+    # Config for XOAUTH SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = smtp.office365.com
+        port = 587
+        security = XOAUTH
+        username = Laȝamon@example.com
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string("Hello world")
+
+    # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    with pytest.raises(MailmergeError) as err:
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+    # Verify exception string
+    assert "Username and XOAUTH access token must be ASCII" in str(err.value)
+
+
 def test_security_plain(mocker, tmp_path):
     """Verify plain security configuration."""
     # Config for Plain SMTP server
