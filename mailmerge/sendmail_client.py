@@ -86,39 +86,18 @@ class SendmailClient:
             )
 
         # Send
+        host, port = self.config.host, self.config.port
         try:
-            message_flattened = str(message)
-            host, port = self.config.host, self.config.port
             if self.config.security == "SSL/TLS":
-                with smtplib.SMTP_SSL(host, port) as smtp:
-                    smtp.login(self.config.username, self.password)
-                    smtp.sendmail(sender, recipients, message_flattened)
+                self.sendmail_ssltls(sender, recipients, message)
             elif self.config.security == "STARTTLS":
-                with smtplib.SMTP(host, port) as smtp:
-                    smtp.ehlo()
-                    smtp.starttls()
-                    smtp.ehlo()
-                    smtp.login(self.config.username, self.password)
-                    smtp.sendmail(sender, recipients, message_flattened)
+                self.sendmail_starttls(sender, recipients, message)
             elif self.config.security == "PLAIN":
-                with smtplib.SMTP(host, port) as smtp:
-                    smtp.login(self.config.username, self.password)
-                    smtp.sendmail(sender, recipients, message_flattened)
+                self.sendmail_plain(sender, recipients, message)
             elif self.config.security == "XOAUTH":
-                with smtplib.SMTP(host, port) as smtp:
-                    xoauth2 = (
-                        f"user={self.config.username}\x01"
-                        f"auth=Bearer {self.password}\x01\x01"
-                    ).encode("ascii")
-                    smtp.ehlo()
-                    smtp.starttls()
-                    smtp.ehlo()
-                    smtp.docmd('AUTH XOAUTH2')
-                    smtp.docmd(str(base64.b64encode(xoauth2).decode("utf-8")))
-                    smtp.sendmail(sender, recipients, message_flattened)
+                self.sendmail_xoauth(sender, recipients, message)
             elif self.config.security is None:
-                with smtplib.SMTP(host, port) as smtp:
-                    smtp.sendmail(sender, recipients, message_flattened)
+                self.sendmail_clear(sender, recipients, message)
         except smtplib.SMTPAuthenticationError as err:
             raise exceptions.MailmergeError(
                 f"{host}:{port} failed to authenticate "
@@ -132,11 +111,58 @@ class SendmailClient:
             raise exceptions.MailmergeError(
                 f"{host}:{port} failed to connect to server: {err}"
             )
-        except UnicodeEncodeError as err:
-            raise exceptions.MailmergeError(
-                f"{host}:{port} failed to encode: {err}, "
-                "username and XOAUTH access token must be ASCII"
-            )
 
         # Update timestamp of last sent message
         self.lastsent = now
+
+    def sendmail_ssltls(self, sender, recipients, message):
+        """Send email message with SSL/TLS security."""
+        message_flattened = str(message)
+        with smtplib.SMTP_SSL(self.config.host, self.config.port) as smtp:
+            smtp.login(self.config.username, self.password)
+            smtp.sendmail(sender, recipients, message_flattened)
+
+    def sendmail_starttls(self, sender, recipients, message):
+        """Send email message with STARTTLS security."""
+        message_flattened = str(message)
+        with smtplib.SMTP(self.config.host, self.config.port) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.login(self.config.username, self.password)
+            smtp.sendmail(sender, recipients, message_flattened)
+
+    def sendmail_plain(self, sender, recipients, message):
+        """Send email message with plain security."""
+        message_flattened = str(message)
+        with smtplib.SMTP(self.config.host, self.config.port) as smtp:
+            smtp.login(self.config.username, self.password)
+            smtp.sendmail(sender, recipients, message_flattened)
+
+    def sendmail_clear(self, sender, recipients, message):
+        """Send email message with no security."""
+        message_flattened = str(message)
+        with smtplib.SMTP(self.config.host, self.config.port) as smtp:
+            smtp.sendmail(sender, recipients, message_flattened)
+
+    def sendmail_xoauth(self, sender, recipients, message):
+        """Send email message with XOAUTH security."""
+        xoauth2 = (
+            f"user={self.config.username}\x01"
+            f"auth=Bearer {self.password}\x01\x01"
+        )
+        try:
+            xoauth2 = xoauth2.encode("ascii")
+        except UnicodeEncodeError as err:
+            raise exceptions.MailmergeError(
+                f"Failed to encode: {err}, "
+                "username and XOAUTH access token must be ASCII"
+            )
+        message_flattened = str(message)
+        with smtplib.SMTP(self.config.host, self.config.port) as smtp:
+            smtp.ehlo()
+            smtp.starttls()
+            smtp.ehlo()
+            smtp.docmd('AUTH XOAUTH2')
+            smtp.docmd(str(base64.b64encode(xoauth2).decode("utf-8")))
+            smtp.sendmail(sender, recipients, message_flattened)
