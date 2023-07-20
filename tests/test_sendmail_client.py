@@ -296,7 +296,7 @@ def test_security_xoauth(mocker, tmp_path):
     # Verify authentication token format.  The first call to docmd() is always
     # the same.  Second call to docmd() contains a base64 encoded username and
     # password.
-    smtp.docmd.call_args_list[0].args[0] == "AUTH XOAUTH2"
+    assert smtp.docmd.call_args_list[0].args[0] == "AUTH XOAUTH2"
     user_pass = smtp.docmd.call_args_list[1].args[0]
     user_pass = base64.b64decode(user_pass)
     assert user_pass == \
