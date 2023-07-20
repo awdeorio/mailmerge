@@ -8,6 +8,7 @@ import socket
 import smtplib
 import email
 import email.parser
+import base64
 import pytest
 from mailmerge import SendmailClient, MailmergeError
 
@@ -256,10 +257,10 @@ def test_security_xoauth(mocker, tmp_path):
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent("""\
         [smtp_server]
-        host = newman.eecs.umich.edu
-        port = 25
+        host = smtp.office365.com
+        port = 587
         security = XOAUTH
-        username = YOUR_USERNAME_HERE
+        username = username@example.com
     """))
 
     # Simple template
@@ -289,7 +290,17 @@ def test_security_xoauth(mocker, tmp_path):
     assert smtp.ehlo.call_count == 2
     assert smtp.starttls.call_count == 1
     assert smtp.login.call_count == 0
+    assert smtp.docmd.call_count == 2
     assert smtp.sendmail.call_count == 1
+
+    # Verify authentication token format.  The first call to docmd() is always
+    # the same.  Second call to docmd() contains a base64 encoded username and
+    # password.
+    smtp.docmd.call_args_list[0].args[0] == "AUTH XOAUTH2"
+    user_pass = smtp.docmd.call_args_list[1].args[0]
+    user_pass = base64.b64decode(user_pass)
+    assert user_pass == \
+        b'user=username@example.com\x01auth=Bearer password\x01\x01'
 
 
 def test_security_plain(mocker, tmp_path):
