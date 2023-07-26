@@ -8,6 +8,7 @@ import socket
 import smtplib
 import email
 import email.parser
+import base64
 import pytest
 from mailmerge import SendmailClient, MailmergeError
 
@@ -248,6 +249,90 @@ def test_security_starttls(mocker, tmp_path):
     assert smtp.starttls.call_count == 1
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
+
+
+def test_security_xoauth(mocker, tmp_path):
+    """Verify XOAUTH security configuration."""
+    # Config for XOAUTH SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = smtp.office365.com
+        port = 587
+        security = XOAUTH
+        username = username@example.com
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string("Hello world")
+
+    # Mock SMTP
+    mock_smtp = mocker.patch('smtplib.SMTP')
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+
+    # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    sendmail_client.sendmail(
+        sender="test@test.com",
+        recipients=["test@test.com"],
+        message=message,
+    )
+
+    # Verify SMTP library calls
+    assert mock_getpass.call_count == 1
+    assert mock_smtp.call_count == 1
+    assert mock_smtp_ssl.call_count == 0
+    smtp = mock_smtp.return_value.__enter__.return_value
+    assert smtp.ehlo.call_count == 2
+    assert smtp.starttls.call_count == 1
+    assert smtp.login.call_count == 0
+    assert smtp.docmd.call_count == 2
+    assert smtp.sendmail.call_count == 1
+
+    # Verify authentication token format.  The first call to docmd() is always
+    # the same.  Second call to docmd() contains a base64 encoded username and
+    # password.
+    assert smtp.docmd.call_args_list[0].args[0] == "AUTH XOAUTH2"
+    user_pass = smtp.docmd.call_args_list[1].args[0]
+    user_pass = base64.b64decode(user_pass)
+    assert user_pass == \
+        b'user=username@example.com\x01auth=Bearer password\x01\x01'
+
+
+def test_security_xoauth_bad_username(mocker, tmp_path):
+    """Verify exception is thrown for UTF-8 username."""
+    # Config for XOAUTH SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = smtp.office365.com
+        port = 587
+        security = XOAUTH
+        username = Laȝamon@example.com
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string("Hello world")
+
+    # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    with pytest.raises(MailmergeError) as err:
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+    # Verify exception string
+    assert "Username and XOAUTH access token must be ASCII" in str(err.value)
 
 
 def test_security_plain(mocker, tmp_path):
