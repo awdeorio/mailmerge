@@ -9,6 +9,7 @@ import smtplib
 import email
 import email.parser
 import base64
+import ssl
 import pytest
 from mailmerge import SendmailClient, MailmergeError
 
@@ -378,7 +379,7 @@ def test_security_plain(mocker, tmp_path):
 
 
 def test_security_ssl(mocker, tmp_path):
-    """Verify open (Never) security configuration."""
+    """Verify SSL/TLS security configuration."""
     # Config for SSL SMTP server
     config_path = tmp_path/"server.conf"
     config_path.write_text(textwrap.dedent("""\
@@ -397,6 +398,10 @@ def test_security_ssl(mocker, tmp_path):
     mock_smtp = mocker.patch('smtplib.SMTP')
     mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
 
+    # Mock SSL
+    mock_ssl_create_default_context = \
+        mocker.patch('ssl.create_default_context')
+
     # Mock the password entry
     mock_getpass = mocker.patch('getpass.getpass')
     mock_getpass.return_value = "password"
@@ -412,11 +417,51 @@ def test_security_ssl(mocker, tmp_path):
     assert mock_getpass.call_count == 1
     assert mock_smtp.call_count == 0
     assert mock_smtp_ssl.call_count == 1
+    assert mock_ssl_create_default_context.called
+    assert "context" in mock_smtp_ssl.call_args[1]  # SSL cert chain
     smtp = mock_smtp_ssl.return_value.__enter__.return_value
     assert smtp.ehlo.call_count == 0
     assert smtp.starttls.call_count == 0
     assert smtp.login.call_count == 1
     assert smtp.sendmail.call_count == 1
+
+
+def test_ssl_error(mocker, tmp_path):
+    """Verify SSL/TLS with an SSL error."""
+    # Config for SSL SMTP server
+    config_path = tmp_path/"server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = smtp.mail.umich.edu
+        port = 465
+        security = SSL/TLS
+        username = YOUR_USERNAME_HERE
+    """))
+
+    # Simple template
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string("Hello world")
+
+    # Mock ssl.create_default_context() to raise an exception
+    mocker.patch(
+        'ssl.create_default_context',
+        side_effect=ssl.SSLError(1, "CERTIFICATE_VERIFY_FAILED")
+    )
+
+    # Mock the password entry
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send a message
+    with pytest.raises(MailmergeError) as err:
+        sendmail_client.sendmail(
+            sender="test@test.com",
+            recipients=["test@test.com"],
+            message=message,
+        )
+
+    # Verify exception string
+    assert "CERTIFICATE_VERIFY_FAILED" in str(err.value)
 
 
 def test_missing_username(tmp_path):
