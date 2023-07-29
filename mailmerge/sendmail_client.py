@@ -10,6 +10,7 @@ import configparser
 import getpass
 import datetime
 import base64
+import ssl
 from . import exceptions
 
 # Type to store info read from config file
@@ -118,7 +119,12 @@ class SendmailClient:
     def sendmail_ssltls(self, sender, recipients, message):
         """Send email message with SSL/TLS security."""
         message_flattened = str(message)
-        with smtplib.SMTP_SSL(self.config.host, self.config.port) as smtp:
+        try:
+            ctx = ssl.create_default_context()
+        except ssl.SSLError as err:
+            raise exceptions.MailmergeError(f"SSL Error: {err}")
+        host, port = (self.config.host, self.config.port)
+        with smtplib.SMTP_SSL(host, port, context=ctx) as smtp:
             smtp.login(self.config.username, self.password)
             smtp.sendmail(sender, recipients, message_flattened)
 
