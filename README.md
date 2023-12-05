@@ -208,6 +208,7 @@ This example will send progress reports to students.  The template uses more of 
 TO: {{email}}
 SUBJECT: EECS 280 Mid-semester Progress Report
 FROM: My Self <myself@mydomain.com>
+REPLY-TO: My Reply Self <myreplyself@mydomain.com>
 
 Dear {{name}},
 
