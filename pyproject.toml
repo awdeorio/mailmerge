@@ -1,0 +1,44 @@
+[build-system]
+requires = ["setuptools>=64.0.0", "wheel"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "mailmerge"
+version = "2.2.3"
+description = "A simple, command line mail merge tool"
+keywords = ["mail merge", "mailmerge", "email"]
+authors = [{ email = "awdeorio@umich.edu" }, { name = "Andrew DeOrio" }]
+license = {file = "LICENSE"}
+readme = "README.md"
+requires-python = ">=3.6"
+dependencies = [
+    "click",
+    "jinja2",
+    "markdown",
+    "html5lib"
+]
+
+[project.optional-dependencies]
+dev = [
+    "twine",
+    "tox",
+]
+test = [
+    "check-manifest",
+    "freezegun",
+    "pycodestyle",
+    "pydocstyle",
+    "pylint",
+    "pytest",
+    "pytest-cov",
+    "pytest-mock",
+]
+
+[project.scripts]
+mailmerge = "mailmerge.__main__:main"
+
+[project.urls]
+homepage = "https://github.com/awdeorio/mailmerge/"
+
+[tool.setuptools]
+packages = ["mailmerge"]
