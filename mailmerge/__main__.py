@@ -315,8 +315,7 @@ def read_csv_database(database_path):
         csvdialect.strict = True
         reader = csv.DictReader(database_file, dialect=csvdialect)
         try:
-            for row in reader:
-                yield row
+            yield from reader
         except csv.Error as err:
             raise exceptions.MailmergeError(
                 f"{database_path}:{reader.line_num}: {err}"
