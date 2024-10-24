@@ -23,7 +23,8 @@ A simple, command line mail merge tool.
 
 ## Quickstart
 ```console
-$ pip install mailmerge
+$ pipx install mailmerge
+$ pipx ensurepath
 $ mailmerge
 ```
 
@@ -32,12 +33,8 @@ $ mailmerge
 ## Install
 System-wide install.
 ```console
-$ pip install mailmerge
-```
-
-System-wide install requiring administrator privileges.  Use this if you get a `Permission denied` error.
-```console
-$ sudo pip install mailmerge
+$ pipx install mailmerge
+$ pipx ensurepath
 ```
 
 Fedora package install.
