@@ -4,7 +4,7 @@ build-backend = "setuptools.build_meta"
 
 [project]
 name = "mailmerge"
-version = "2.2.3"
+version = "2.2.4"
 description = "A simple, command line mail merge tool"
 keywords = ["mail merge", "mailmerge", "email"]
 authors = [{ email = "awdeorio@umich.edu" }, { name = "Andrew DeOrio" }]
