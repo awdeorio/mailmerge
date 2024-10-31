@@ -73,7 +73,9 @@ def main(sample, dry_run, limit, no_limit, resume,
     """
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
-    # pylint: disable=too-many-arguments, too-many-locals
+    # pylint: disable=too-many-arguments
+    # pylint: disable=too-many-positional-arguments
+    # pylint: disable=too-many-locals
 
     # Convert paths from string to Path objects
     # https://github.com/pallets/click/issues/405
