@@ -31,7 +31,7 @@ $ mailmerge
 `mailmerge` will guide you through the process.  Don't worry, it won't send real emails by default.
 
 ## Install
-System-wide install.
+Local install.
 ```console
 $ pipx install mailmerge
 $ pipx ensurepath
