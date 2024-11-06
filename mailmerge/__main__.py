@@ -62,7 +62,7 @@ from . import exceptions
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
-def main(sample, dry_run, limit, no_limit, resume,
+def main(*, sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
          output_format):
     """
@@ -74,7 +74,6 @@ def main(sample, dry_run, limit, no_limit, resume,
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
     # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
     # pylint: disable=too-many-locals
 
     # Convert paths from string to Path objects
@@ -143,9 +142,7 @@ def main(sample, dry_run, limit, no_limit, resume,
 
 
 if __name__ == "__main__":
-    # No value for parameter, that's how click works
-    # pylint: disable=no-value-for-parameter
-    main()
+    main()  # pylint: disable=missing-kwoa
 
 
 def check_input_files(template_path, database_path, config_path, sample):

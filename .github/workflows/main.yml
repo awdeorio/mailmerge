@@ -55,6 +55,8 @@ jobs:
       # Upload coverage report
       # https://github.com/codecov/codecov-action
       - name: Upload coverage report
-        uses: codecov/codecov-action@v2
+        uses: codecov/codecov-action@v4
         with:
+          token: ${{ secrets.CODECOV_TOKEN }}
+          slug: awdeorio/mailmerge
           fail_ci_if_error: true
