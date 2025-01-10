@@ -58,7 +58,13 @@ class TemplateMessage:
         self._transform_markdown()
         self._transform_attachments()
         self._transform_attachment_references()
-        self._message.add_header('Date', email.utils.formatdate())
+        # Do not add "Date" header if already present
+        # If "Date" header is already present but empty - then delete it
+        hdr_date = self._message.get('Date')
+        if hdr_date is None:
+            self._message.add_header('Date', email.utils.formatdate())
+        elif len(hdr_date) == 0:
+            self._message.__delitem__('Date')
         assert self._sender
         assert self._recipients
         assert self._message
