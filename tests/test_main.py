@@ -694,7 +694,6 @@ def test_resume_hint_on_config_error(tmpdir):
         [smtp_server]
         host = open-smtp.example.com
     """), encoding="utf8")
-
     # Run and check output
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
@@ -991,7 +990,8 @@ def test_utf8smtp_trigger(tmpdir):
         MIME-Version: 1.0
         Content-Type: text/plain; charset="utf-8"
         Content-Transfer-Encoding: base64
-        Date: REDACTED                        
+        Date: REDACTED
+                                                           
         Hello Max Müller!
                                      
         >>> message 1 sent
