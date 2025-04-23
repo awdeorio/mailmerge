@@ -124,9 +124,19 @@ class SendmailClient:
         except ssl.SSLError as err:
             raise exceptions.MailmergeError(f"SSL Error: {err}")
         host, port = (self.config.host, self.config.port)
+
+        def needs_smtputf8(*string):
+            return any(any(ord(c) > 127 for c in part) for part in string)
         with smtplib.SMTP_SSL(host, port, context=ctx) as smtp:
             smtp.login(self.config.username, self.password)
-            smtp.sendmail(sender, recipients, message_flattened)
+            if needs_smtputf8(sender, *recipients):
+                smtp.sendmail(
+                    sender, recipients,
+                    message_flattened,
+                    rcpt_options=("UTF8SMTP")
+                    )
+            else:
+                smtp.sendmail(sender, recipients, message_flattened)
 
     def sendmail_starttls(self, sender, recipients, message):
         """Send email message with STARTTLS security."""
