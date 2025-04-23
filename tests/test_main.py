@@ -765,7 +765,6 @@ def test_other_mime_type(tmpdir):
         email
         one@test.com
     """), encoding="utf8")
-
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
@@ -773,14 +772,12 @@ def test_other_mime_type(tmpdir):
         host = open-smtp.example.com
         port = 25
     """), encoding="utf8")
-
     # Run mailmerge
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, [])
     assert not result.exception
     assert result.exit_code == 0
-
     # Verify output
     stdout = copy.deepcopy(result.output)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
@@ -820,12 +817,10 @@ def test_database_bom(tmpdir):
 
         Hello {{name}}
     """), encoding="utf8")
-
     # Copy database containing a BOM
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_with_bom = utils.TESTDATA/"mailmerge_database_with_BOM.csv"
     shutil.copyfile(database_with_bom, database_path)
-
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
@@ -833,14 +828,12 @@ def test_database_bom(tmpdir):
         host = open-smtp.example.com
         port = 25
     """), encoding="utf8")
-
     # Run mailmerge
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
     assert not result.exception
     assert result.exit_code == 0
-
     # Verify output
     stdout = copy.deepcopy(result.output)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
@@ -871,14 +864,12 @@ def test_database_tsv(tmpdir):
 
         Hello {{name}}
     """), encoding="utf8")
-
     # Tab-separated format database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email\tname
         to@test.com\tMy Name
     """), encoding="utf8")
-
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
@@ -886,14 +877,12 @@ def test_database_tsv(tmpdir):
         host = open-smtp.example.com
         port = 25
     """), encoding="utf8")
-
     # Run mailmerge
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
     assert not result.exception
     assert result.exit_code == 0
-
     # Verify output
     stdout = copy.deepcopy(result.output)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
@@ -924,14 +913,12 @@ def test_database_semicolon(tmpdir):
 
         Hello {{name}}
     """), encoding="utf8")
-
     # Semicolon-separated format database
     database_path = Path(tmpdir/"mailmerge_database.csv")
     database_path.write_text(textwrap.dedent("""\
         email;name
         to@test.com;My Name
     """), encoding="utf8")
-
     # Simple unsecure server config
     config_path = Path(tmpdir/"mailmerge_server.conf")
     config_path.write_text(textwrap.dedent("""\
@@ -939,14 +926,12 @@ def test_database_semicolon(tmpdir):
         host = open-smtp.example.com
         port = 25
     """), encoding="utf8")
-
     # Run mailmerge
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
     assert not result.exception
     assert result.exit_code == 0
-
     # Verify output
     stdout = copy.deepcopy(result.output)
     stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
@@ -963,5 +948,52 @@ def test_database_semicolon(tmpdir):
 
         >>> message 1 sent
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)  # noqa: E501
+
+
+def test_utf8smtp_trigger(tmpdir):
+    """Verify triggers to rcpt_options=['UTF8SMTP']."""
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: müller@domain.com
+        FROM: from@example.com
+        SUBJECT: UTF8SMTP Test
+        Hello{{name}}!
+    """), encoding="utf8")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent("""\
+        email;name
+        müller@domain.com; Max Müller
+    """), encoding="utf8")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, [
+            "--dry-run",
+            "--no-limit",
+            "--output-format", "text",
+        ])
+    assert result.exit_code == 0
+    assert not result.exception
+    stdout = result.output
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    assert stdout == textwrap.dedent("""\
+        >>> message 1
+        TO: müller@domain.com
+        FROM: from@example.com
+        SUBJECT: UTF8SMTP Test
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+        Date: REDACTED                        
+        Hello Max Müller!
+                                     
+        >>> message 1 sent
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
