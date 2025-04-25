@@ -611,7 +611,7 @@ def test_socket_error(mocker, tmp_path):
     assert "Dummy error message" in str(err.value)
 
 
-def test_utf8smtp_trigger(mocker, tmp_path):
+def test_utf8smtp_recipient(mocker, tmp_path):
     """Verify UTF8SMTP trigger."""
     # Config for SSL SMTP server
     config_path = tmp_path / "server.conf"
@@ -627,8 +627,10 @@ def test_utf8smtp_trigger(mocker, tmp_path):
 
     message = email.message_from_string(textwrap.dedent("""\
         TO: müller@gmail.com
-        SUBJECT: UTF8 Test
         FROM: from@example.com
+        CC: josé@gmail.com
+        BCC: céline@gmail.com
+        SUBJECT: UTF8 Test
 
         Hello!
     """))
@@ -641,7 +643,7 @@ def test_utf8smtp_trigger(mocker, tmp_path):
     # Send the message
     sendmail_client.sendmail(
         sender="from@example.com",
-        recipients=["müller@domain.com"],
+        recipients=["müller@domain.com", "josé@gmail.com", "céline@gmail.com"],
         message=message,
     )
 
