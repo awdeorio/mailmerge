@@ -540,7 +540,7 @@ def test_utf8_headers(tmpdir):
 
 
 def test_utf8_recipient(tmpdir):
-    """Verify triggers to rcpt_options=['UTF8SMTP']."""
+    """Message with recipient email address containing UTF-8 characters."""
     # Simple template
     template_path = Path(tmpdir/"mailmerge_template.txt")
     template_path.write_text(textwrap.dedent("""\

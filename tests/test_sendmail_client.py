@@ -612,7 +612,7 @@ def test_socket_error(mocker, tmp_path):
 
 
 def test_utf8smtp_recipient(mocker, tmp_path):
-    """Verify UTF8SMTP trigger."""
+    """Recipient containing UTF8 characters."""
     # Config for SSL SMTP server
     config_path = tmp_path / "server.conf"
     config_path.write_text(textwrap.dedent("""\
@@ -623,8 +623,8 @@ def test_utf8smtp_recipient(mocker, tmp_path):
         username = awdeorio
     """))
 
+    # Template with recipient containing UTF8 characters
     sendmail_client = SendmailClient(config_path, dry_run=False)
-
     message = email.message_from_string(textwrap.dedent("""\
         TO: müller@gmail.com
         FROM: from@example.com
