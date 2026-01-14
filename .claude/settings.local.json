@@ -11,7 +11,8 @@
       "Bash(pip show:*)",
       "Bash(echo:*)",
       "Bash(tox)",
-      "Bash(tox:*)"
+      "Bash(tox:*)",
+      "Bash(gh issue view:*)"
     ]
   }
 }
