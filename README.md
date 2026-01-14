@@ -69,10 +69,13 @@ username = YOUR_USERNAME_HERE
 
 ### Edit the template email message `mailmerge_template.txt`
 The `TO`, `SUBJECT`, and `FROM` fields are required.  The remainder is the body of the message.  Use `{{ }}` to indicate customized parameters that will be read from the database.  For example, `{{email}}` will be filled in from the `email` column of `mailmerge_database.csv`.
+
+**Pro-tip**: Add a `BCC` header to keep a copy of each sent message in your email client's Sent folder.
 ```
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 
 Hi, {{name}},
 
@@ -206,6 +209,7 @@ TO: {{email}}
 SUBJECT: EECS 280 Mid-semester Progress Report
 FROM: My Self <myself@mydomain.com>
 REPLY-TO: My Reply Self <myreplyself@mydomain.com>
+BCC: myself@mydomain.com
 
 Dear {{name}},
 
@@ -251,6 +255,7 @@ This example will use HTML to format an email.  Add `Content-Type: text/html` ju
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 Content-Type: text/html
 
 <html>
@@ -275,6 +280,7 @@ This example shows how to provide both HTML and plain text versions in the same 
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 MIME-Version: 1.0
 Content-Type: multipart/alternative; boundary="boundary"
 
@@ -315,6 +321,7 @@ Mailmerge supports [Markdown](https://daringfireball.net/projects/markdown/synta
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 CONTENT-TYPE: text/markdown
 
 You can add:
@@ -344,6 +351,7 @@ This example shows how to add attachments with a special `ATTACHMENT` header.
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 ATTACHMENT: file1.docx
 ATTACHMENT: ../file2.pdf
 ATTACHMENT: /z/shared/{{name}}_submission.txt
@@ -384,6 +392,7 @@ This example shows how to add inline-image-attachments so that the images are re
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 Content-Type: text/html
 ATTACHMENT: image.jpg
 ATTACHMENT: second/image.jpg
@@ -408,6 +417,7 @@ The second image: <img alt="second" src="second/image.jpg">
 TO: {{email}}
 SUBJECT: Testing mailmerge
 FROM: My Self <myself@mydomain.com>
+BCC: myself@mydomain.com
 ATTACHMENT: image.jpg
 CONTENT-TYPE: text/markdown
 

@@ -189,6 +189,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             TO: {{email}}
             SUBJECT: Testing mailmerge
             FROM: My Self <myself@mydomain.com>
+            BCC: myself@mydomain.com
 
             Hi, {{name}},
 
