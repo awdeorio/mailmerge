@@ -314,6 +314,21 @@ def read_csv_database(database_path):
         csvdialect = detect_database_format(database_file)
         csvdialect.strict = True
         reader = csv.DictReader(database_file, dialect=csvdialect)
+
+        # Warn about leading/trailing whitespace in header field names.
+        # This can cause confusing "undefined variable" errors in templates.
+        # See Issue #156 https://github.com/awdeorio/mailmerge/issues/156
+        whitespace_fields = [
+            f for f in reader.fieldnames
+            if f != f.strip()
+        ]
+        if whitespace_fields:
+            field_list = ", ".join(f"'{f}'" for f in whitespace_fields)
+            click.echo(
+                f"Warning: database header contains whitespace: {field_list}",
+                err=True,
+            )
+
         try:
             yield from reader
         except csv.Error as err:
