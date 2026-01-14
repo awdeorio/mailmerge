@@ -13,11 +13,18 @@ import base64
 import ssl
 from . import exceptions
 
+
 # Type to store info read from config file
 MailmergeConfig = collections.namedtuple(
     "MailmergeConfig",
     ["username", "host", "port", "security", "ratelimit"],
 )
+
+
+# Can be more efficient with isascii() if mailmerge moves to Python 3.7+
+def any_non_ascii(*strings):
+    """Check if any of the recipients contain non-ASCII characters."""
+    return any(any(ord(c) > 127 for c in part) for part in strings)
 
 
 class SendmailClient:
@@ -119,14 +126,27 @@ class SendmailClient:
     def sendmail_ssltls(self, sender, recipients, message):
         """Send email message with SSL/TLS security."""
         message_flattened = str(message)
+
+        # Create SSL context
         try:
             ctx = ssl.create_default_context()
         except ssl.SSLError as err:
             raise exceptions.MailmergeError(f"SSL Error: {err}")
         host, port = (self.config.host, self.config.port)
+
         with smtplib.SMTP_SSL(host, port, context=ctx) as smtp:
             smtp.login(self.config.username, self.password)
-            smtp.sendmail(sender, recipients, message_flattened)
+
+            # check for non-ascii characters
+            if any_non_ascii(sender, *recipients):
+                smtp.sendmail(
+                    sender, recipients,
+                    message_flattened,
+                    rcpt_options=("UTF8SMTP")
+                    )
+            else:
+                # No support for non-ascii
+                smtp.sendmail(sender, recipients, message_flattened)
 
     def sendmail_starttls(self, sender, recipients, message):
         """Send email message with STARTTLS security."""

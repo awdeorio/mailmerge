@@ -609,3 +609,49 @@ def test_socket_error(mocker, tmp_path):
 
     # Verify exception string
     assert "Dummy error message" in str(err.value)
+
+
+def test_utf8smtp_recipient(mocker, tmp_path):
+    """Recipient containing UTF8 characters."""
+    # Config for SSL SMTP server
+    config_path = tmp_path / "server.conf"
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = smtp.gmail.com
+        port = 465
+        security = SSL/TLS
+        username = awdeorio
+    """))
+
+    # Template with recipient containing UTF8 characters
+    sendmail_client = SendmailClient(config_path, dry_run=False)
+    message = email.message_from_string(textwrap.dedent("""\
+        TO: müller@gmail.com
+        FROM: from@example.com
+        CC: josé@gmail.com
+        BCC: céline@gmail.com
+        SUBJECT: UTF8 Test
+
+        Hello!
+    """))
+
+    # Patch SMTP_SSL and getpass
+    mock_smtp_ssl = mocker.patch('smtplib.SMTP_SSL')
+    mock_getpass = mocker.patch('getpass.getpass')
+    mock_getpass.return_value = "password"
+
+    # Send the message
+    sendmail_client.sendmail(
+        sender="from@example.com",
+        recipients=["müller@domain.com", "josé@gmail.com", "céline@gmail.com"],
+        message=message,
+    )
+
+    # Grab mocked SMTP instance
+    smtp = mock_smtp_ssl.return_value.__enter__.return_value
+
+    # Assert UTF8SMTP was passed
+    smtp.sendmail.assert_called_once()
+    kwargs = smtp.sendmail.call_args.kwargs
+    assert "rcpt_options" in kwargs
+    assert kwargs["rcpt_options"] == "UTF8SMTP"
