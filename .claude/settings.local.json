@@ -9,7 +9,9 @@
       "Bash(check-manifest:*)",
       "Bash(grep:*)",
       "Bash(pip show:*)",
-      "Bash(echo:*)"
+      "Bash(echo:*)",
+      "Bash(tox)",
+      "Bash(tox:*)"
     ]
   }
 }

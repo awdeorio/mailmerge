@@ -122,6 +122,7 @@ mailmerge --no-dry-run --no-limit  # Send all messages
 
 ## Important Notes
 
+- **Python Version**: Requires Python 3.10+ (matches Click 8.3 requirement; Python 3.6-3.9 are EOL or soon EOL)
 - **Character Encoding**: Auto-detects ASCII vs UTF-8 based on message content
 - **Multipart Message Structure**: Uses `multipart/related` for attachments, `multipart/alternative` for text/HTML variants
 - **Jinja2 Configuration**: Uses `StrictUndefined` to catch template errors early
@@ -153,7 +154,7 @@ mailmerge/
 ## Dependencies
 
 **Core Runtime:**
-- `click>=8.0` - CLI framework (requires 8.0+ for test suite compatibility; `mix_stderr` parameter removed in 8.0)
+- `click>=8.3` - CLI framework (requires 8.3+ for separate stderr capture by default; 8.1.x had different behavior)
 - `jinja2` - Template engine
 - `markdown` - Markdown to HTML conversion
 - `html5lib` - HTML parsing for inline image transformation
