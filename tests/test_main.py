@@ -413,7 +413,7 @@ def test_utf8_template(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert stdout == textwrap.dedent("""\
@@ -468,7 +468,7 @@ def test_utf8_database(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert stdout == textwrap.dedent("""\
@@ -530,7 +530,7 @@ def test_utf8_headers(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert stdout == textwrap.dedent("""\
@@ -783,7 +783,7 @@ def test_other_mime_type(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         \x1b[7m\x1b[1m\x1b[36m>>> message 1\x1b(B\x1b[m
         TO: one@test.com
@@ -843,7 +843,7 @@ def test_database_bom(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -896,7 +896,7 @@ def test_database_tsv(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -949,7 +949,7 @@ def test_database_semicolon(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com

@@ -288,7 +288,7 @@ def test_output_format_raw(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert result.stderr == ""
@@ -348,7 +348,7 @@ def test_output_format_text(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert result.stderr == ""
@@ -425,7 +425,7 @@ def test_output_format_colorized(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output.  The funny looking character sequences are colors.
     assert result.stderr == ""
@@ -532,7 +532,7 @@ def test_complicated(tmpdir):
 
     # Remove the Date and Content-ID strings, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     stdout = re.sub(r'Content-Id:.*', '', stdout)
 
     # Verify stdout and stderr after above corrections
