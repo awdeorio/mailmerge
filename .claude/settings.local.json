@@ -6,7 +6,10 @@
       "Bash(pycodestyle:*)",
       "Bash(pydocstyle:*)",
       "Bash(pylint:*)",
-      "Bash(check-manifest:*)"
+      "Bash(check-manifest:*)",
+      "Bash(grep:*)",
+      "Bash(pip show:*)",
+      "Bash(echo:*)"
     ]
   }
 }

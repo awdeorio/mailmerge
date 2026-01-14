@@ -106,7 +106,7 @@ def test_stdout_ratelimit(mocker, tmpdir):
     # Run mailmerge
     before = datetime.datetime.now()
     with tmpdir.as_cwd():
-        runner = click.testing.CliRunner(mix_stderr=False)
+        runner = click.testing.CliRunner()
         result = runner.invoke(
             main, [
                 "--no-limit",

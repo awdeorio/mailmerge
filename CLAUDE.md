@@ -153,7 +153,7 @@ mailmerge/
 ## Dependencies
 
 **Core Runtime:**
-- `click` - CLI framework
+- `click>=8.0` - CLI framework (requires 8.0+ for test suite compatibility; `mix_stderr` parameter removed in 8.0)
 - `jinja2` - Template engine
 - `markdown` - Markdown to HTML conversion
 - `html5lib` - HTML parsing for inline image transformation

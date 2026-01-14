@@ -12,7 +12,7 @@ license = {file = "LICENSE"}
 readme = "README.md"
 requires-python = ">=3.6"
 dependencies = [
-    "click",
+    "click>=8.0",
     "jinja2",
     "markdown",
     "html5lib"
