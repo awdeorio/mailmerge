@@ -56,7 +56,7 @@ def test_database_bom(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -109,7 +109,7 @@ def test_database_tsv(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
@@ -162,7 +162,7 @@ def test_database_semicolon(tmpdir):
 
     # Verify output
     stdout = copy.deepcopy(result.output)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     assert stdout == textwrap.dedent("""\
         >>> message 1
         TO: to@test.com
