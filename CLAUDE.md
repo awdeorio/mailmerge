@@ -6,6 +6,20 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Mailmerge is a command-line mail merge tool that uses plain text files and the Jinja2 template engine. It reads a CSV database, renders email templates with Jinja2, and sends personalized emails via SMTP.
 
+## Git Workflow
+
+**IMPORTANT: This project uses a develop/main branching strategy:**
+
+- **`develop`** - Integration branch for all development work
+- **`main`** - Stable release branch
+
+**Workflow:**
+1. Create feature branches from `develop`: `git checkout develop && git pull && git checkout -b feature-name`
+2. Make changes and commit to your feature branch
+3. Create pull requests targeting `develop` (not `main`)
+4. After review and CI passes, PRs are merged into `develop`
+5. Releases are created by merging `develop` into `main`
+
 ## Core Architecture
 
 ### Main Components
