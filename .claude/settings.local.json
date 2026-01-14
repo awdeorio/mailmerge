@@ -1,0 +1,12 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest:*)",
+      "Bash(find:*)",
+      "Bash(pycodestyle:*)",
+      "Bash(pydocstyle:*)",
+      "Bash(pylint:*)",
+      "Bash(check-manifest:*)"
+    ]
+  }
+}
