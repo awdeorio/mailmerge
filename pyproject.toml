@@ -10,9 +10,9 @@ keywords = ["mail merge", "mailmerge", "email"]
 authors = [{ email = "awdeorio@umich.edu" }, { name = "Andrew DeOrio" }]
 license = {file = "LICENSE"}
 readme = "README.md"
-requires-python = ">=3.6"
+requires-python = ">=3.10"
 dependencies = [
-    "click",
+    "click>=8.3",
     "jinja2",
     "markdown",
     "html5lib"

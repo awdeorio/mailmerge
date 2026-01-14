@@ -46,7 +46,7 @@ def test_stdout(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     result = runner.invoke(main, [
         "--template", template_path,
         "--database", database_path,
@@ -122,7 +122,7 @@ def test_stdout_utf8(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge with defaults, which includes dry-run
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
     assert not result.exception
@@ -235,7 +235,7 @@ def test_english(tmpdir):
 
 def test_output_format_bad(tmpdir):
     """Verify bad output format."""
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "bad"])
     assert result.exit_code == 2
@@ -280,7 +280,7 @@ def test_output_format_raw(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "raw"])
     assert not result.exception
@@ -288,7 +288,7 @@ def test_output_format_raw(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert result.stderr == ""
@@ -340,7 +340,7 @@ def test_output_format_text(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "text"])
     assert not result.exception
@@ -348,7 +348,7 @@ def test_output_format_text(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output
     assert result.stderr == ""
@@ -417,7 +417,7 @@ def test_output_format_colorized(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, ["--output-format", "colorized"])
     assert not result.exception
@@ -425,7 +425,7 @@ def test_output_format_colorized(tmpdir):
 
     # Remove the Date string, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
 
     # Verify output.  The funny looking character sequences are colors.
     assert result.stderr == ""
@@ -521,7 +521,7 @@ def test_complicated(tmpdir):
     """), encoding="utf8")
 
     # Run mailmerge in tmpdir with defaults, which includes dry run
-    runner = click.testing.CliRunner(mix_stderr=False)
+    runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         result = runner.invoke(main, [
             "--no-limit",
@@ -532,7 +532,7 @@ def test_complicated(tmpdir):
 
     # Remove the Date and Content-ID strings, which will be different each time
     stdout = copy.deepcopy(result.stdout)
-    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+    stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, flags=re.MULTILINE)
     stdout = re.sub(r'Content-Id:.*', '', stdout)
 
     # Verify stdout and stderr after above corrections
