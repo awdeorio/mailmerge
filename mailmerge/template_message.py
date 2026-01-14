@@ -6,7 +6,6 @@ Andrew DeOrio <awdeorio@umich.edu>
 
 import re
 from pathlib import Path
-from xml.etree import ElementTree
 import email
 import email.mime
 import email.mime.application
@@ -294,7 +293,12 @@ class TemplateMessage:
             # We only need to update the message if we cleared the header,
             # which only happens if we transformed an attachment reference.
             if 'Content-Transfer-Encoding' not in part:
-                new_html = ElementTree.tostring(document).decode('utf-8')
+                new_html = html5lib.serialize(
+                    document,
+                    tree='etree',
+                    omit_optional_tags=False,
+                    quote_attr_values='always',
+                )
                 part.set_payload(new_html)
 
     def _resolve_attachment_path(self, path):
