@@ -62,7 +62,7 @@ from . import exceptions
     type=click.Choice(["colorized", "text", "raw"]),
     help="Output format (colorized).",
 )
-def main(sample, dry_run, limit, no_limit, resume,
+def main(*, sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
          output_format):
     """
@@ -74,7 +74,6 @@ def main(sample, dry_run, limit, no_limit, resume,
     # We need an argument for each command line option.  That also means a lot
     # of local variables.
     # pylint: disable=too-many-arguments
-    # pylint: disable=too-many-positional-arguments
     # pylint: disable=too-many-locals
 
     # Convert paths from string to Path objects
@@ -143,9 +142,7 @@ def main(sample, dry_run, limit, no_limit, resume,
 
 
 if __name__ == "__main__":
-    # No value for parameter, that's how click works
-    # pylint: disable=no-value-for-parameter
-    main()
+    main()  # pylint: disable=missing-kwoa
 
 
 def check_input_files(template_path, database_path, config_path, sample):
@@ -192,6 +189,7 @@ def create_sample_input_files(template_path, database_path, config_path):
             TO: {{email}}
             SUBJECT: Testing mailmerge
             FROM: My Self <myself@mydomain.com>
+            BCC: myself@mydomain.com
 
             Hi, {{name}},
 
@@ -316,6 +314,21 @@ def read_csv_database(database_path):
         csvdialect = detect_database_format(database_file)
         csvdialect.strict = True
         reader = csv.DictReader(database_file, dialect=csvdialect)
+
+        # Warn about leading/trailing whitespace in header field names.
+        # This can cause confusing "undefined variable" errors in templates.
+        # See Issue #156 https://github.com/awdeorio/mailmerge/issues/156
+        whitespace_fields = [
+            f for f in reader.fieldnames
+            if f != f.strip()
+        ]
+        if whitespace_fields:
+            field_list = ", ".join(f"'{f}'" for f in whitespace_fields)
+            click.echo(
+                f"Warning: database header contains whitespace: {field_list}",
+                err=True,
+            )
+
         try:
             yield from reader
         except csv.Error as err:

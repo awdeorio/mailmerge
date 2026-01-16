@@ -1,0 +1,19 @@
+{
+  "permissions": {
+    "allow": [
+      "Bash(pytest:*)",
+      "Bash(find:*)",
+      "Bash(pycodestyle:*)",
+      "Bash(pydocstyle:*)",
+      "Bash(pylint:*)",
+      "Bash(check-manifest:*)",
+      "Bash(grep:*)",
+      "Bash(pip show:*)",
+      "Bash(echo:*)",
+      "Bash(tox)",
+      "Bash(tox:*)",
+      "Bash(gh issue view:*)",
+      "Bash(git log:*)"
+    ]
+  }
+}
