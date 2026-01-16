@@ -180,6 +180,49 @@ def test_database_semicolon(tmpdir):
     """)  # noqa: E501
 
 
+def test_database_header_whitespace(tmpdir):
+    """Warn about leading/trailing whitespace in database header field names.
+
+    Regression test for https://github.com/awdeorio/mailmerge/issues/156
+    """
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        FROM: My Self <myself@mydomain.com>
+
+        Hello {{name}}
+    """), encoding="utf8")
+
+    # Database with trailing space in header (note "name " has trailing space)
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(
+        "email,name \nto@test.com,My Name\n",
+        encoding="utf8",
+    )
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+
+    # Run mailmerge
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--output-format", "text"])
+
+    # Should fail because template uses {{name}} but database has "name "
+    assert result.exit_code == 1
+    assert "'name' is undefined" in result.output
+
+    # Should warn about the whitespace in stderr
+    assert "Warning: database header contains whitespace" in result.stderr
+    assert "'name '" in result.stderr
+
+
 def test_database_not_found(tmpdir):
     """Verify error when database input file not found."""
     runner = click.testing.CliRunner()

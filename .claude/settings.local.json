@@ -12,7 +12,8 @@
       "Bash(echo:*)",
       "Bash(tox)",
       "Bash(tox:*)",
-      "Bash(gh issue view:*)"
+      "Bash(gh issue view:*)",
+      "Bash(git log:*)"
     ]
   }
 }
