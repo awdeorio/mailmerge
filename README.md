@@ -1,7 +1,7 @@
 Mailmerge
 =========
 
-[![CI main](https://github.com/awdeorio/mailmerge/workflows/CI/badge.svg?branch=develop)](https://github.com/awdeorio/mailmerge/actions?query=branch%3Adevelop)
+[![CI](https://github.com/awdeorio/mailmerge/actions/workflows/main.yml/badge.svg?branch=develop)](https://github.com/awdeorio/mailmerge/actions/workflows/main.yml?query=branch%3Adevelop)
 [![codecov](https://codecov.io/gh/awdeorio/mailmerge/branch/develop/graph/badge.svg)](https://codecov.io/gh/awdeorio/mailmerge)
 [![PyPI](https://img.shields.io/pypi/v/mailmerge.svg)](https://pypi.org/project/mailmerge/)
 
