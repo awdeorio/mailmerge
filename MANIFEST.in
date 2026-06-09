@@ -1,3 +1,4 @@
+include AGENTS.md
 include CLAUDE.md
 include CONTRIBUTING.md
 include LICENSE
