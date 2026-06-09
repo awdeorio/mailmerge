@@ -865,3 +865,61 @@ def test_content_id_header_for_attachments(tmpdir):
     assert filename == "attachment.txt"
     assert content == b"Hello world\n"
     assert re.match(r'<[\d\w]+(\.[\d\w]+)*@mailmerge\.invalid>', cid_header)
+
+
+def test_svg_with_attachment(tmp_path):
+    """SVG elements should not have namespace prefixes when attachments exist.
+
+    Regression test for https://github.com/awdeorio/mailmerge/issues/165
+    """
+    # Create a dummy attachment
+    attachment_path = tmp_path / "image.png"
+    attachment_path.write_bytes(b"fake png data")
+
+    # Create template with inline SVG and an attachment referencing the image
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: to@test.com
+        FROM: from@test.com
+        SUBJECT: SVG Test
+        ATTACHMENT: image.png
+        Content-Type: text/html
+
+        <html>
+        <body>
+        <svg id="circle" viewBox="0 0 100 100">
+            <circle cx="50" cy="50" r="40" fill="green" />
+        </svg>
+        <img src="image.png" alt="test" />
+        </body>
+        </html>
+    """), encoding="utf8")
+
+    # Render template
+    template_message = TemplateMessage(template_path)
+    _, _, message = template_message.render({})
+
+    # Get the HTML part
+    assert message.is_multipart()
+    html_part = None
+    for part in message.walk():
+        if part.get_content_type() == "text/html":
+            html_part = part
+            break
+    assert html_part is not None
+
+    # Get HTML content
+    html_content = html_part.get_payload(decode=True).decode("utf-8")
+
+    # Verify SVG elements do NOT have namespace prefixes
+    assert "ns0:svg" not in html_content, \
+        "SVG element should not have namespace prefix"
+    assert "ns0:circle" not in html_content, \
+        "circle element should not have namespace prefix"
+
+    # Verify SVG elements are present (without prefixes)
+    assert "<svg" in html_content, "SVG element should be present"
+    assert "<circle" in html_content, "circle element should be present"
+
+    # Verify the image src was transformed to a CID reference
+    assert "cid:" in html_content, "Image src should be transformed to CID"
