@@ -4,7 +4,7 @@ name: CI
 # Define conditions for when to run this action
 on:
   pull_request: # Run on all pull requests
-  push: # Run on all pushes to master
+  push: # Run on all pushes to the integration and release branches
     branches:
       - main
       - develop
@@ -29,14 +29,15 @@ jobs:
       # Check out latest code
       # Docs: https://github.com/actions/checkout
       - name: Checkout code
-        uses: actions/checkout@v2
+        uses: actions/checkout@v6
 
       # Set up Python
       # Docs: https://github.com/actions/setup-python
       - name: Set up Python ${{ matrix.python-version }}
-        uses: actions/setup-python@v2
+        uses: actions/setup-python@v6
         with:
           python-version: ${{ matrix.python-version }}
+          cache: pip
 
       # Install dependencies
       # https://github.com/ymyzk/tox-gh-actions#workflow-configuration
@@ -55,7 +56,7 @@ jobs:
       # Upload coverage report
       # https://github.com/codecov/codecov-action
       - name: Upload coverage report
-        uses: codecov/codecov-action@v4
+        uses: codecov/codecov-action@v7
         with:
           token: ${{ secrets.CODECOV_TOKEN }}
           slug: awdeorio/mailmerge
