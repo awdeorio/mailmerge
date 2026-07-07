@@ -6,6 +6,7 @@ Andrew DeOrio <awdeorio@umich.edu>
 import sys
 import time
 import textwrap
+import itertools
 from pathlib import Path
 import csv
 import click
@@ -57,6 +58,10 @@ from . import exceptions
     help="server configuration (mailmerge_server.conf)",
 )
 @click.option(
+    "--group-by", "group_by", default=None,
+    help="Merge rows sharing this column into one message (e.g. email)",
+)
+@click.option(
     "--output-format", "output_format",
     default="colorized",
     type=click.Choice(["colorized", "text", "raw"]),
@@ -64,7 +69,7 @@ from . import exceptions
 )
 def main(*, sample, dry_run, limit, no_limit, resume,
          template_path, database_path, config_path,
-         output_format):
+         group_by, output_format):
     """
     Mailmerge is a simple, command line mail merge tool.
 
@@ -95,6 +100,8 @@ def main(*, sample, dry_run, limit, no_limit, resume,
     try:
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
+        if group_by:
+            csv_database = group_rows(csv_database, group_by)
         sendmail_client = SendmailClient(config_path, dry_run)
 
         for _, row in enumerate_range(csv_database, start, stop):
@@ -335,6 +342,26 @@ def read_csv_database(database_path):
             raise exceptions.MailmergeError(
                 f"{database_path}:{reader.line_num}: {err}"
             )
+
+
+def group_rows(rows, key):
+    """Merge rows sharing the same value in column `key`.
+
+    The first row's columns stay at the top level (so headers like
+    {{email}} still work), and every row of the group is exposed as `rows`
+    for Jinja iteration.
+    """
+    def keyfunc(row):
+        if key not in row:
+            raise exceptions.MailmergeError(
+                f"--group-by column not found in database: '{key}'"
+            )
+        return row[key]
+
+    rows = sorted(rows, key=keyfunc)
+    for _, group in itertools.groupby(rows, key=keyfunc):
+        group = list(group)
+        yield {**group[0], "rows": group}
 
 
 def enumerate_range(iterable, start=0, stop=None):

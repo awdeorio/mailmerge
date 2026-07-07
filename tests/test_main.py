@@ -850,3 +850,72 @@ def test_other_mime_type(tmpdir):
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
+
+
+def test_group_by(tmpdir):
+    """Rows sharing --group-by column merge into one message with `rows`."""
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Hello {{name}},
+        {% for r in rows %}- {{r.number}}
+        {% endfor %}
+    """), encoding="utf8")
+
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent("""\
+        email,name,number
+        a@test.com,Alice,1
+        b@test.com,Bob,9
+        a@test.com,Alice,2
+    """), encoding="utf8")
+
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        result = runner.invoke(
+            main, ["--group-by", "email", "--no-limit", "--dry-run"]
+        )
+    assert not result.exception, result.output
+    # Two groups -> two messages
+    assert "message 2 sent" in result.output
+    assert "message 3 sent" not in result.output
+    # Alice's group merged both her numbers
+    assert "- 1" in result.output
+    assert "- 2" in result.output
+
+
+def test_group_by_bad_column(tmpdir):
+    """--group-by with a missing column errors cleanly."""
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        FROM: from@test.com
+
+        Hi
+    """), encoding="utf8")
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent("""\
+        email
+        a@test.com
+    """), encoding="utf8")
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--group-by", "nope"])
+    assert result.exit_code != 0
+    assert "column not found" in result.output
