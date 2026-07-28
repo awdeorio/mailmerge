@@ -9,6 +9,7 @@ import textwrap
 from pathlib import Path
 import csv
 import configparser
+import json
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
@@ -96,6 +97,17 @@ def main(*, sample, dry_run, limit, no_limit, resume,
             extension.strip() for extension in configured.split(",") if extension.strip()
         )
 
+    extension_configs = {}
+    parser = configparser.ConfigParser()
+    parser.read(config_path)
+    raw_extension_configs = parser.get("markdown", "extension_configs", fallback="{}")
+    try:
+        extension_configs = json.loads(raw_extension_configs)
+    except json.JSONDecodeError as err:
+        raise exceptions.MailmergeError(
+            f"Invalid [markdown] extension_configs JSON: {err}"
+        ) from err
+
     # Make sure input files exist and provide helpful prompts
     check_input_files(template_path, database_path, config_path, sample)
 
@@ -110,6 +122,7 @@ def main(*, sample, dry_run, limit, no_limit, resume,
         template_message = TemplateMessage(
             template_path,
             markdown_extensions=markdown_extensions,
+            extension_configs=extension_configs,
         )
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
