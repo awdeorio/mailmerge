@@ -319,7 +319,10 @@ def test_markdown(tmp_path):
                                                   'text/html')
 
     # Verify rendered Markdown
-    rendered = markdown.markdown(plaintext, extensions=['nl2br'])
+    rendered = markdown.markdown(
+        plaintext,
+        extensions=['nl2br', 'fenced_code', 'tables'],
+    )
     expected = html5lib.parse(rendered)
 
     htmltext_document = html5lib.parse(htmltext)

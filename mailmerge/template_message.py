@@ -170,7 +170,10 @@ class TemplateMessage:
         # multipart/alternative message as per RFC 2046.
         #
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
-        html = markdown.markdown(text, extensions=['nl2br'])
+        html = markdown.markdown(
+            text,
+            extensions=['nl2br', 'fenced_code', 'tables'],
+        )
         html_payload = email.mime.text.MIMEText(
             f"<html><body>{html}</body></html>",
             _subtype="html",
