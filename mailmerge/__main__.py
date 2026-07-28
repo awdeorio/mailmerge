@@ -8,6 +8,7 @@ import time
 import textwrap
 from pathlib import Path
 import csv
+import configparser
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
@@ -45,6 +46,11 @@ from . import exceptions
     help="template email (mailmerge_template.txt)"
 )
 @click.option(
+    "--markdown-extension", "markdown_extensions",
+    multiple=True,
+    help="Markdown extension to enable (repeat the option, e.g. --markdown-extension fenced_code).",
+)
+@click.option(
     "--database", "database_path",
     default="mailmerge_database.csv",
     type=click.Path(),
@@ -63,7 +69,7 @@ from . import exceptions
     help="Output format (colorized).",
 )
 def main(*, sample, dry_run, limit, no_limit, resume,
-         template_path, database_path, config_path,
+         template_path, markdown_extensions, database_path, config_path,
          output_format):
     """
     Mailmerge is a simple, command line mail merge tool.
@@ -82,6 +88,14 @@ def main(*, sample, dry_run, limit, no_limit, resume,
     database_path = Path(database_path)
     config_path = Path(config_path)
 
+    if not markdown_extensions:
+        parser = configparser.ConfigParser()
+        parser.read(config_path)
+        configured = parser.get("markdown", "extensions", fallback="nl2br")
+        markdown_extensions = tuple(
+            extension.strip() for extension in configured.split(",") if extension.strip()
+        )
+
     # Make sure input files exist and provide helpful prompts
     check_input_files(template_path, database_path, config_path, sample)
 
@@ -93,7 +107,10 @@ def main(*, sample, dry_run, limit, no_limit, resume,
     # Run
     message_num = 1 + start
     try:
-        template_message = TemplateMessage(template_path)
+        template_message = TemplateMessage(
+            template_path,
+            markdown_extensions=markdown_extensions,
+        )
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
 

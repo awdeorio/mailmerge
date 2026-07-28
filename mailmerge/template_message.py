@@ -28,9 +28,10 @@ class TemplateMessage:
     # more than one public method.
     # pylint: disable=too-few-public-methods
 
-    def __init__(self, template_path):
+    def __init__(self, template_path, markdown_extensions=None):
         """Initialize variables and Jinja2 template."""
         self.template_path = Path(template_path)
+        self.markdown_extensions = list(markdown_extensions or ["nl2br"])
         self._message = None
         self._sender = None
         self._recipients = None
@@ -172,7 +173,7 @@ class TemplateMessage:
         # https://docs.python.org/3/library/email.mime.html#email.mime.text.MIMEText
         html = markdown.markdown(
             text,
-            extensions=['nl2br', 'fenced_code', 'tables'],
+            extensions=self.markdown_extensions,
         )
         html_payload = email.mime.text.MIMEText(
             f"<html><body>{html}</body></html>",
