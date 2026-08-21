@@ -638,3 +638,118 @@ def test_complicated(tmpdir):
         >>> message 2 sent
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)
+
+
+def test_date_already_present(tmpdir):
+    """Verify date already_present."""
+
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        FROM: from@test.com
+        Date: Already Present
+
+        Laȝamon 😀 klâwen
+    """), encoding="utf8")
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent("""\
+        email
+        to@test.com
+    """), encoding="utf8")
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+
+    # Run mailmerge
+    runner = click.testing.CliRunner(mix_stderr=False)
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # Remove the Date string, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
+    #stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert result.stderr == ""
+    assert stdout == textwrap.dedent("""\
+        >>> message 1
+        TO: to@test.com
+        FROM: from@test.com
+        Date: Already Present
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        Laȝamon 😀 klâwen
+
+        >>> message 1 sent
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)  # noqa: E501
+
+
+def test_date_already_present_but_empty(tmpdir):
+    """Verify date already_present."""
+
+    # Simple template
+    template_path = Path(tmpdir/"mailmerge_template.txt")
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        FROM: from@test.com
+        Date:
+
+        Laȝamon 😀 klâwen
+    """), encoding="utf8")
+
+    # Simple database
+    database_path = Path(tmpdir/"mailmerge_database.csv")
+    database_path.write_text(textwrap.dedent("""\
+        email
+        to@test.com
+    """), encoding="utf8")
+
+    # Simple unsecure server config
+    config_path = Path(tmpdir/"mailmerge_server.conf")
+    config_path.write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+
+    # Run mailmerge
+    runner = click.testing.CliRunner(mix_stderr=False)
+    with tmpdir.as_cwd():
+        result = runner.invoke(main, ["--output-format", "text"])
+    assert not result.exception
+    assert result.exit_code == 0
+
+    # Remove the Date string, which will be different each time
+    stdout = copy.deepcopy(result.stdout)
+    #stdout = re.sub(r"Date:.+", "Date: REDACTED", stdout, re.MULTILINE)
+
+    # Verify output
+    assert result.stderr == ""
+    assert stdout == textwrap.dedent("""\
+        >>> message 1
+        TO: to@test.com
+        FROM: from@test.com
+        MIME-Version: 1.0
+        Content-Type: text/plain; charset="utf-8"
+        Content-Transfer-Encoding: base64
+
+        Laȝamon 😀 klâwen
+
+        >>> message 1 sent
+        >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
+        >>> This was a dry run.  To send messages, use the --no-dry-run option.
+    """)  # noqa: E501
