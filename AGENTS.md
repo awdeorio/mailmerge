@@ -54,7 +54,7 @@ Mailmerge is a command-line mail merge tool that uses plain text files and the J
 3. For each row, `TemplateMessage.render()` renders the template with Jinja2 context
 4. Message transformations are applied:
    - Character encoding detection
-   - Recipient extraction from TO/CC/BCC headers
+   - Recipient extraction from TO/CC/BCC headers (a message with no recipients stops here; the CLI skips it if `[template] skip_blank_recipients = true` is set in the config, otherwise it's an error)
    - Markdown-to-HTML conversion (if Content-Type: text/markdown)
    - Attachment processing with Content-ID generation
    - Inline image reference transformation in HTML

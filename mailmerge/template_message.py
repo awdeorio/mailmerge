@@ -17,6 +17,13 @@ import jinja2
 from . import exceptions
 
 
+# Header lines that mailmerge reads.  A body starting with one of these means
+# the header block ended early.
+HEADER_RE = re.compile(
+    r"(TO|CC|BCC|FROM|SUBJECT|REPLY-TO|ATTACHMENT)\s*:", re.IGNORECASE
+)
+
+
 class TemplateMessage:
     """Represent a templated email message.
 
@@ -46,22 +53,55 @@ class TemplateMessage:
         )
 
     def render(self, context):
-        """Return rendered message object."""
+        """Return rendered message object.
+
+        A message with no recipients (blank TO, CC and BCC, including a
+        completely blank render) is returned with an empty recipient list and
+        no further processing, so that the caller can skip it.
+        """
         try:
             raw_message = self.template.render(context)
         except jinja2.exceptions.TemplateError as err:
             raise exceptions.MailmergeError(f"{self.template_path}: {err}")
+
+        # Leading blank lines would end the header block before it starts.
+        # They come from Jinja tags above the headers, e.g. a template wrapped
+        # in {% if ... %} ... {% endif %}.
+        raw_message = raw_message.lstrip()
         self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()
+        if not self._sender:
+            self._check_header_block()
+        if not self._recipients:
+            return self._sender, self._recipients, self._message
+        if not self._sender:
+            raise exceptions.MailmergeError(
+                f"{self.template_path}: message has no FROM header"
+            )
         self._transform_markdown()
         self._transform_attachments()
         self._transform_attachment_references()
         self._message.add_header('Date', email.utils.formatdate())
-        assert self._sender
-        assert self._recipients
         assert self._message
         return self._sender, self._recipients, self._message
+
+    def _check_header_block(self):
+        """Raise an error if the header block ended early.
+
+        A blank line inside the headers ends them, pushing the remaining
+        headers into the body.  The usual cause is a Jinja tag on a line of
+        its own between header lines.  Only called when FROM is missing, so a
+        body that happens to start with "To:" is not mistaken for headers.
+        """
+        if self._message.is_multipart():
+            return
+        body = self._message.get_payload().lstrip()
+        if HEADER_RE.match(body):
+            raise exceptions.MailmergeError(
+                f"{self.template_path}: a blank line ended the header block "
+                f"early; the body starts with '{body.splitlines()[0]}'"
+            )
 
     def _transform_encoding(self, raw_message):
         """Detect and set character encoding."""
@@ -76,9 +116,14 @@ class TemplateMessage:
         # The docs recommend using __delitem__()
         # https://docs.python.org/3/library/email.message.html#email.message.EmailMessage.__delitem__
         # pylint: disable=unnecessary-dunder-call
-        addrs = email.utils.getaddresses(self._message.get_all("TO", [])) + \
-            email.utils.getaddresses(self._message.get_all("CC", [])) + \
-            email.utils.getaddresses(self._message.get_all("BCC", []))
+        # Header values that render blank hold no recipients.  Filter the
+        # values, not the parsed addresses: getaddresses() returns ('', '')
+        # for a value it can't parse, such as "a@b.com,", and dropping that
+        # would silently lose a real recipient.
+        addrs = []
+        for field in ("TO", "CC", "BCC"):
+            values = [v for v in self._message.get_all(field, []) if v.strip()]
+            addrs += email.utils.getaddresses(values)
         self._recipients = [x[1] for x in addrs]
         self._message.__delitem__("bcc")
         self._sender = self._message["from"]

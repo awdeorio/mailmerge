@@ -923,3 +923,73 @@ def test_svg_with_attachment(tmp_path):
 
     # Verify the image src was transformed to a CID reference
     assert "cid:" in html_content, "Image src should be transformed to CID"
+
+
+def test_wrapped_template(tmp_path):
+    """A template wrapped in {% if %} keeps its headers or renders blank."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        {% if send == "yes" %}
+        TO: to@test.com
+        SUBJECT: Testing mailmerge
+        FROM: from@test.com
+
+        Hello world!
+        {% endif %}
+    """), encoding="utf8")
+    template_message = TemplateMessage(template_path)
+    sender, recipients, message = template_message.render({"send": "yes"})
+    assert sender == "from@test.com"
+    assert recipients == ["to@test.com"]
+    assert message["subject"] == "Testing mailmerge"
+    assert "Hello world!" in message.get_payload()
+    _, recipients, _ = template_message.render({"send": "no"})
+    assert recipients == []
+
+
+def test_empty_recipient_headers(tmp_path):
+    """Empty TO and CC values are not recipients; unparseable ones are."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: {{email}}
+        CC: {{email}}
+        FROM: from@test.com
+
+        To: whom it may concern
+    """), encoding="utf8")
+    template_message = TemplateMessage(template_path)
+    _, recipients, _ = template_message.render({"email": ""})
+    assert recipients == []
+    _, recipients, _ = template_message.render({"email": "a@b.com,"})
+    assert recipients
+
+
+def test_broken_header_block(tmp_path):
+    """A blank line inside the headers produces a helpful error."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        SUBJECT: Testing mailmerge
+        {% if send == "yes" %}TO: to@test.com{% endif %}
+        FROM: from@test.com
+
+        Hello world!
+    """), encoding="utf8")
+    template_message = TemplateMessage(template_path)
+    with pytest.raises(MailmergeError) as err:
+        template_message.render({"send": "no"})
+    assert "a blank line ended the header block early" in str(err.value)
+    assert "FROM: from@test.com" in str(err.value)
+
+
+def test_no_from(tmp_path):
+    """A message with recipients but no FROM produces an error."""
+    template_path = tmp_path / "template.txt"
+    template_path.write_text(textwrap.dedent("""\
+        TO: to@test.com
+
+        Hello world!
+    """), encoding="utf8")
+    template_message = TemplateMessage(template_path)
+    with pytest.raises(MailmergeError) as err:
+        template_message.render({})
+    assert "message has no FROM header" in str(err.value)

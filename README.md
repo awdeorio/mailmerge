@@ -244,6 +244,32 @@ borderline@fixme.com,"Borderline Name",50,50,50,50,C-
 failing@fixme.com,"Failing Name",0,0,0,0,F
 ```
 
+## Skipping messages
+To send to only some rows of the database, wrap the whole template in a Jinja `if`.  A row where the condition is false renders a blank message, which has no recipients.  Tell mailmerge to skip messages with no recipients in `mailmerge_server.conf`:
+```
+[template]
+skip_blank_recipients = true
+```
+
+Without this option, a message with no recipients is an error.  A message is also skipped when TO, CC and BCC are present but render blank.
+
+#### Template `mailmerge_template.txt`
+```
+{% if status == "enrolled" %}
+TO: {{email}}
+SUBJECT: Welcome to the course
+FROM: My Self <myself@mydomain.com>
+
+Dear {{name}},
+
+Welcome!
+{% endif %}
+```
+
+Values from the database are strings, so compare with `"1"` rather than `1`.
+
+Each skipped message prints `>>> message 2 skipped (no recipients)`, and the run ends with a count such as `>>> 1 sent, 1 skipped`.  If every message is skipped in a run with `--no-limit`, mailmerge prints a warning, which usually means the condition never matches.  Skipped messages still count towards `--limit` and `--resume`, which number the rows of the database.
+
 ## HTML formatting
 Mailmerge supports HTML formatting.
 
