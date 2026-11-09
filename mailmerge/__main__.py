@@ -96,9 +96,19 @@ def main(*, sample, dry_run, limit, no_limit, resume,
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
+        num_sent = 0
+        num_skipped = 0
 
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
+            if message is None:
+                print_bright_white_on_cyan(
+                    f">>> message {message_num} skipped (blank message)",
+                    output_format,
+                )
+                num_skipped += 1
+                message_num += 1
+                continue
             while True:
                 try:
                     sendmail_client.sendmail(sender, recipients, message)
@@ -119,7 +129,15 @@ def main(*, sample, dry_run, limit, no_limit, resume,
                 f">>> message {message_num} sent",
                 output_format,
             )
+            num_sent += 1
             message_num += 1
+
+        # Summary when messages were skipped
+        if num_skipped:
+            print(f">>> {num_sent} sent, {num_skipped} skipped")
+            # Only without a limit: a limited run may just not reach a match
+            if not num_sent and stop is None:
+                click.echo("Warning: every message was skipped", err=True)
 
     except exceptions.MailmergeError as error:
         hint_text = ""

@@ -850,3 +850,88 @@ def test_other_mime_type(tmpdir):
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
+
+
+SKIP_DATABASE = """\
+    email,phase
+    one@test.com,1
+    two@test.com,2
+    three@test.com,1
+"""
+
+
+def run_skip_inputs(tmpdir, args, database=SKIP_DATABASE):
+    """Run mailmerge on a wrapped template.
+
+    The template sends only to rows whose phase is 1.
+    """
+    Path(tmpdir/"mailmerge_template.txt").write_text(textwrap.dedent("""\
+        {% if phase == "1" %}
+        TO: {{email}}
+        CC: cc@test.com
+        BCC: bcc@test.com
+        FROM: from@test.com
+
+        Hello {{email}}
+        {% endif %}
+    """), encoding="utf8")
+    Path(tmpdir/"mailmerge_database.csv").write_text(
+        textwrap.dedent(database), encoding="utf8",
+    )
+    Path(tmpdir/"mailmerge_server.conf").write_text(textwrap.dedent("""\
+        [smtp_server]
+        host = open-smtp.example.com
+        port = 25
+    """), encoding="utf8")
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        return runner.invoke(main, args)
+
+
+def test_skip_blank_message(tmpdir):
+    """Messages that render blank are skipped."""
+    result = run_skip_inputs(tmpdir, ["--no-limit", "--output-format", "text"])
+    assert not result.exception
+    assert result.exit_code == 0
+    assert "Hello one@test.com" in result.output
+    assert "Hello three@test.com" in result.output
+    assert "two@test.com" not in result.output
+    assert ">>> message 1 sent" in result.output
+    assert ">>> message 2 skipped (blank message)" in result.output
+    assert ">>> message 3 sent" in result.output
+    assert ">>> 2 sent, 1 skipped" in result.output
+    assert "every message was skipped" not in result.output
+
+
+def test_blank_recipient_error(tmpdir):
+    """A blank TO header is an error, not a skip."""
+    result = run_skip_inputs(tmpdir, ["--no-limit"], database="""\
+        email,phase
+        one@test.com,1
+        ,1
+    """)
+    assert result.exit_code == 1
+    assert "Error on message 2" in result.output
+    assert "TO header is blank" in result.output
+    assert 'Hint: "--resume 2"' in result.output
+
+
+def test_every_message_skipped(tmpdir):
+    """A warning is printed when every message is skipped without a limit."""
+    result = run_skip_inputs(tmpdir, ["--no-limit"], database="""\
+        email,phase
+        one@test.com,2
+        two@test.com,2
+        three@test.com,2
+    """)
+    assert result.exit_code == 0
+    assert ">>> 0 sent, 3 skipped" in result.output
+    assert "Warning: every message was skipped" in result.stderr
+
+
+def test_skipped_within_limit(tmpdir):
+    """No warning when a limited run skips the only row it reaches."""
+    result = run_skip_inputs(tmpdir, ["--resume", "2", "--limit", "1"])
+    assert result.exit_code == 0
+    assert ">>> 0 sent, 1 skipped" in result.output
+    assert "every message was skipped" not in result.output
