@@ -852,13 +852,21 @@ def test_other_mime_type(tmpdir):
     """)  # noqa: E501
 
 
-def run_skip_inputs(tmpdir, args, config_extra="", wanted="1"):
-    """Run mailmerge on a wrapped template and a mixed database.
+SKIP_DATABASE = """\
+    email,phase
+    one@test.com,1
+    two@test.com,2
+    three@test.com,1
+"""
 
-    The template sends only to rows whose phase equals wanted.
+
+def run_skip_inputs(tmpdir, args, database=SKIP_DATABASE):
+    """Run mailmerge on a wrapped template.
+
+    The template sends only to rows whose phase is 1.
     """
     Path(tmpdir/"mailmerge_template.txt").write_text(textwrap.dedent("""\
-        {% if phase == "WANTED" %}
+        {% if phase == "1" %}
         TO: {{email}}
         CC: cc@test.com
         BCC: bcc@test.com
@@ -866,56 +874,56 @@ def run_skip_inputs(tmpdir, args, config_extra="", wanted="1"):
 
         Hello {{email}}
         {% endif %}
-    """).replace("WANTED", wanted), encoding="utf8")
-    Path(tmpdir/"mailmerge_database.csv").write_text(textwrap.dedent("""\
-        email,phase
-        one@test.com,1
-        two@test.com,2
-        three@test.com,1
     """), encoding="utf8")
+    Path(tmpdir/"mailmerge_database.csv").write_text(
+        textwrap.dedent(database), encoding="utf8",
+    )
     Path(tmpdir/"mailmerge_server.conf").write_text(textwrap.dedent("""\
         [smtp_server]
         host = open-smtp.example.com
         port = 25
-    """) + config_extra, encoding="utf8")
+    """), encoding="utf8")
     runner = click.testing.CliRunner()
     with tmpdir.as_cwd():
         return runner.invoke(main, args)
 
 
-SKIP_OPTION = "\n[template]\nskip_blank_recipients = true\n"
-
-
-def test_skip_blank_recipients(tmpdir):
-    """Messages with no recipients are skipped when the option is set."""
-    result = run_skip_inputs(
-        tmpdir, ["--no-limit", "--output-format", "text"], SKIP_OPTION,
-    )
+def test_skip_blank_message(tmpdir):
+    """Messages that render blank are skipped."""
+    result = run_skip_inputs(tmpdir, ["--no-limit", "--output-format", "text"])
     assert not result.exception
     assert result.exit_code == 0
     assert "Hello one@test.com" in result.output
     assert "Hello three@test.com" in result.output
     assert "two@test.com" not in result.output
     assert ">>> message 1 sent" in result.output
-    assert ">>> message 2 skipped (no recipients)" in result.output
+    assert ">>> message 2 skipped (blank message)" in result.output
     assert ">>> message 3 sent" in result.output
     assert ">>> 2 sent, 1 skipped" in result.output
     assert "every message was skipped" not in result.output
 
 
-def test_blank_recipients_error(tmpdir):
-    """Without the option, a message with no recipients is an error."""
-    result = run_skip_inputs(tmpdir, ["--no-limit"])
+def test_blank_recipient_error(tmpdir):
+    """A blank TO header is an error, not a skip."""
+    result = run_skip_inputs(tmpdir, ["--no-limit"], database="""\
+        email,phase
+        one@test.com,1
+        ,1
+    """)
     assert result.exit_code == 1
     assert "Error on message 2" in result.output
-    assert "message has no recipients" in result.output
-    assert "skip_blank_recipients = true" in result.output
+    assert "TO header is blank" in result.output
     assert 'Hint: "--resume 2"' in result.output
 
 
 def test_every_message_skipped(tmpdir):
     """A warning is printed when every message is skipped without a limit."""
-    result = run_skip_inputs(tmpdir, ["--no-limit"], SKIP_OPTION, wanted="9")
+    result = run_skip_inputs(tmpdir, ["--no-limit"], database="""\
+        email,phase
+        one@test.com,2
+        two@test.com,2
+        three@test.com,2
+    """)
     assert result.exit_code == 0
     assert ">>> 0 sent, 3 skipped" in result.output
     assert "Warning: every message was skipped" in result.stderr
@@ -923,18 +931,7 @@ def test_every_message_skipped(tmpdir):
 
 def test_skipped_within_limit(tmpdir):
     """No warning when a limited run skips the only row it reaches."""
-    result = run_skip_inputs(
-        tmpdir, ["--resume", "2", "--limit", "1"], SKIP_OPTION,
-    )
+    result = run_skip_inputs(tmpdir, ["--resume", "2", "--limit", "1"])
     assert result.exit_code == 0
     assert ">>> 0 sent, 1 skipped" in result.output
     assert "every message was skipped" not in result.output
-
-
-def test_bad_template_option(tmpdir):
-    """A bad skip_blank_recipients value is an error."""
-    result = run_skip_inputs(
-        tmpdir, [], SKIP_OPTION.replace("true", "maybe"),
-    )
-    assert result.exit_code == 1
-    assert "mailmerge_server.conf" in result.output

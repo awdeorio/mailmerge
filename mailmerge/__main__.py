@@ -8,7 +8,6 @@ import time
 import textwrap
 from pathlib import Path
 import csv
-import configparser
 import click
 from .template_message import TemplateMessage
 from .sendmail_client import SendmailClient
@@ -97,22 +96,14 @@ def main(*, sample, dry_run, limit, no_limit, resume,
         template_message = TemplateMessage(template_path)
         csv_database = read_csv_database(database_path)
         sendmail_client = SendmailClient(config_path, dry_run)
-        skip_blank_recipients = read_skip_blank_recipients(config_path)
         num_sent = 0
         num_skipped = 0
 
         for _, row in enumerate_range(csv_database, start, stop):
             sender, recipients, message = template_message.render(row)
-            if not recipients and not skip_blank_recipients:
-                raise exceptions.MailmergeError(
-                    f"{template_path}: message has no recipients "
-                    "(TO, CC and BCC are blank).  To skip such messages, "
-                    "add 'skip_blank_recipients = true' to the [template] "
-                    f"section of {config_path}"
-                )
-            if not recipients:
+            if message is None:
                 print_bright_white_on_cyan(
-                    f">>> message {message_num} skipped (no recipients)",
+                    f">>> message {message_num} skipped (blank message)",
                     output_format,
                 )
                 num_skipped += 1
@@ -141,11 +132,11 @@ def main(*, sample, dry_run, limit, no_limit, resume,
             num_sent += 1
             message_num += 1
 
-        # Summary when messages may have been skipped
-        if skip_blank_recipients:
+        # Summary when messages were skipped
+        if num_skipped:
             print(f">>> {num_sent} sent, {num_skipped} skipped")
             # Only without a limit: a limited run may just not reach a match
-            if num_skipped and not num_sent and stop is None:
+            if not num_sent and stop is None:
                 click.echo("Warning: every message was skipped", err=True)
 
     except exceptions.MailmergeError as error:
@@ -324,26 +315,6 @@ def detect_database_format(database_file):
         csvdialect = StrictExcel
 
     return csvdialect
-
-
-def read_skip_blank_recipients(config_path):
-    """Return the skip_blank_recipients option from the [template] section.
-
-    When true, messages with no recipients (blank TO, CC and BCC) are skipped
-    instead of causing an error.  See Issue #85
-    https://github.com/awdeorio/mailmerge/issues/85
-
-    This reads the config file separately from SendmailClient.read_config();
-    moving all config reading into one place is discussed in Issue #85.
-    """
-    parser = configparser.RawConfigParser()
-    try:
-        parser.read(str(config_path))
-        return parser.getboolean(
-            "template", "skip_blank_recipients", fallback=False,
-        )
-    except (configparser.Error, ValueError) as err:
-        raise exceptions.MailmergeError(f"{config_path}: {err}")
 
 
 def read_csv_database(database_path):

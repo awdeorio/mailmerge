@@ -55,9 +55,10 @@ class TemplateMessage:
     def render(self, context):
         """Return rendered message object.
 
-        A message with no recipients (blank TO, CC and BCC, including a
-        completely blank render) is returned with an empty recipient list and
-        no further processing, so that the caller can skip it.
+        A message that renders blank, e.g. a template wrapped in
+        {% if ... %} ... {% endif %} whose condition is false, returns
+        (None, [], None) so that the caller can skip it.  A blank TO, CC or
+        BCC header, or a message with no recipients, is an error.
         """
         try:
             raw_message = self.template.render(context)
@@ -68,13 +69,18 @@ class TemplateMessage:
         # They come from Jinja tags above the headers, e.g. a template wrapped
         # in {% if ... %} ... {% endif %}.
         raw_message = raw_message.lstrip()
+        if not raw_message:
+            return None, [], None
         self._message = email.message_from_string(raw_message)
         self._transform_encoding(raw_message)
         self._transform_recipients()
-        if not self._sender:
+        if not self._sender or not self._recipients:
             self._check_header_block()
         if not self._recipients:
-            return self._sender, self._recipients, self._message
+            raise exceptions.MailmergeError(
+                f"{self.template_path}: message has no recipients "
+                "(no TO, CC or BCC header)"
+            )
         if not self._sender:
             raise exceptions.MailmergeError(
                 f"{self.template_path}: message has no FROM header"
@@ -91,8 +97,9 @@ class TemplateMessage:
 
         A blank line inside the headers ends them, pushing the remaining
         headers into the body.  The usual cause is a Jinja tag on a line of
-        its own between header lines.  Only called when FROM is missing, so a
-        body that happens to start with "To:" is not mistaken for headers.
+        its own between header lines.  Only called when FROM or the
+        recipients are missing, so a body that happens to start with "To:" is
+        not mistaken for headers.
         """
         if self._message.is_multipart():
             return
@@ -116,13 +123,19 @@ class TemplateMessage:
         # The docs recommend using __delitem__()
         # https://docs.python.org/3/library/email.message.html#email.message.EmailMessage.__delitem__
         # pylint: disable=unnecessary-dunder-call
-        # Header values that render blank hold no recipients.  Filter the
-        # values, not the parsed addresses: getaddresses() returns ('', '')
-        # for a value it can't parse, such as "a@b.com,", and dropping that
-        # would silently lose a real recipient.
+        # A header that renders blank is a mistake, such as a missing value
+        # in the database.  Check the values, not the parsed addresses:
+        # getaddresses() returns ('', '') for a blank value and for one it
+        # can't parse, such as "a@b.com,".
         addrs = []
         for field in ("TO", "CC", "BCC"):
-            values = [v for v in self._message.get_all(field, []) if v.strip()]
+            values = self._message.get_all(field, [])
+            if any(not v.strip() for v in values):
+                raise exceptions.MailmergeError(
+                    f"{self.template_path}: {field} header is blank.  To "
+                    "skip a row, wrap the whole template in "
+                    "{% if ... %} ... {% endif %}"
+                )
             addrs += email.utils.getaddresses(values)
         self._recipients = [x[1] for x in addrs]
         self._message.__delitem__("bcc")
