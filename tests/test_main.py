@@ -850,3 +850,31 @@ def test_other_mime_type(tmpdir):
         >>> Limit was 1 message.  To remove the limit, use the --no-limit option.
         >>> This was a dry run.  To send messages, use the --no-dry-run option.
     """)  # noqa: E501
+
+
+def test_empty_database(tmpdir):
+    """Verify an empty database CSV yields a clean error, not a traceback.
+
+    An empty file has no header row, so csv.DictReader.fieldnames is None.
+    """
+    runner = click.testing.CliRunner()
+    with tmpdir.as_cwd():
+        Path("mailmerge_template.txt").write_text(textwrap.dedent("""\
+            TO: {{email}}
+            SUBJECT: Testing mailmerge
+            FROM: My Self <myself@mydomain.com>
+
+            Hi, {{name}},
+        """), encoding="utf8")
+        Path("mailmerge_database.csv").write_text("", encoding="utf8")
+        Path("mailmerge_server.conf").write_text(textwrap.dedent("""\
+            [smtp_server]
+            host = smtp.gmail.com
+            port = 465
+        """), encoding="utf8")
+
+        result = runner.invoke(main, ["--no-limit"])
+    assert result.exit_code == 1
+    assert isinstance(result.exception, SystemExit)
+    assert "empty database" in result.output
+    assert "Traceback" not in result.output
