@@ -315,6 +315,13 @@ def read_csv_database(database_path):
         csvdialect.strict = True
         reader = csv.DictReader(database_file, dialect=csvdialect)
 
+        # An empty database has no header row (fieldnames is None).  Report
+        # a clean error instead of crashing with a TypeError below.
+        if reader.fieldnames is None:
+            raise exceptions.MailmergeError(
+                f"{database_path}: empty database, missing header row"
+            )
+
         # Warn about leading/trailing whitespace in header field names.
         # This can cause confusing "undefined variable" errors in templates.
         # See Issue #156 https://github.com/awdeorio/mailmerge/issues/156
